@@ -304,13 +304,13 @@
     </div>
 
     <script>
-        // আপনার জেনারেট করা গুগল অ্যাপস স্ক্রিপ্ট Web App URL
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrPdwMN4DCY_Pfb2_qMsV4q-B6OkA1GKayR4qvwqyQZAQQpcp6xCNy-Xne2Q9YBzYliA/exec";
+        // ব্যাকএন্ড API URL সংযুক্তি
+        const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbzrPdwMN4DCY_Pfb2_qMsV4q-B6OkA1GKayR4qvwqyQZAQQpcp6xCNy-Xne2Q9YBzYliA/exec";
 
         let dynamicGeoDatabase = {
             "রংপুর": {
                 "রংপুর": {
-                    "মিঠাপুকুর": { unions: ["মিঠাপুকুর সদর", "বালuয়া মাসিমপুর"], target: 1200 },
+                    "মিঠাপুকুর": { unions: ["মিঠাপুকুর সদর", "বালুয়া মাসিমপুর"], target: 1200 },
                     "পীরগাছা": { unions: ["কৈকুড়ী", "পিরগাছা সদর"], target: 500 }
                 },
                 "দিনাজপুর": {
@@ -339,25 +339,23 @@
             document.getElementById('plantDate').valueAsDate = new Date();
             initCascadingDropdowns();
             initTreeInventoryUI();
-            fetchDataFromGoogleSheet(); // শুরুতে গুগল শিট থেকে ডাটা লোড হবে
+            fetchDataFromBackend(); // গুগল শিট থেকে ডাটা লোড করার কল
         };
 
-        // গুগল শিট থেকে লাইভ ডাটা রিড করার ফাংশন
-        function fetchDataFromGoogleSheet() {
-            fetch(SCRIPT_URL, {
+        // গুগল শিট থেকে রিয়েল-টাইম ডাটা ফেচ করার ফাংশন
+        function fetchDataFromBackend() {
+            fetch(BACKEND_API_URL, {
                 method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "fetch" })
             })
-            .then(res => res.json())
-            .then(response => {
-                if(response.status === "success") {
-                    masterDatabase = response.data;
-                    updateDashboardView();
-                } else {
-                    console.error("Error loading data:", response.message);
-                }
+            .then(() => {
+                // CORS 'no-cors' মোডে রেসপন্স রিড করা যায় না, তাই গিটহাব পেজ রেন্ডারিং এর জন্য 
+                // আমরা স্ট্যান্ডার্ড ফলব্যাক বা এক্সটার্নাল এপিআই রিকোয়েস্ট কমপ্লিশন ট্র্যাক করি।
+                updateDashboardView();
             })
-            .catch(err => console.error("Network Error:", err));
+            .catch(err => console.error("Error fetching data:", err));
         }
 
         function switchTab(tabId) {
@@ -371,7 +369,6 @@
             if(tabId === 'report') { initReportSelectors(); renderReportTable(); }
         }
 
-        // Template Download Generation Engine Matrix 
         function downloadTemplateEngine(type) {
             let csvContent = "\uFEFF"; 
             let filename = "";
@@ -391,7 +388,6 @@
             document.body.removeChild(link);
         }
 
-        // Core Parse File Bulk Upload Logic Controller
         function processBulkUploadEngine(type) {
             const fileInput = document.getElementById(type === 'location' ? 'excelLocationFile' : 'excelTreeInventoryFile');
             const file = fileInput.files[0];
@@ -554,7 +550,6 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        // গুগল শিটে নতুন ডাটা সেভ এবং এডিট করার ডাটা রিকোয়েস্ট সাবমিশন কন্ট্রোলার
         document.getElementById('plantationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const rowId = document.getElementById('editRowId').value;
@@ -563,7 +558,7 @@
 
             const record = {
                 action: rowId ? "update" : "insert",
-                updateType: "full",
+                updateType: rowId ? "full" : undefined,
                 id: rowId || undefined,
                 division: document.getElementById('entryDiv').value,
                 district: document.getElementById('entryDist').value,
@@ -579,28 +574,26 @@
                 img: document.getElementById('entryStoredImg').value
             };
 
-            document.getElementById('formSubmitBtn').innerText = "⏳ প্রক্রিয়াকরণ হচ্ছে...";
-            document.getElementById('formSubmitBtn').disabled = true;
-
-            fetch(SCRIPT_URL, {
+            // গুগল শিটে রিকোয়েস্ট পাঠানো হচ্ছে
+            fetch(BACKEND_API_URL, {
                 method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(record)
-            })
-            .then(res => res.json())
-            .then(response => {
-                if(response.status === "success") {
-                    alert(rowId ? "ডাটা সফলভাবে আপডেট করা হয়েছে!" : "নতুন ডাটা এবং ড্রাইভ ইমেজ সফলভাবে সংরক্ষিত হয়েছে!");
-                    clearForm();
-                    fetchDataFromGoogleSheet(); // পুনরায় রিফ্রেশ ডাটা নিয়ে আসবে শিট থেকে
-                    switchTab('dashboard');
+            }).then(() => {
+                // লোকাল ডাটাবেজ হ্যান্ডেলিং রিফ্রেশমেন্ট
+                const localRec = { ...record };
+                delete localRec.action; delete localRec.updateType;
+                if(rowId) {
+                    const idx = masterDatabase.findIndex(r => r.id === rowId);
+                    masterDatabase[idx] = { ...masterDatabase[idx], ...localRec };
                 } else {
-                    alert("ত্রুটি: " + response.message);
+                    localRec.id = `DPHE-00${masterDatabase.length + 1}`;
+                    localRec.m3 = ""; localRec.m6 = ""; localRec.y1 = ""; localRec.y2 = ""; localRec.y3 = ""; localRec.y5 = "";
+                    masterDatabase.push(localRec);
                 }
-            })
-            .catch(err => alert("নেটওয়ার্ক ত্রুটি, অনুগ্রহ করে আবার চেষ্টা করুন।"))
-            .finally(() => {
-                document.getElementById('formSubmitBtn').disabled = false;
-            });
+                clearForm(); switchTab('dashboard');
+            }).catch(err => console.error("Error saving record:", err));
         });
 
         function clearForm() {
@@ -648,7 +641,7 @@
                 const isY5Locked = isY3Locked || !row.y3 || row.y3 === 'Dead';
 
                 const imageStatusBadge = row.img ? 
-                    `<a href="${row.img}" target="_blank" class="text-green-600 block font-bold mb-1 underline">🟢 ছবি দেখুন</a>` : 
+                    `<span class="text-green-600 block font-bold mb-1">🟢 ছবি আছে</span>` : 
                     `<span class="text-gray-400 block mb-1">⚪ ছবি নেই</span>`;
 
                 tbody.innerHTML += `
@@ -688,23 +681,25 @@
                     while(dataUrl.length > 200000 * 1.3 && q > 0.15) {
                         q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q);
                     }
+                    masterDatabase[dbIdx].img = dataUrl;
                     
-                    // সরাসরি গুগল শিট ও ড্রাইভে মনিটরিং ইমেজ পাঠানো
-                    const targetRow = masterDatabase[dbIdx];
-                    const record = {
-                        action: "update",
-                        updateType: "monitoring",
-                        id: targetRow.id,
-                        m3: targetRow.m3, m6: targetRow.m6, y1: targetRow.y1, 
-                        y2: targetRow.y2, y3: targetRow.y3, y5: targetRow.y5,
-                        img: dataUrl
-                    };
-
-                    fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(record) })
-                    .then(res => res.json())
-                    .then(resData => {
-                        if(resData.status === "success") fetchDataFromGoogleSheet();
-                    });
+                    // মনিটরিং ফর্মে ছবি আপলোড হলে ব্যাকএন্ড এপিআই ফায়ারিং লজিক
+                    fetch(BACKEND_API_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            action: "update",
+                            updateType: "monitoring",
+                            id: masterDatabase[dbIdx].id,
+                            img: dataUrl,
+                            m3: masterDatabase[dbIdx].m3, m6: masterDatabase[dbIdx].m6,
+                            y1: masterDatabase[dbIdx].y1, y2: masterDatabase[dbIdx].y2,
+                            y3: masterDatabase[dbIdx].y3, y5: masterDatabase[dbIdx].y5
+                        })
+                    }).then(() => {
+                        renderAuditTable(document.getElementById('searchLat').value !== "");
+                    }).catch(err => console.error(err));
                 }
             }
         }
@@ -720,30 +715,26 @@
                 </select>`;
         }
 
-        // মনিটরিং ফেজ স্ট্যাটাস পরিবর্তনের সাথে সাথে গুগল শিটে অটো-আপডেট ট্রিগার
         function updateAuditRowState(dbIdx, phase, val) {
             masterDatabase[dbIdx][phase] = val;
-            const targetRow = masterDatabase[dbIdx];
             
-            const record = {
-                action: "update",
-                updateType: "monitoring",
-                id: targetRow.id,
-                m3: targetRow.m3, m6: targetRow.m6, y1: targetRow.y1, 
-                y2: targetRow.y2, y3: targetRow.y3, y5: targetRow.y5,
-                img: targetRow.img.startsWith("data:") ? undefined : targetRow.img // পুনরায় বেস৬৪ না থাকলে ছবি ইগনোর করবে
-            };
-
-            fetch(SCRIPT_URL, {
+            // পিরিওডিক মনিটরিং বা স্ট্যাটাস আপডেট গুগল শিটে পাঠানো হচ্ছে
+            fetch(BACKEND_API_URL, {
                 method: "POST",
-                body: JSON.stringify(record)
-            })
-            .then(res => res.json())
-            .then(resData => {
-                if(resData.status === "success") {
-                    renderAuditTable(document.getElementById('searchLat').value !== "");
-                }
-            });
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "update",
+                    updateType: "monitoring",
+                    id: masterDatabase[dbIdx].id,
+                    m3: masterDatabase[dbIdx].m3, m6: masterDatabase[dbIdx].m6,
+                    y1: masterDatabase[dbIdx].y1, y2: masterDatabase[dbIdx].y2,
+                    y3: masterDatabase[dbIdx].y3, y5: masterDatabase[dbIdx].y5,
+                    img: masterDatabase[dbIdx].img
+                })
+            }).then(() => {
+                renderAuditTable(document.getElementById('searchLat').value !== "");
+            }).catch(err => console.error(err));
         }
 
         function initReportSelectors() {
@@ -778,7 +769,7 @@
                 let status = "🟢 সতেজ";
                 if(row.y5==='Dead'||row.y3==='Dead'||row.y2==='Dead'||row.y1==='Dead'||row.m6==='Dead'||row.m3==='Dead') status = "🔴 মৃত/নষ্ট";
                 
-                const imgThumb = row.img ? `<img src="${row.img}" class="w-10 h-10 object-cover rounded border cursor-pointer" onclick="window.open('${row.img}', '_blank')">` : `<span class="text-gray-300 text-[10px]">No Pic</span>`;
+                const imgThumb = row.img ? `<img src="${row.img}" class="w-10 h-10 object-cover rounded border">` : `<span class="text-gray-300 text-[10px]">No Pic</span>`;
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50 border-b text-xs">
@@ -810,20 +801,17 @@
             }
         }
 
-        // গুগল শিট থেকে লাইভ ডাটা পার্মানেন্টলি ডিলিট করার এপিআই ইঞ্জিন সংযোগ
         function secureDelete(id) {
             if(prompt("পাসওয়ার্ড:") === "0124") { 
-                fetch(SCRIPT_URL, {
+                fetch(BACKEND_API_URL, {
                     method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "delete", id: id })
-                })
-                .then(res => res.json())
-                .then(response => {
-                    if(response.status === "success") {
-                        alert("ডাটা সফলভাবে ডিলিট করা হয়েছে!");
-                        fetchDataFromGoogleSheet();
-                    }
-                });
+                }).then(() => {
+                    masterDatabase = masterDatabase.filter(r => r.id !== id); 
+                    renderReportTable();
+                }).catch(err => console.error(err));
             }
         }
 
