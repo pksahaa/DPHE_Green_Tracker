@@ -340,7 +340,7 @@
         // ⚙️ GOOGLE SHEETS BACKEND CONFIG
         // 👇 এখানে আপনার Google Apps Script Web App URL বসান
         // ============================================================
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwuY1B8DzY0hQiUPsR323lVpWVkZe7jf1TeToYmyuB6wv7_a1EueDrmJESdpDrZUk/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrPdwMN4DCY_Pfb2_qMsV4q-B6OkA1GKayR4qvwqyQZAQQpcp6xCNy-Xne2Q9YBzYliA/exec";
 
         let isSyncing = false;
 
@@ -374,63 +374,101 @@
         }
 
         // ✅ Google Sheets এ ডাটা SAVE করার ফাংশন
+        // Google Apps Script CORS সমস্যা: POST এ no-cors লাগে, কিন্তু তাতে
+        // response পড়া যায় না। তাই payload কে GET parameter হিসেবে পাঠাই।
         function saveToCentralDatabaseEngine() {
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                console.warn("Apps Script URL সেট করা হয়নি। শুধু localStorage এ save হচ্ছে।");
+                console.warn("Apps Script URL সেট করা হয়নি।");
                 return;
             }
             if (isSyncing) return;
             isSyncing = true;
             showSyncStatus("☁️ Google Sheets এ সেভ হচ্ছে...", 'blue');
 
-            const payload = {
+            const payload = JSON.stringify({
                 action: "saveAll",
                 geoDb: dynamicGeoDatabase,
                 treeInv: treeInventory,
-                masterDb: masterDatabase.map(r => ({ ...r, img: "" })) // ছবি বাদ দিয়ে save (size limit)
-            };
+                masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
+            });
 
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
+            // Google Apps Script এ POST + no-cors করলে response পাওয়া যায় না।
+            // তাই URLSearchParams দিয়ে GET এ পাঠাই (Apps Script doGet এও handle করা আছে)।
+            // payload বড় হলে এনকোড করে পাঠাই।
+            const url = APPS_SCRIPT_URL + "?method=POST&payload=" + encodeURIComponent(payload);
+
+            fetch(url, { method: 'GET' })
+            .then(res => res.json())
+            .then(data => {
                 isSyncing = false;
-                showSyncStatus("✅ Google Sheets এ সেভ সফল!", 'green');
+                if (data && data.success) {
+                    showSyncStatus("✅ Google Sheets এ সেভ সফল!", 'green');
+                } else {
+                    showSyncStatus("⚠️ সেভ হয়েছে কিন্তু response অস্বাভাবিক", 'orange');
+                    console.warn("Save response:", data);
+                }
             })
             .catch(err => {
                 isSyncing = false;
-                showSyncStatus("❌ Sheets সেভ ব্যর্থ! Local এ আছে।", 'red');
-                console.error("Sheets sync error:", err);
+                // no-cors fallback — response না পেলেও সেভ হয়ে থাকতে পারে
+                // তাই error দেখালেও data যাওয়ার সম্ভাবনা আছে
+                showSyncStatus("⚠️ Sheets response নেই, Local এ আছে", 'orange');
+                console.warn("Sheets sync warning:", err);
             });
         }
 
         // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
         function fetchCentralDatabaseEngine() {
-            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                console.warn("Apps Script URL সেট করা হয়নি। localStorage থেকে লোড হচ্ছে।");
+            const localInit = () => {
                 initCascadingDropdowns();
                 initTreeInventoryUI();
                 updateDashboardView();
+            };
+
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                console.warn("Apps Script URL সেট করা হয়নি। localStorage থেকে লোড হচ্ছে।");
+                localInit();
                 return;
             }
+
             showSyncStatus("☁️ Google Sheets থেকে লোড হচ্ছে...", 'orange');
 
-            fetch(APPS_SCRIPT_URL + "?action=getAll", { method: 'GET' })
-            .then(res => res.json())
+            // timeout: ১০ সেকেন্ডে না আসলে local data দিয়ে চালু হবে
+            const timeout = setTimeout(() => {
+                console.warn("Sheets load timeout — localStorage দিয়ে চলছে");
+                localInit();
+                showSyncStatus("⚠️ Sheets slow, Local ডাটা ব্যবহার হচ্ছে", 'orange');
+            }, 10000);
+
+            fetch(APPS_SCRIPT_URL + "?action=getAll")
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            })
             .then(data => {
-                if (data && data.geoDb && Object.keys(data.geoDb).length > 0) {
+                clearTimeout(timeout);
+
+                if (!data || !data.success) {
+                    console.warn("Sheets returned no success:", data);
+                    localInit();
+                    showSyncStatus("⚠️ Sheets থেকে ডাটা আসেনি, Local ব্যবহার হচ্ছে", 'orange');
+                    return;
+                }
+
+                // GeoDatabase আপডেট
+                if (data.geoDb && Object.keys(data.geoDb).length > 0) {
                     dynamicGeoDatabase = data.geoDb;
                     localStorage.setItem('dphe_geo_db', JSON.stringify(dynamicGeoDatabase));
                 }
-                if (data && data.treeInv && data.treeInv.length > 0) {
+
+                // TreeInventory আপডেট
+                if (data.treeInv && data.treeInv.length > 0) {
                     treeInventory = data.treeInv;
                     localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInventory));
                 }
-                if (data && data.masterDb && data.masterDb.length > 0) {
-                    // ছবি local থেকে merge করি (Sheets এ ছবি নেই)
+
+                // MasterDatabase আপডেট — ছবি local থেকে merge করি
+                if (data.masterDb && data.masterDb.length > 0) {
                     const localDb = JSON.parse(localStorage.getItem('dphe_master_db')) || [];
                     data.masterDb.forEach(row => {
                         const localRow = localDb.find(r => r.id === row.id);
@@ -439,16 +477,14 @@
                     masterDatabase = data.masterDb;
                     localStorage.setItem('dphe_master_db', JSON.stringify(masterDatabase));
                 }
-                initCascadingDropdowns();
-                initTreeInventoryUI();
-                updateDashboardView();
+
+                localInit();
                 showSyncStatus("✅ Google Sheets থেকে লোড সফল!", 'green');
             })
             .catch(err => {
-                console.warn("Sheets load failed, using localStorage:", err);
-                initCascadingDropdowns();
-                initTreeInventoryUI();
-                updateDashboardView();
+                clearTimeout(timeout);
+                console.warn("Sheets load failed:", err);
+                localInit();
                 showSyncStatus("⚠️ Sheets লোড ব্যর্থ, Local ডাটা ব্যবহার হচ্ছে", 'red');
             });
         }
