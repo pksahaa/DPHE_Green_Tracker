@@ -341,6 +341,19 @@
         // 👇 এখানে আপনার Google Apps Script Web App URL বসান
         // ============================================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwuY1B8DzY0hQiUPsR323lVpWVkZe7jf1TeToYmyuB6wv7_a1EueDrmJESdpDrZUk/exec";
+        // CORS proxy দিয়ে fetch করি — GitHub Pages থেকে Apps Script এ সরাসরি যায় না
+        function proxyFetch(url) {
+            const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
+            return fetch(proxy).then(r => r.json());
+        }
+        function proxyPost(url, data) {
+            const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
+            return fetch(proxy, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(data)
+            }).then(r => r.json());
+        }
 
         let isSyncing = false;
 
@@ -389,93 +402,22 @@
                 masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
             };
 
-            // JSONP chunk দিয়ে save — CORS সমস্যা নেই
-            const jsonStr = encodeURIComponent(JSON.stringify(payload));
-            const CHUNK = 1500;
-            const total = Math.ceil(jsonStr.length / CHUNK);
-            const sid = 's' + Date.now();
-            let idx = 0;
-
-            function sendChunkJSONP(i, cb) {
-                const cbName = 'dphe_sc_' + sid + '_' + i;
-                const chunk = jsonStr.substring(i * CHUNK, (i + 1) * CHUNK);
-                const isLast = (i === total - 1);
-
-                window[cbName] = function(res) {
-                    const el = document.getElementById(cbName);
-                    if (el) el.remove();
-                    delete window[cbName];
-                    if (res && (res.ok || res.success || res.status === 'buffered')) {
-                        cb(null);
-                    } else {
-                        cb('Chunk ' + i + ' failed: ' + JSON.stringify(res));
-                    }
-                };
-
-                const script = document.createElement('script');
-                script.id = cbName;
-                script.src = APPS_SCRIPT_URL
-                    + '?action=saveChunk'
-                    + '&session=' + sid
-                    + '&chunk=' + i
-                    + '&total=' + total
-                    + '&data=' + chunk
-                    + '&callback=' + cbName;
-                script.onerror = function() {
-                    this.remove();
-                    delete window[cbName];
-                    cb('script load error chunk ' + i);
-                };
-                document.head.appendChild(script);
-            }
-
-            function sendNext() {
-                if (idx >= total) {
-                    // সব chunk গেছে — JSONP দিয়ে verify
-                    const vcb = 'dphe_verify_' + Date.now();
-                    window[vcb] = function(data) {
-                        const el = document.getElementById(vcb);
-                        if (el) el.remove();
-                        delete window[vcb];
-                        isSyncing = false;
-                        if (data && data.success) {
-                            showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
-                        } else {
-                            showSyncStatus("⚠️ সেভ হয়েছে, verify করা যায়নি", 'orange');
-                        }
-                    };
-                    setTimeout(() => {
-                        const vs = document.createElement('script');
-                        vs.id = vcb;
-                        vs.src = APPS_SCRIPT_URL + '?action=getAll&callback=' + vcb;
-                        vs.onerror = function() {
-                            this.remove();
-                            delete window[vcb];
-                            isSyncing = false;
-                            showSyncStatus("✅ Sheets এ পাঠানো হয়েছে", 'green');
-                        };
-                        document.head.appendChild(vs);
-                    }, 2000);
-                    return;
+            proxyPost(APPS_SCRIPT_URL, payload)
+            .then(data => {
+                isSyncing = false;
+                if (data && data.success) {
+                    showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
+                } else {
+                    showSyncStatus("⚠️ সেভ হয়েছে কিন্তু verify হয়নি", 'orange');
                 }
-
-                sendChunkJSONP(idx, function(err) {
-                    if (err) {
-                        isSyncing = false;
-                        showSyncStatus("❌ সেভ ব্যর্থ: " + err, 'red');
-                        console.error(err);
-                        return;
-                    }
-                    idx++;
-                    setTimeout(sendNext, 200);
-                });
-            }
-
-            sendNext();
+            })
+            .catch(err => {
+                isSyncing = false;
+                showSyncStatus("❌ সেভ ব্যর্থ: " + err.message, 'red');
+                console.error("Save error:", err);
+            });
         }
 
-
-        // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
         function fetchCentralDatabaseEngine() {
             const localInit = () => {
                 initCascadingDropdowns();
@@ -484,37 +426,19 @@
             };
 
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                console.warn("Apps Script URL সেট করা হয়নি। localStorage থেকে লোড হচ্ছে।");
                 localInit();
                 return;
             }
 
             showSyncStatus("☁️ Google Sheets থেকে লোড হচ্ছে...", 'orange');
 
-            // JSONP দিয়ে load করি — CORS সমস্যা এড়ানোর জন্য
-            const cbName = 'dphe_load_cb_' + Date.now();
-            const timeout = setTimeout(() => {
-                delete window[cbName];
-                const el = document.getElementById(cbName);
-                if (el) el.remove();
-                console.warn("Sheets load timeout");
-                localInit();
-                showSyncStatus("⚠️ Sheets slow, Local ডাটা ব্যবহার হচ্ছে", 'orange');
-            }, 10000);
-
-            window[cbName] = function(data) {
-                clearTimeout(timeout);
-                const el = document.getElementById(cbName);
-                if (el) el.remove();
-                delete window[cbName];
-
+            proxyFetch(APPS_SCRIPT_URL + "?action=getAll")
+            .then(data => {
                 if (!data || !data.success) {
-                    console.warn("Sheets returned:", data);
                     localInit();
                     showSyncStatus("⚠️ Sheets থেকে ডাটা আসেনি, Local ব্যবহার হচ্ছে", 'orange');
                     return;
                 }
-
                 if (data.geoDb && Object.keys(data.geoDb).length > 0) {
                     dynamicGeoDatabase = data.geoDb;
                     localStorage.setItem('dphe_geo_db', JSON.stringify(dynamicGeoDatabase));
@@ -532,24 +456,16 @@
                     masterDatabase = data.masterDb;
                     localStorage.setItem('dphe_master_db', JSON.stringify(masterDatabase));
                 }
-
                 localInit();
                 showSyncStatus("✅ Google Sheets থেকে লোড সফল!", 'green');
-            };
-
-            const script = document.createElement('script');
-            script.id = cbName;
-            script.src = APPS_SCRIPT_URL + "?action=getAll&callback=" + cbName;
-            script.onerror = function() {
-                clearTimeout(timeout);
-                delete window[cbName];
-                this.remove();
-                console.warn("JSONP load failed");
+            })
+            .catch(err => {
+                console.warn("Sheets load failed:", err);
                 localInit();
                 showSyncStatus("⚠️ Sheets লোড ব্যর্থ, Local ডাটা ব্যবহার হচ্ছে", 'red');
-            };
-            document.head.appendChild(script);
+            });
         }
+
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
