@@ -374,6 +374,7 @@
         }
 
         // ✅ Google Sheets এ ডাটা SAVE করার ফাংশন
+        // JSONP technique ব্যবহার করি — no-cors POST এর চেয়ে বেশি reliable
         function saveToCentralDatabaseEngine() {
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
                 console.warn("Apps Script URL সেট করা হয়নি।");
@@ -383,47 +384,71 @@
             isSyncing = true;
             showSyncStatus("☁️ Google Sheets এ সেভ হচ্ছে...", 'blue');
 
-            const payload = JSON.stringify({
+            const payload = {
                 action: "saveAll",
                 geoDb: dynamicGeoDatabase,
                 treeInv: treeInventory,
                 masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
-            });
+            };
 
-            // no-cors দিয়ে POST — Apps Script data পাবে ও save করবে
-            // response browser এ আসবে না (Google CORS policy) — এটা স্বাভাবিক
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: payload
-            })
-            .then(() => {
-                isSyncing = false;
-                showSyncStatus("✅ Sheets এ পাঠানো হয়েছে!", 'green');
-                // ৩ সেকেন্ড পরে GET দিয়ে verify করব
-                setTimeout(verifyLastSave, 3000);
-            })
-            .catch(err => {
-                isSyncing = false;
-                showSyncStatus("❌ Network error — Local এ আছে", 'red');
-                console.error("Save error:", err);
-            });
-        }
+            // JSONP দিয়ে save করি — script tag inject করে GET request পাঠাই
+            // এতে CORS সমস্যা হয় না এবং data Apps Script এ পৌঁছায়
+            const cbName = 'dphe_cb_' + Date.now();
+            const dataStr = encodeURIComponent(JSON.stringify(payload));
+            
+            // data বড় হলে chunks এ ভাগ করে পাঠাই
+            const MAX_CHUNK = 7000; // URL safe limit
+            const chunks = [];
+            let remaining = dataStr;
+            while (remaining.length > 0) {
+                chunks.push(remaining.substring(0, MAX_CHUNK));
+                remaining = remaining.substring(MAX_CHUNK);
+            }
 
-        // Save এর পর GET দিয়ে সত্যিই গেছে কিনা যাচাই করি
-        function verifyLastSave() {
-            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") return;
-            fetch(APPS_SCRIPT_URL + "?action=getAll")
-            .then(r => r.json())
-            .then(data => {
-                if (data && data.success && (data.treeInv && data.treeInv.length > 0 || data.geoDb && Object.keys(data.geoDb).length > 0)) {
-                    showSyncStatus("✅ Sheets এ সেভ নিশ্চিত হয়েছে!", 'green');
+            // সব chunk একসাথে পাঠাই, শেষেরটায় callback থাকবে
+            let sent = 0;
+            const totalChunks = chunks.length;
+            const sessionId = Date.now().toString();
+
+            window[cbName] = function(result) {
+                // script tag cleanup
+                const el = document.getElementById(cbName);
+                if (el) el.remove();
+                delete window[cbName];
+                isSyncing = false;
+                if (result && result.success) {
+                    showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
                 } else {
-                    showSyncStatus("⚠️ Sheets এ সেভ হয়নি — পুনরায় চেষ্টা করুন", 'red');
+                    showSyncStatus("⚠️ Sheets সেভে সমস্যা হয়েছে", 'orange');
+                    console.warn("Save result:", result);
                 }
-            })
-            .catch(() => {});
+            };
+
+            function sendChunk(idx) {
+                const isLast = (idx === totalChunks - 1);
+                const url = APPS_SCRIPT_URL
+                    + "?action=saveChunk"
+                    + "&session=" + sessionId
+                    + "&chunk=" + idx
+                    + "&total=" + totalChunks
+                    + "&data=" + chunks[idx]
+                    + (isLast ? "&callback=" + cbName : "");
+
+                const script = document.createElement('script');
+                if (isLast) script.id = cbName;
+                script.src = url;
+                script.onerror = function() {
+                    if (isLast) {
+                        delete window[cbName];
+                        isSyncing = false;
+                        showSyncStatus("❌ Network error — Local এ আছে", 'red');
+                    }
+                };
+                document.head.appendChild(script);
+                if (!isLast) setTimeout(() => sendChunk(idx + 1), 300);
+            }
+
+            sendChunk(0);
         }
 
         // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
