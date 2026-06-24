@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPHE Green Tracker - Enterprise Ultimate Pro v3.1</title>
+    <title>DPHE Green Tracker - Enterprise Ultimate Pro v3.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -265,7 +265,7 @@
                                 <select id="newTreeType" class="flex-1 p-2 border rounded-lg">
                                     <option value="Fruit">ফলজ (Fruit)</option>
                                     <option value="Timber">বনজ (Timber)</option>
-                                    <option value="Medicinal">ঔষধি (Medicinal)</option>
+                                    <option value="Medicinal">ঔषধি (Medicinal)</option>
                                     <option value="Ornamental">শোভাবর্ধনকারী (Ornamental)</option>
                                 </select>
                                 <button onclick="saveInventoryTree()" id="addTreeBtn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold">সংরক্ষণ</button>
@@ -304,10 +304,8 @@
     </div>
 
     <script>
-        // ব্যাকএন্ড API URL সংযুক্তি
-        const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbzrPdwMN4DCY_Pfb2_qMsV4q-B6OkA1GKayR4qvwqyQZAQQpcp6xCNy-Xne2Q9YBzYliA/exec";
-
-        let dynamicGeoDatabase = {
+        // Synchronized Persistent Engine Init Wrapper
+        let dynamicGeoDatabase = JSON.parse(localStorage.getItem('dphe_geo_db')) || {
             "রংপুর": {
                 "রংপুর": {
                     "মিঠাপুকুর": { unions: ["মিঠাপুকুর সদর", "বালুয়া মাসিমপুর"], target: 1200 },
@@ -324,38 +322,135 @@
             }
         };
 
-        let treeInventory = [
+        let treeInventory = JSON.parse(localStorage.getItem('dphe_tree_inv')) || [
             { name: "আম (Mango)", type: "Fruit" },
             { name: "মেহগনি (Mahogany)", type: "Timber" },
             { name: "নিম (Neem)", type: "Medicinal" },
             { name: "কৃষ্ণচূড়া (Krishna Chura)", type: "Ornamental" }
         ];
 
-        let masterDatabase = [];
+        let masterDatabase = JSON.parse(localStorage.getItem('dphe_master_db')) || [
+            { id: "DPHE-001", division: "রংপুর", district: "রংপুর", upojela: "পীরগাছা", union: "কৈকুড়ী", tree: "আম (Mango)", type: "Fruit", date: "2026-03-10", lat: 25.57810, lng: 89.26340, caregiver: "রফিক ইসলাম", phone: "01712345678", m3: "Healthy", m6: "Healthy", y1: "Healthy", y2: "Healthy", y3: "Healthy", y5: "Healthy", img: "" },
+            { id: "DPHE-002", division: "রাজশাহী", district: "বগুড়া", upojela: "বগুড়া সদর", union: "ফাঁপোর", tree: "মেহগনি (Mahogany)", type: "Timber", date: "2026-05-12", lat: 24.84810, lng: 89.37340, caregiver: "আলমগীর", phone: "01987654321", m3: "NeedsCare", m6: "Dead", y1: "", y2: "", y3: "", y5: "", img: "" }
+        ];
 
         let typeChartInstance = null, locChartInstance = null;
 
+        // ============================================================
+        // ⚙️ GOOGLE SHEETS BACKEND CONFIG
+        // 👇 এখানে আপনার Google Apps Script Web App URL বসান
+        // ============================================================
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwuY1B8DzY0hQiUPsR323lVpWVkZe7jf1TeToYmyuB6wv7_a1EueDrmJESdpDrZUk/exec";
+
+        let isSyncing = false;
+
         window.onload = function() {
             document.getElementById('plantDate').valueAsDate = new Date();
-            initCascadingDropdowns();
-            initTreeInventoryUI();
-            fetchDataFromBackend(); // গুগল শিট থেকে ডাটা লোড করার কল
+            fetchCentralDatabaseEngine(); // Sheets থেকে লোড করে UI সাজাবে
         };
 
-        // গুগল শিট থেকে রিয়েল-টাইম ডাটা ফেচ করার ফাংশন
-        function fetchDataFromBackend() {
-            fetch(BACKEND_API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "fetch" })
+        function showSyncStatus(msg, color = 'blue') {
+            let el = document.getElementById('syncStatus');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'syncStatus';
+                el.style.cssText = 'position:fixed;bottom:70px;right:16px;z-index:9999;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:bold;color:white;transition:opacity 0.5s;';
+                document.body.appendChild(el);
+            }
+            const colors = { blue: '#2563eb', green: '#059669', red: '#dc2626', orange: '#d97706' };
+            el.style.background = colors[color] || colors.blue;
+            el.style.opacity = '1';
+            el.innerText = msg;
+            if (color === 'green' || color === 'red') {
+                setTimeout(() => { el.style.opacity = '0'; }, 3000);
+            }
+        }
+
+        function syncLocalStorageState() {
+            localStorage.setItem('dphe_geo_db', JSON.stringify(dynamicGeoDatabase));
+            localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInventory));
+            localStorage.setItem('dphe_master_db', JSON.stringify(masterDatabase));
+            saveToCentralDatabaseEngine();
+        }
+
+        // ✅ Google Sheets এ ডাটা SAVE করার ফাংশন
+        function saveToCentralDatabaseEngine() {
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                console.warn("Apps Script URL সেট করা হয়নি। শুধু localStorage এ save হচ্ছে।");
+                return;
+            }
+            if (isSyncing) return;
+            isSyncing = true;
+            showSyncStatus("☁️ Google Sheets এ সেভ হচ্ছে...", 'blue');
+
+            const payload = {
+                action: "saveAll",
+                geoDb: dynamicGeoDatabase,
+                treeInv: treeInventory,
+                masterDb: masterDatabase.map(r => ({ ...r, img: "" })) // ছবি বাদ দিয়ে save (size limit)
+            };
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
             })
             .then(() => {
-                // CORS 'no-cors' মোডে রেসপন্স রিড করা যায় না, তাই গিটহাব পেজ রেন্ডারিং এর জন্য 
-                // আমরা স্ট্যান্ডার্ড ফলব্যাক বা এক্সটার্নাল এপিআই রিকোয়েস্ট কমপ্লিশন ট্র্যাক করি।
-                updateDashboardView();
+                isSyncing = false;
+                showSyncStatus("✅ Google Sheets এ সেভ সফল!", 'green');
             })
-            .catch(err => console.error("Error fetching data:", err));
+            .catch(err => {
+                isSyncing = false;
+                showSyncStatus("❌ Sheets সেভ ব্যর্থ! Local এ আছে।", 'red');
+                console.error("Sheets sync error:", err);
+            });
+        }
+
+        // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
+        function fetchCentralDatabaseEngine() {
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                console.warn("Apps Script URL সেট করা হয়নি। localStorage থেকে লোড হচ্ছে।");
+                initCascadingDropdowns();
+                initTreeInventoryUI();
+                updateDashboardView();
+                return;
+            }
+            showSyncStatus("☁️ Google Sheets থেকে লোড হচ্ছে...", 'orange');
+
+            fetch(APPS_SCRIPT_URL + "?action=getAll", { method: 'GET' })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.geoDb && Object.keys(data.geoDb).length > 0) {
+                    dynamicGeoDatabase = data.geoDb;
+                    localStorage.setItem('dphe_geo_db', JSON.stringify(dynamicGeoDatabase));
+                }
+                if (data && data.treeInv && data.treeInv.length > 0) {
+                    treeInventory = data.treeInv;
+                    localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInventory));
+                }
+                if (data && data.masterDb && data.masterDb.length > 0) {
+                    // ছবি local থেকে merge করি (Sheets এ ছবি নেই)
+                    const localDb = JSON.parse(localStorage.getItem('dphe_master_db')) || [];
+                    data.masterDb.forEach(row => {
+                        const localRow = localDb.find(r => r.id === row.id);
+                        if (localRow && localRow.img) row.img = localRow.img;
+                    });
+                    masterDatabase = data.masterDb;
+                    localStorage.setItem('dphe_master_db', JSON.stringify(masterDatabase));
+                }
+                initCascadingDropdowns();
+                initTreeInventoryUI();
+                updateDashboardView();
+                showSyncStatus("✅ Google Sheets থেকে লোড সফল!", 'green');
+            })
+            .catch(err => {
+                console.warn("Sheets load failed, using localStorage:", err);
+                initCascadingDropdowns();
+                initTreeInventoryUI();
+                updateDashboardView();
+                showSyncStatus("⚠️ Sheets লোড ব্যর্থ, Local ডাটা ব্যবহার হচ্ছে", 'red');
+            });
         }
 
         function switchTab(tabId) {
@@ -424,6 +519,7 @@
                         }
                     }
                 }
+                syncLocalStorageState();
                 alert(`সাফল্যের সাথে ${loadedCount}টি রো আপলোড ও প্রসেস করা হয়েছে!`);
                 fileInput.value = "";
                 initCascadingDropdowns();
@@ -464,6 +560,7 @@
             const upoSel = document.getElementById('entryUpo');
             const uniSel = document.getElementById('entryUni');
 
+            if (!divSel) return;
             divSel.innerHTML = '<option value="">বিভাগ বাছুন</option>';
             Object.keys(dynamicGeoDatabase).forEach(d => divSel.innerHTML += `<option value="${d}">${d}</option>`);
 
@@ -489,6 +586,7 @@
         function initTreeInventoryUI() {
             const select = document.getElementById('treeSelect');
             const listUl = document.getElementById('treeInventoryList');
+            if (!select || !listUl) return;
             select.innerHTML = '<option value="">গাছ নির্বাচন করুন</option>';
             listUl.innerHTML = '';
 
@@ -503,10 +601,19 @@
         function saveInventoryTree() {
             const name = document.getElementById('newTreeName').value.trim();
             const type = document.getElementById('newTreeType').value;
-            if(name) { treeInventory.push({ name, type }); document.getElementById('newTreeName').value = ""; initTreeInventoryUI(); }
+            if(name) { 
+                treeInventory.push({ name, type }); 
+                document.getElementById('newTreeName').value = ""; 
+                syncLocalStorageState();
+                initTreeInventoryUI(); 
+            }
         }
 
-        function deleteInventoryTree(idx) { treeInventory.splice(idx,1); initTreeInventoryUI(); }
+        function deleteInventoryTree(idx) { 
+            treeInventory.splice(idx,1); 
+            syncLocalStorageState();
+            initTreeInventoryUI(); 
+        }
 
         function saveManualLocation() {
             const dv = document.getElementById('setDiv').value.trim();
@@ -521,6 +628,7 @@
                 if(!dynamicGeoDatabase[dv][ds][up]) dynamicGeoDatabase[dv][ds][up] = { unions: [], target: 0 };
                 if(!dynamicGeoDatabase[dv][ds][up].unions.includes(un)) dynamicGeoDatabase[dv][ds][up].unions.push(un);
                 dynamicGeoDatabase[dv][ds][up].target = gl;
+                syncLocalStorageState();
                 initCascadingDropdowns(); alert('সংরক্ষণ সফল!');
             }
         }
@@ -557,9 +665,6 @@
             const treeObj = treeInventory.find(t => t.name === treeName);
 
             const record = {
-                action: rowId ? "update" : "insert",
-                updateType: rowId ? "full" : undefined,
-                id: rowId || undefined,
                 division: document.getElementById('entryDiv').value,
                 district: document.getElementById('entryDist').value,
                 upojela: document.getElementById('entryUpo').value,
@@ -574,26 +679,16 @@
                 img: document.getElementById('entryStoredImg').value
             };
 
-            // গুগল শিটে রিকোয়েস্ট পাঠানো হচ্ছে
-            fetch(BACKEND_API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(record)
-            }).then(() => {
-                // লোকাল ডাটাবেজ হ্যান্ডেলিং রিফ্রেশমেন্ট
-                const localRec = { ...record };
-                delete localRec.action; delete localRec.updateType;
-                if(rowId) {
-                    const idx = masterDatabase.findIndex(r => r.id === rowId);
-                    masterDatabase[idx] = { ...masterDatabase[idx], ...localRec };
-                } else {
-                    localRec.id = `DPHE-00${masterDatabase.length + 1}`;
-                    localRec.m3 = ""; localRec.m6 = ""; localRec.y1 = ""; localRec.y2 = ""; localRec.y3 = ""; localRec.y5 = "";
-                    masterDatabase.push(localRec);
-                }
-                clearForm(); switchTab('dashboard');
-            }).catch(err => console.error("Error saving record:", err));
+            if(rowId) {
+                const idx = masterDatabase.findIndex(r => r.id === rowId);
+                masterDatabase[idx] = { ...masterDatabase[idx], ...record };
+            } else {
+                record.id = `DPHE-00${masterDatabase.length + 1}`;
+                record.m3 = ""; record.m6 = ""; record.y1 = ""; record.y2 = ""; record.y3 = ""; record.y5 = "";
+                masterDatabase.push(record);
+            }
+            syncLocalStorageState();
+            clearForm(); switchTab('dashboard');
         });
 
         function clearForm() {
@@ -607,12 +702,15 @@
 
         function initAuditSelectors() {
             const dv = document.getElementById('auditDiv');
+            if (!dv) return;
             dv.innerHTML = '<option value="">সকল বিভাগ</option>';
             Object.keys(dynamicGeoDatabase).forEach(d => dv.innerHTML += `<option value="${d}">${d}</option>`);
         }
 
         function renderAuditTable(useRadius = false) {
-            const tbody = document.getElementById('auditTableBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('auditTableBody'); 
+            if (!tbody) return;
+            tbody.innerHTML = '';
             let pool = masterDatabase;
 
             if(useRadius) {
@@ -682,24 +780,8 @@
                         q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q);
                     }
                     masterDatabase[dbIdx].img = dataUrl;
-                    
-                    // মনিটরিং ফর্মে ছবি আপলোড হলে ব্যাকএন্ড এপিআই ফায়ারিং লজিক
-                    fetch(BACKEND_API_URL, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            action: "update",
-                            updateType: "monitoring",
-                            id: masterDatabase[dbIdx].id,
-                            img: dataUrl,
-                            m3: masterDatabase[dbIdx].m3, m6: masterDatabase[dbIdx].m6,
-                            y1: masterDatabase[dbIdx].y1, y2: masterDatabase[dbIdx].y2,
-                            y3: masterDatabase[dbIdx].y3, y5: masterDatabase[dbIdx].y5
-                        })
-                    }).then(() => {
-                        renderAuditTable(document.getElementById('searchLat').value !== "");
-                    }).catch(err => console.error(err));
+                    syncLocalStorageState();
+                    renderAuditTable(document.getElementById('searchLat').value !== "");
                 }
             }
         }
@@ -717,28 +799,13 @@
 
         function updateAuditRowState(dbIdx, phase, val) {
             masterDatabase[dbIdx][phase] = val;
-            
-            // পিরিওডিক মনিটরিং বা স্ট্যাটাস আপডেট গুগল শিটে পাঠানো হচ্ছে
-            fetch(BACKEND_API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "update",
-                    updateType: "monitoring",
-                    id: masterDatabase[dbIdx].id,
-                    m3: masterDatabase[dbIdx].m3, m6: masterDatabase[dbIdx].m6,
-                    y1: masterDatabase[dbIdx].y1, y2: masterDatabase[dbIdx].y2,
-                    y3: masterDatabase[dbIdx].y3, y5: masterDatabase[dbIdx].y5,
-                    img: masterDatabase[dbIdx].img
-                })
-            }).then(() => {
-                renderAuditTable(document.getElementById('searchLat').value !== "");
-            }).catch(err => console.error(err));
+            syncLocalStorageState();
+            renderAuditTable(document.getElementById('searchLat').value !== "");
         }
 
         function initReportSelectors() {
             const rd = document.getElementById('repDiv');
+            if (!rd) return;
             rd.innerHTML = '<option value="">সকল বিভাগ</option>';
             Object.keys(dynamicGeoDatabase).forEach(d => rd.innerHTML += `<option value="${d}">${d}</option>`);
         }
@@ -747,6 +814,7 @@
             const div = document.getElementById('repDiv').value;
             const dist = document.getElementById('repDist');
             const upo = document.getElementById('repUpo');
+            if (!dist || !upo) return;
             dist.innerHTML = '<option value="">সকল জেলা</option>';
             upo.innerHTML = '<option value="">সকল উপজেলা</option>';
             if(div && dynamicGeoDatabase[div]) {
@@ -759,7 +827,9 @@
             const dv = document.getElementById('repDiv').value;
             const ds = document.getElementById('repDist').value;
             const up = document.getElementById('repUpo').value;
-            const tbody = document.getElementById('reportTableBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('reportTableBody'); 
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
             masterDatabase.filter(r => {
                 const matchTxt = r.id.toLowerCase().includes(txt) || r.caregiver.toLowerCase().includes(txt) || r.tree.toLowerCase().includes(txt);
@@ -803,15 +873,9 @@
 
         function secureDelete(id) {
             if(prompt("পাসওয়ার্ড:") === "0124") { 
-                fetch(BACKEND_API_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "delete", id: id })
-                }).then(() => {
-                    masterDatabase = masterDatabase.filter(r => r.id !== id); 
-                    renderReportTable();
-                }).catch(err => console.error(err));
+                masterDatabase = masterDatabase.filter(r => r.id !== id); 
+                syncLocalStorageState();
+                renderReportTable(); 
             }
         }
 
@@ -845,6 +909,7 @@
             const tier = document.getElementById('dashTier').value;
             const divSel = document.getElementById('dashDivision');
             const distSel = document.getElementById('dashDistrict');
+            if (!divSel || !distSel) return;
             divSel.classList.add('hidden'); distSel.classList.add('hidden');
 
             if(tier === 'Division' || tier === 'District') {
@@ -883,28 +948,34 @@
             if(tier === 'Division' && sDiv) pool = pool.filter(r => r.division === sDiv);
             if(tier === 'District' && sDiv && sDist) pool = pool.filter(r => r.division === sDiv && r.district === sDist);
 
-            document.getElementById('dash-target-goal').innerText = totalTarget;
-            document.getElementById('dash-total-planted').innerText = pool.length;
+            const targetGoalEl = document.getElementById('dash-target-goal');
+            const totalPlantedEl = document.getElementById('dash-total-planted');
+            const survivalRateEl = document.getElementById('dash-survival-rate');
+            const pieLabelEl = document.getElementById('pieLabel');
+            const barLabelEl = document.getElementById('barLabel');
+
+            if (targetGoalEl) targetGoalEl.innerText = totalTarget;
+            if (totalPlantedEl) totalPlantedEl.innerText = pool.length;
 
             let dead = pool.filter(r => r.y5==='Dead'||r.y3==='Dead'||r.y2==='Dead'||r.y1==='Dead'||r.m6==='Dead'||r.m3==='Dead').length;
-            document.getElementById('dash-survival-rate').innerText = pool.length > 0 ? (((pool.length - dead)/pool.length)*100).toFixed(1)+'%' : '0%';
+            if (survivalRateEl) survivalRateEl.innerText = pool.length > 0 ? (((pool.length - dead)/pool.length)*100).toFixed(1)+'%' : '0%';
 
             let fr = pool.filter(r => r.type === 'Fruit').length;
             let tm = pool.filter(r => r.type === 'Timber').length;
             let md = pool.filter(r => r.type === 'Medicinal').length;
             let or = pool.filter(r => r.type === 'Ornamental').length;
 
-            document.getElementById('pieLabel').innerText = `গাছের ধরণের অনুপাত (${tier === 'Country' ? 'দেশ' : (tier==='Division'?sDiv:sDist)})`;
+            if (pieLabelEl) pieLabelEl.innerText = `গাছের ধরণের অনুপাত (${tier === 'Country' ? 'দেশ' : (tier==='Division'?sDiv:sDist)})`;
 
             let locLabels = [], locCounts = [], countsObj = {};
             if(tier === 'Country') {
-                document.getElementById('barLabel').innerText = "বিভাগ ভিত্তিক চিত্র";
+                if (barLabelEl) barLabelEl.innerText = "বিভাগ ভিত্তিক চিত্র";
                 pool.forEach(r => countsObj[r.division] = (countsObj[r.division] || 0) + 1);
             } else if(tier === 'Division') {
-                document.getElementById('barLabel').innerText = "জেলা ভিত্তিক চিত্র";
+                if (barLabelEl) barLabelEl.innerText = "জেলা ভিত্তিক চিত্র";
                 pool.forEach(r => countsObj[r.district] = (countsObj[r.district] || 0) + 1);
             } else {
-                document.getElementById('barLabel').innerText = "উপজেলা ভিত্তিক চিত্র";
+                if (barLabelEl) barLabelEl.innerText = "উপজেলা ভিত্তিক চিত্র";
                 pool.forEach(r => countsObj[r.upojela] = (countsObj[r.upojela] || 0) + 1);
             }
             Object.keys(countsObj).forEach(k => { locLabels.push(k); locCounts.push(countsObj[k]); });
@@ -912,13 +983,20 @@
             if(typeChartInstance) typeChartInstance.destroy();
             if(locChartInstance) locChartInstance.destroy();
 
-            typeChartInstance = new Chart(document.getElementById('chartType').getContext('2d'), {
-                type: 'pie', data: { labels: ['ফলজ', 'বনজ', 'ঔষধি', 'শোভাবর্ধনকারী'], datasets: [{ data: [fr, tm, md, or], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899'] }] }
-            });
+            const chartTypeEl = document.getElementById('chartType');
+            const chartLocationEl = document.getElementById('chartLocation');
 
-            locChartInstance = new Chart(document.getElementById('chartLocation').getContext('2d'), {
-                type: 'bar', data: { labels: locLabels.length > 0 ? locLabels : ['কোন ডাটা নেই'], datasets: [{ label: 'গাছ', data: locCounts.length > 0 ? locCounts : [0], backgroundColor: '#047857' }] }
-            });
+            if (chartTypeEl) {
+                typeChartInstance = new Chart(chartTypeEl.getContext('2d'), {
+                    type: 'pie', data: { labels: ['ফলজ', 'বনজ', 'ঔষধি', 'শোভাবর্ধনকারী'], datasets: [{ data: [fr, tm, md, or], backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899'] }] }
+                });
+            }
+
+            if (chartLocationEl) {
+                locChartInstance = new Chart(chartLocationEl.getContext('2d'), {
+                    type: 'bar', data: { labels: locLabels.length > 0 ? locLabels : ['কোন ডাটা নেই'], datasets: [{ label: 'গাছ', data: locCounts.length > 0 ? locCounts : [0], backgroundColor: '#047857' }] }
+                });
+            }
         }
     </script>
 </body>
