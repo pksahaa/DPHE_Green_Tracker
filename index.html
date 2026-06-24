@@ -638,7 +638,7 @@
 </nav>
 
 <!-- ═══════════ SYNC BADGE ═══════════ -->
-<div id="syncBadge" onclick="if(APPS_SCRIPT_URL){isSyncing=false;saveToSheets();}"></div>
+<div id="syncBadge"></div>
 
 <!-- ═══════════════════════════════════════
      SCRIPT ENGINE
@@ -771,42 +771,13 @@ function saveAppsScriptUrl() {
     }
 }
 
+// ════════════════════════════════
+// GOOGLE SHEETS SYNC (GET-based, no CORS issue)
+// ════════════════════════════════
 async function proxyFetch(url) {
-    try {
-        const res = await fetch(url, { method:'GET', redirect:'follow', signal: AbortSignal.timeout(15000) });
-        const text = await res.text();
-        return JSON.parse(text);
-    } catch(e) {
-        try {
-            const res = await fetch("https://corsproxy.io/?" + encodeURIComponent(url), { signal: AbortSignal.timeout(15000) });
-            return await res.json();
-        } catch(e2) { throw new Error("লোড ব্যর্থ: " + e2.message); }
-    }
-}
-
-async function proxyPost(url, data) {
-    try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(data),
-            redirect: 'follow',
-            signal: AbortSignal.timeout(60000)
-        });
-        const text = await res.text();
-        try { return JSON.parse(text); } catch(e) { return {success: true}; }
-    } catch(e) {
-        try {
-            const res = await fetch("https://corsproxy.io/?" + encodeURIComponent(url), {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(data),
-                signal: AbortSignal.timeout(60000)
-            });
-            const text = await res.text();
-            try { return JSON.parse(text); } catch(e2) { return {success: true}; }
-        } catch(e2) { throw new Error("সেভ ব্যর্থ: " + e2.message); }
-    }
+    const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15000) });
+    const text = await res.text();
+    return JSON.parse(text);
 }
 
 async function saveToSheets() {
@@ -814,16 +785,21 @@ async function saveToSheets() {
     isSyncing = true;
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     try {
+        // Encode data as URL parameter (GET request - no CORS issue)
         const payload = {
             action: "saveAll",
-            geoDb: geoDb,
-            treeInv: treeInv,
-            masterDb: db.map(r => ({ ...r, img: "" })) // img base64 sheets এ পাঠাই না
+            geoDb: JSON.stringify(geoDb),
+            treeInv: JSON.stringify(treeInv),
+            masterDb: JSON.stringify(db.map(r => ({ ...r, img: "" })))
         };
-        const res = await proxyPost(APPS_SCRIPT_URL, payload);
-        showSync(res?.success ? "✅ Sheets সেভ সফল!" : "⚠️ সেভ verify হয়নি", res?.success ? 'green' : 'orange');
+        const params = new URLSearchParams(payload);
+        const url = APPS_SCRIPT_URL + "?" + params.toString();
+        const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(60000) });
+        const text = await res.text();
+        const data = JSON.parse(text);
+        showSync(data?.success ? "✅ Sheets সেভ সফল!" : "⚠️ সেভ verify হয়নি: " + (data?.error||""), data?.success ? 'green' : 'orange');
     } catch(e) {
-        showSync("❌ Sheets সেভ ব্যর্থ: " + e.message, 'red');
+        showSync("❌ সেভ ব্যর্থ: " + e.message, 'red');
     } finally { isSyncing = false; }
 }
 
@@ -853,14 +829,12 @@ async function loadFromSheets() {
         showSync("✅ Sheets লোড সফল!", 'green');
         initCascadingDropdowns();
         initTreeUI();
+        updateDashboard();
     } catch(e) {
-        showSync("⚠️ Sheets লোড ব্যর্থ, Local ব্যবহার হচ্ছে", 'red');
+        showSync("⚠️ Sheets লোড ব্যর্থ: " + e.message, 'red');
     }
 }
 
-// ════════════════════════════════
-// GOOGLE DRIVE IMAGE UPLOAD
-// ════════════════════════════════
 async function uploadImageToDrive(base64Data, filename) {
     if (!APPS_SCRIPT_URL) return null;
     try {
