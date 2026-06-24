@@ -839,8 +839,10 @@ async function uploadImageToDrive(base64Data, filename) {
     if (!APPS_SCRIPT_URL) return null;
     try {
         const payload = { action: "uploadImage", filename: filename, imageData: base64Data };
-        const res = await proxyPost(APPS_SCRIPT_URL, payload);
-        if (res?.success && res?.url) return res.url;
+        const params = new URLSearchParams(payload);
+        const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), { redirect:'follow', signal: AbortSignal.timeout(30000) });
+        const data = JSON.parse(await res.text());
+        if (data?.success && data?.url) return data.url;
     } catch(e) { console.warn("Drive upload failed:", e); }
     return null;
 }
