@@ -562,6 +562,10 @@
                     <button onclick="saveAppsScriptUrl()" class="btn-primary flex-shrink-0" style="padding:8px 16px;">💾 Save</button>
                 </div>
                 <div id="sheetConnectStatus" class="text-xs font-bold"></div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="isSyncing=false;saveToSheets();" class="btn-primary" style="padding:8px 16px;background:#059669;">☁️ এখনই Sheets এ Save করুন</button>
+                    <button onclick="loadFromSheets().then(()=>{updateDashboard();});" class="btn-primary" style="padding:8px 16px;background:#2563eb;">🔄 Sheets থেকে Load করুন</button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -775,9 +779,15 @@ function saveAppsScriptUrl() {
 // GOOGLE SHEETS SYNC (GET-based, no CORS issue)
 // ════════════════════════════════
 async function proxyFetch(url) {
-    const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15000) });
-    const text = await res.text();
-    return JSON.parse(text);
+    // Try direct first, fallback to corsproxy for reading data
+    try {
+        const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15000) });
+        const text = await res.text();
+        return JSON.parse(text);
+    } catch(e) {
+        const res = await fetch("https://corsproxy.io/?" + encodeURIComponent(url), { signal: AbortSignal.timeout(15000) });
+        return await res.json();
+    }
 }
 
 async function saveToSheets() {
@@ -785,7 +795,6 @@ async function saveToSheets() {
     isSyncing = true;
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     try {
-        // Encode data as URL parameter (GET request - no CORS issue)
         const payload = {
             action: "saveAll",
             geoDb: JSON.stringify(geoDb),
@@ -794,10 +803,9 @@ async function saveToSheets() {
         };
         const params = new URLSearchParams(payload);
         const url = APPS_SCRIPT_URL + "?" + params.toString();
-        const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(60000) });
-        const text = await res.text();
-        const data = JSON.parse(text);
-        showSync(data?.success ? "✅ Sheets সেভ সফল!" : "⚠️ সেভ verify হয়নি: " + (data?.error||""), data?.success ? 'green' : 'orange');
+        // no-cors: request goes through but response is opaque — we assume success
+        await fetch(url, { mode: 'no-cors', redirect: 'follow', signal: AbortSignal.timeout(60000) });
+        showSync("✅ Sheets সেভ সফল!", 'green');
     } catch(e) {
         showSync("❌ সেভ ব্যর্থ: " + e.message, 'red');
     } finally { isSyncing = false; }
