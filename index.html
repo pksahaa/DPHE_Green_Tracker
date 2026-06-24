@@ -389,65 +389,91 @@
                 masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
             };
 
-            // data কে ছোট ছোট chunk এ ভাগ করে একের পর এক GET request পাঠাই
-            const jsonStr = JSON.stringify(payload);
-            const CHUNK_SIZE = 1500; // safe GET parameter size
-            const totalChunks = Math.ceil(jsonStr.length / CHUNK_SIZE);
-            const sessionId = 's' + Date.now();
+            // JSONP chunk দিয়ে save — CORS সমস্যা নেই
+            const jsonStr = encodeURIComponent(JSON.stringify(payload));
+            const CHUNK = 1500;
+            const total = Math.ceil(jsonStr.length / CHUNK);
+            const sid = 's' + Date.now();
+            let idx = 0;
 
-            let chunkIndex = 0;
+            function sendChunkJSONP(i, cb) {
+                const cbName = 'dphe_sc_' + sid + '_' + i;
+                const chunk = jsonStr.substring(i * CHUNK, (i + 1) * CHUNK);
+                const isLast = (i === total - 1);
 
-            function sendNextChunk() {
-                if (chunkIndex >= totalChunks) {
-                    // সব chunk পাঠানো হয়েছে, verify করি
+                window[cbName] = function(res) {
+                    const el = document.getElementById(cbName);
+                    if (el) el.remove();
+                    delete window[cbName];
+                    if (res && (res.ok || res.success || res.status === 'buffered')) {
+                        cb(null);
+                    } else {
+                        cb('Chunk ' + i + ' failed: ' + JSON.stringify(res));
+                    }
+                };
+
+                const script = document.createElement('script');
+                script.id = cbName;
+                script.src = APPS_SCRIPT_URL
+                    + '?action=saveChunk'
+                    + '&session=' + sid
+                    + '&chunk=' + i
+                    + '&total=' + total
+                    + '&data=' + chunk
+                    + '&callback=' + cbName;
+                script.onerror = function() {
+                    this.remove();
+                    delete window[cbName];
+                    cb('script load error chunk ' + i);
+                };
+                document.head.appendChild(script);
+            }
+
+            function sendNext() {
+                if (idx >= total) {
+                    // সব chunk গেছে — JSONP দিয়ে verify
+                    const vcb = 'dphe_verify_' + Date.now();
+                    window[vcb] = function(data) {
+                        const el = document.getElementById(vcb);
+                        if (el) el.remove();
+                        delete window[vcb];
+                        isSyncing = false;
+                        if (data && data.success) {
+                            showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
+                        } else {
+                            showSyncStatus("⚠️ সেভ হয়েছে, verify করা যায়নি", 'orange');
+                        }
+                    };
                     setTimeout(() => {
-                        fetch(APPS_SCRIPT_URL + "?action=getAll")
-                        .then(r => r.json())
-                        .then(d => {
-                            isSyncing = false;
-                            if (d && d.success) {
-                                showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
-                            } else {
-                                showSyncStatus("⚠️ সেভ যাচাই করা যায়নি", 'orange');
-                            }
-                        })
-                        .catch(() => {
+                        const vs = document.createElement('script');
+                        vs.id = vcb;
+                        vs.src = APPS_SCRIPT_URL + '?action=getAll&callback=' + vcb;
+                        vs.onerror = function() {
+                            this.remove();
+                            delete window[vcb];
                             isSyncing = false;
                             showSyncStatus("✅ Sheets এ পাঠানো হয়েছে", 'green');
-                        });
+                        };
+                        document.head.appendChild(vs);
                     }, 2000);
                     return;
                 }
 
-                const chunk = jsonStr.substring(chunkIndex * CHUNK_SIZE, (chunkIndex + 1) * CHUNK_SIZE);
-                const url = APPS_SCRIPT_URL
-                    + "?action=chunk"
-                    + "&sid=" + sessionId
-                    + "&i=" + chunkIndex
-                    + "&t=" + totalChunks
-                    + "&d=" + encodeURIComponent(chunk);
-
-                fetch(url)
-                .then(r => r.json())
-                .then(res => {
-                    if (res.ok) {
-                        chunkIndex++;
-                        sendNextChunk();
-                    } else {
+                sendChunkJSONP(idx, function(err) {
+                    if (err) {
                         isSyncing = false;
-                        showSyncStatus("❌ Chunk " + chunkIndex + " সেভ ব্যর্থ", 'red');
-                        console.error("Chunk error:", res);
+                        showSyncStatus("❌ সেভ ব্যর্থ: " + err, 'red');
+                        console.error(err);
+                        return;
                     }
-                })
-                .catch(err => {
-                    isSyncing = false;
-                    showSyncStatus("❌ Network error: " + err.message, 'red');
-                    console.error("Network error:", err);
+                    idx++;
+                    setTimeout(sendNext, 200);
                 });
             }
 
-            sendNextChunk();
+            sendNext();
         }
+
 
         // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
         function fetchCentralDatabaseEngine() {
