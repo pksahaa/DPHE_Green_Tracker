@@ -340,7 +340,7 @@
         // ⚙️ GOOGLE SHEETS BACKEND CONFIG
         // 👇 এখানে আপনার Google Apps Script Web App URL বসান
         // ============================================================
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwuY1B8DzY0hQiUPsR323lVpWVkZe7jf1TeToYmyuB6wv7_a1EueDrmJESdpDrZUk/exec?action=getAll";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwuY1B8DzY0hQiUPsR323lVpWVkZe7jf1TeToYmyuB6wv7_a1EueDrmJESdpDrZUk/exec";
 
         let isSyncing = false;
 
@@ -374,12 +374,10 @@
         }
 
         // ✅ Google Sheets এ ডাটা SAVE করার ফাংশন
-        // JSONP technique ব্যবহার করি — no-cors POST এর চেয়ে বেশি reliable
+        // সবচেয়ে reliable পদ্ধতি: data কে base64 এ encode করে GET parameter এ পাঠাই
+        // Apps Script doGet এ decode করে save করে
         function saveToCentralDatabaseEngine() {
-            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                console.warn("Apps Script URL সেট করা হয়নি।");
-                return;
-            }
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") return;
             if (isSyncing) return;
             isSyncing = true;
             showSyncStatus("☁️ Google Sheets এ সেভ হচ্ছে...", 'blue');
@@ -391,64 +389,64 @@
                 masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
             };
 
-            // JSONP দিয়ে save করি — script tag inject করে GET request পাঠাই
-            // এতে CORS সমস্যা হয় না এবং data Apps Script এ পৌঁছায়
-            const cbName = 'dphe_cb_' + Date.now();
-            const dataStr = encodeURIComponent(JSON.stringify(payload));
-            
-            // data বড় হলে chunks এ ভাগ করে পাঠাই
-            const MAX_CHUNK = 7000; // URL safe limit
-            const chunks = [];
-            let remaining = dataStr;
-            while (remaining.length > 0) {
-                chunks.push(remaining.substring(0, MAX_CHUNK));
-                remaining = remaining.substring(MAX_CHUNK);
-            }
+            // data কে ছোট ছোট chunk এ ভাগ করে একের পর এক GET request পাঠাই
+            const jsonStr = JSON.stringify(payload);
+            const CHUNK_SIZE = 1500; // safe GET parameter size
+            const totalChunks = Math.ceil(jsonStr.length / CHUNK_SIZE);
+            const sessionId = 's' + Date.now();
 
-            // সব chunk একসাথে পাঠাই, শেষেরটায় callback থাকবে
-            let sent = 0;
-            const totalChunks = chunks.length;
-            const sessionId = Date.now().toString();
+            let chunkIndex = 0;
 
-            window[cbName] = function(result) {
-                // script tag cleanup
-                const el = document.getElementById(cbName);
-                if (el) el.remove();
-                delete window[cbName];
-                isSyncing = false;
-                if (result && result.success) {
-                    showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
-                } else {
-                    showSyncStatus("⚠️ Sheets সেভে সমস্যা হয়েছে", 'orange');
-                    console.warn("Save result:", result);
+            function sendNextChunk() {
+                if (chunkIndex >= totalChunks) {
+                    // সব chunk পাঠানো হয়েছে, verify করি
+                    setTimeout(() => {
+                        fetch(APPS_SCRIPT_URL + "?action=getAll")
+                        .then(r => r.json())
+                        .then(d => {
+                            isSyncing = false;
+                            if (d && d.success) {
+                                showSyncStatus("✅ Sheets এ সেভ সফল!", 'green');
+                            } else {
+                                showSyncStatus("⚠️ সেভ যাচাই করা যায়নি", 'orange');
+                            }
+                        })
+                        .catch(() => {
+                            isSyncing = false;
+                            showSyncStatus("✅ Sheets এ পাঠানো হয়েছে", 'green');
+                        });
+                    }, 2000);
+                    return;
                 }
-            };
 
-            function sendChunk(idx) {
-                const isLast = (idx === totalChunks - 1);
+                const chunk = jsonStr.substring(chunkIndex * CHUNK_SIZE, (chunkIndex + 1) * CHUNK_SIZE);
                 const url = APPS_SCRIPT_URL
-                    + "?action=saveChunk"
-                    + "&session=" + sessionId
-                    + "&chunk=" + idx
-                    + "&total=" + totalChunks
-                    + "&data=" + chunks[idx]
-                    + (isLast ? "&callback=" + cbName : "");
+                    + "?action=chunk"
+                    + "&sid=" + sessionId
+                    + "&i=" + chunkIndex
+                    + "&t=" + totalChunks
+                    + "&d=" + encodeURIComponent(chunk);
 
-                const script = document.createElement('script');
-                if (isLast) script.id = cbName;
-                script.src = url;
-                script.onerror = function() {
-                    if (isLast) {
-                        delete window[cbName];
+                fetch(url)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.ok) {
+                        chunkIndex++;
+                        sendNextChunk();
+                    } else {
                         isSyncing = false;
-                        showSyncStatus("❌ Network error — Local এ আছে", 'red');
+                        showSyncStatus("❌ Chunk " + chunkIndex + " সেভ ব্যর্থ", 'red');
+                        console.error("Chunk error:", res);
                     }
-                };
-                document.head.appendChild(script);
-                if (!isLast) setTimeout(() => sendChunk(idx + 1), 300);
+                })
+                .catch(err => {
+                    isSyncing = false;
+                    showSyncStatus("❌ Network error: " + err.message, 'red');
+                    console.error("Network error:", err);
+                });
             }
 
-            sendChunk(0);
+            sendNextChunk();
         }
 
         // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
@@ -467,41 +465,38 @@
 
             showSyncStatus("☁️ Google Sheets থেকে লোড হচ্ছে...", 'orange');
 
-            // timeout: ১০ সেকেন্ডে না আসলে local data দিয়ে চালু হবে
+            // JSONP দিয়ে load করি — CORS সমস্যা এড়ানোর জন্য
+            const cbName = 'dphe_load_cb_' + Date.now();
             const timeout = setTimeout(() => {
-                console.warn("Sheets load timeout — localStorage দিয়ে চলছে");
+                delete window[cbName];
+                const el = document.getElementById(cbName);
+                if (el) el.remove();
+                console.warn("Sheets load timeout");
                 localInit();
                 showSyncStatus("⚠️ Sheets slow, Local ডাটা ব্যবহার হচ্ছে", 'orange');
             }, 10000);
 
-            fetch(APPS_SCRIPT_URL + "?action=getAll")
-            .then(res => {
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                return res.json();
-            })
-            .then(data => {
+            window[cbName] = function(data) {
                 clearTimeout(timeout);
+                const el = document.getElementById(cbName);
+                if (el) el.remove();
+                delete window[cbName];
 
                 if (!data || !data.success) {
-                    console.warn("Sheets returned no success:", data);
+                    console.warn("Sheets returned:", data);
                     localInit();
                     showSyncStatus("⚠️ Sheets থেকে ডাটা আসেনি, Local ব্যবহার হচ্ছে", 'orange');
                     return;
                 }
 
-                // GeoDatabase আপডেট
                 if (data.geoDb && Object.keys(data.geoDb).length > 0) {
                     dynamicGeoDatabase = data.geoDb;
                     localStorage.setItem('dphe_geo_db', JSON.stringify(dynamicGeoDatabase));
                 }
-
-                // TreeInventory আপডেট
                 if (data.treeInv && data.treeInv.length > 0) {
                     treeInventory = data.treeInv;
                     localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInventory));
                 }
-
-                // MasterDatabase আপডেট — ছবি local থেকে merge করি
                 if (data.masterDb && data.masterDb.length > 0) {
                     const localDb = JSON.parse(localStorage.getItem('dphe_master_db')) || [];
                     data.masterDb.forEach(row => {
@@ -514,13 +509,20 @@
 
                 localInit();
                 showSyncStatus("✅ Google Sheets থেকে লোড সফল!", 'green');
-            })
-            .catch(err => {
+            };
+
+            const script = document.createElement('script');
+            script.id = cbName;
+            script.src = APPS_SCRIPT_URL + "?action=getAll&callback=" + cbName;
+            script.onerror = function() {
                 clearTimeout(timeout);
-                console.warn("Sheets load failed:", err);
+                delete window[cbName];
+                this.remove();
+                console.warn("JSONP load failed");
                 localInit();
                 showSyncStatus("⚠️ Sheets লোড ব্যর্থ, Local ডাটা ব্যবহার হচ্ছে", 'red');
-            });
+            };
+            document.head.appendChild(script);
         }
 
         function switchTab(tabId) {
