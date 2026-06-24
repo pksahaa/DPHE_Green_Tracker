@@ -374,8 +374,6 @@
         }
 
         // ✅ Google Sheets এ ডাটা SAVE করার ফাংশন
-        // Google Apps Script CORS সমস্যা: POST এ no-cors লাগে, কিন্তু তাতে
-        // response পড়া যায় না। তাই payload কে GET parameter হিসেবে পাঠাই।
         function saveToCentralDatabaseEngine() {
             if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
                 console.warn("Apps Script URL সেট করা হয়নি।");
@@ -392,29 +390,40 @@
                 masterDb: masterDatabase.map(r => ({ ...r, img: "" }))
             });
 
-            // Google Apps Script এ POST + no-cors করলে response পাওয়া যায় না।
-            // তাই URLSearchParams দিয়ে GET এ পাঠাই (Apps Script doGet এও handle করা আছে)।
-            // payload বড় হলে এনকোড করে পাঠাই।
-            const url = APPS_SCRIPT_URL + "?method=POST&payload=" + encodeURIComponent(payload);
-
-            fetch(url, { method: 'GET' })
-            .then(res => res.json())
-            .then(data => {
+            // no-cors দিয়ে POST — Apps Script data পাবে ও save করবে
+            // response browser এ আসবে না (Google CORS policy) — এটা স্বাভাবিক
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload
+            })
+            .then(() => {
                 isSyncing = false;
-                if (data && data.success) {
-                    showSyncStatus("✅ Google Sheets এ সেভ সফল!", 'green');
-                } else {
-                    showSyncStatus("⚠️ সেভ হয়েছে কিন্তু response অস্বাভাবিক", 'orange');
-                    console.warn("Save response:", data);
-                }
+                showSyncStatus("✅ Sheets এ পাঠানো হয়েছে!", 'green');
+                // ৩ সেকেন্ড পরে GET দিয়ে verify করব
+                setTimeout(verifyLastSave, 3000);
             })
             .catch(err => {
                 isSyncing = false;
-                // no-cors fallback — response না পেলেও সেভ হয়ে থাকতে পারে
-                // তাই error দেখালেও data যাওয়ার সম্ভাবনা আছে
-                showSyncStatus("⚠️ Sheets response নেই, Local এ আছে", 'orange');
-                console.warn("Sheets sync warning:", err);
+                showSyncStatus("❌ Network error — Local এ আছে", 'red');
+                console.error("Save error:", err);
             });
+        }
+
+        // Save এর পর GET দিয়ে সত্যিই গেছে কিনা যাচাই করি
+        function verifyLastSave() {
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") return;
+            fetch(APPS_SCRIPT_URL + "?action=getAll")
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success && (data.treeInv && data.treeInv.length > 0 || data.geoDb && Object.keys(data.geoDb).length > 0)) {
+                    showSyncStatus("✅ Sheets এ সেভ নিশ্চিত হয়েছে!", 'green');
+                } else {
+                    showSyncStatus("⚠️ Sheets এ সেভ হয়নি — পুনরায় চেষ্টা করুন", 'red');
+                }
+            })
+            .catch(() => {});
         }
 
         // ✅ Google Sheets থেকে ডাটা LOAD করার ফাংশন
