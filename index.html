@@ -1,3 +1,1603 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPHE Green Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --green-deep: #064e3b;
+            --green-mid:  #059669;
+            --green-light:#d1fae5;
+            --amber:      #f59e0b;
+            --red-alert:  #ef4444;
+            --gray-bg:    #f8fafc;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans Bengali', 'Inter', sans-serif;
+            background: var(--gray-bg);
+        }
+
+        /* ── Sidebar ─────────────────────────────────── */
+        #sidebar {
+            width: 220px;
+            min-width: 220px;
+            background: var(--green-deep);
+            transition: width 0.3s;
+            overflow: hidden;
+        }
+        #sidebar.collapsed { width: 60px; min-width: 60px; }
+        #sidebar.collapsed .nav-label { display: none; }
+        #sidebar.collapsed .logo-text { display: none; }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            color: #a7f3d0;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            width: 100%;
+            text-align: left;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .tab-btn.active {
+            background: rgba(5,150,105,0.25);
+            border-left-color: #10b981;
+            color: #fff;
+        }
+        .tab-btn .icon { font-size: 18px; flex-shrink: 0; }
+
+        /* ── Cards ──────────────────────────────────── */
+        .stat-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border-top: 4px solid var(--green-mid);
+        }
+        .stat-card.amber { border-top-color: var(--amber); }
+        .stat-card.blue  { border-top-color: #3b82f6; }
+        .stat-card.red   { border-top-color: var(--red-alert); }
+
+        /* ── Map ────────────────────────────────────── */
+        #treeMap { height: 400px; border-radius: 12px; z-index: 1; }
+
+        /* ── Progress bar ───────────────────────────── */
+        .progress-bar-outer {
+            background: #e2e8f0;
+            border-radius: 99px;
+            height: 10px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            background: linear-gradient(90deg, var(--green-mid), #10b981);
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+
+        /* ── Sync badge ─────────────────────────────── */
+        #syncBadge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+        #syncBadge.show { opacity: 1; }
+
+        /* ── Tabs content ───────────────────────────── */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Table ──────────────────────────────────── */
+        .data-table th { background: #f0fdf4; color: #065f46; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .data-table td { font-size: 12px; }
+        .data-table tr:hover td { background: #f8fafc; }
+
+        /* ── Mobile nav ─────────────────────────────── */
+        @media (max-width: 768px) {
+            #sidebar { display: none; }
+            #mobileNav { display: flex; }
+            main { padding-bottom: 80px !important; }
+        }
+        #mobileNav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--green-deep);
+            z-index: 1000;
+            justify-content: space-around;
+            padding: 8px 4px;
+            border-top: 1px solid #065f46;
+        }
+        .mob-btn {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 2px; color: #6ee7b7; font-size: 10px; padding: 4px 8px;
+            border-radius: 8px; transition: all 0.2s;
+        }
+        .mob-btn.active { color: #fff; background: rgba(5,150,105,0.3); }
+        .mob-btn .icon { font-size: 20px; }
+
+        /* ── Image preview ──────────────────────────── */
+        .img-preview {
+            width: 56px; height: 56px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #d1fae5;
+            cursor: pointer;
+        }
+
+        /* ── Loader overlay ─────────────────────────── */
+        #loader {
+            position: fixed; inset: 0;
+            background: rgba(6,78,59,0.92);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 99999; color: #fff;
+        }
+        .loader-spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Alert reminder badge ───────────────────── */
+        .reminder-dot {
+            width: 8px; height: 8px;
+            background: var(--red-alert);
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 4px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        select, input[type=text], input[type=number], input[type=date], input[type=tel] {
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            width: 100%;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px #d1fae5; }
+
+        .btn-primary {
+            background: var(--green-mid);
+            color: #fff;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary:hover { background: #047857; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-blue { background: #3b82f6; }
+        .btn-blue:hover { background: #2563eb; }
+
+        /* Modal */
+        #imgModal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 99998;
+            align-items: center;
+            justify-content: center;
+        }
+        #imgModal.show { display: flex; }
+        #imgModal img { max-width: 90vw; max-height: 85vh; border-radius: 12px; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<!-- ═══════════════ LOADER ═══════════════ -->
+<div id="loader">
+    <div class="loader-spinner mb-4"></div>
+    <div class="text-lg font-bold mb-1">DPHE Green Tracker</div>
+    <div class="text-sm text-emerald-300">ডাটা লোড হচ্ছে…</div>
+</div>
+
+<!-- ═══════════════ IMAGE MODAL ═══════════════ -->
+<div id="imgModal" onclick="this.classList.remove('show')">
+    <img id="imgModalSrc" src="" alt="tree">
+</div>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="bg-emerald-900 text-white px-5 py-3 flex justify-between items-center shadow-lg z-10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="text-emerald-300 hover:text-white text-xl mr-1 hidden md:block">☰</button>
+        <span class="text-2xl">🌳</span>
+        <div>
+            <div class="font-black text-base leading-tight">DPHE Green Tracker</div>
+            <div class="text-[10px] text-emerald-300">বৃক্ষরোপণ কর্মসূচি | Department of Public Health Engineering</div>
+        </div>
+    </div>
+    <div class="flex items-center gap-3">
+        <div id="reminderBtn" onclick="switchTab('monitoring')" class="hidden cursor-pointer bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+            ⚠️ <span id="reminderCount">0</span>টি followup বাকি
+        </div>
+        <div class="hidden md:block text-xs bg-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-700">Government of Bangladesh</div>
+    </div>
+</header>
+
+<!-- ═══════════════ BODY ═══════════════ -->
+<div class="flex flex-1 overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="flex flex-col flex-shrink-0 overflow-hidden">
+        <div class="p-4 border-b border-emerald-800">
+            <div class="logo-text text-[10px] font-black text-emerald-400 uppercase tracking-widest">Navigation</div>
+        </div>
+        <nav class="flex-1 flex flex-col py-2">
+            <button onclick="switchTab('dashboard')"  id="btn-dashboard"  class="tab-btn active"><span class="icon">📊</span><span class="nav-label text-sm font-semibold">Dashboard</span></button>
+            <button onclick="switchTab('entry')"      id="btn-entry"      class="tab-btn"><span class="icon">📝</span><span class="nav-label text-sm font-semibold">Data Entry</span></button>
+            <button onclick="switchTab('monitoring')" id="btn-monitoring" class="tab-btn"><span class="icon">🌿</span><span class="nav-label text-sm font-semibold">Monitoring</span></button>
+            <button onclick="switchTab('map')"        id="btn-map"        class="tab-btn"><span class="icon">🗺️</span><span class="nav-label text-sm font-semibold">Map View</span></button>
+            <button onclick="switchTab('report')"     id="btn-report"     class="tab-btn"><span class="icon">📋</span><span class="nav-label text-sm font-semibold">Report</span></button>
+            <button onclick="switchTab('settings')"   id="btn-settings"   class="tab-btn mt-auto" style="color:#fcd34d;"><span class="icon">⚙️</span><span class="nav-label text-sm font-semibold" style="color:#fcd34d;">Settings</span></button>
+        </nav>
+        <div class="p-3 border-t border-emerald-800">
+            <div id="sheetStatus" class="logo-text text-[10px] text-emerald-400 text-center">⚙️ Sheet: Not Configured</div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6" id="mainContent">
+
+        <!-- ══════════ DASHBOARD ══════════ -->
+        <div id="tab-dashboard" class="tab-content active space-y-5">
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b">
+                <h2 class="text-xl font-black text-gray-800">📊 সার্বিক ড্যাশবোর্ড</h2>
+                <div class="flex flex-wrap gap-2 items-center text-xs">
+                    <span class="font-bold text-gray-500">ভিউ লেভেল:</span>
+                    <select id="dashTier" onchange="handleDashTierChange()" style="width:auto;padding:6px 10px;">
+                        <option value="Country">সমগ্র দেশ</option>
+                        <option value="Division">বিভাগ</option>
+                        <option value="District">জেলা</option>
+                    </select>
+                    <select id="dashDivision" onchange="updateDashboard()" class="hidden" style="width:auto;padding:6px 10px;"></select>
+                    <select id="dashDistrict" onchange="updateDashboard()" class="hidden" style="width:auto;padding:6px 10px;"></select>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="stat-card">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মোট লক্ষ্যমাত্রা</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-target">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মোট রোপণকৃত</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-planted">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">বেঁচে আছে</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-survival">0%</div>
+                    <div class="text-xs text-gray-400 mt-1">survival rate</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মৃত/নষ্ট</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-dead">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-bold text-gray-700">লক্ষ্যমাত্রা অর্জনের অগ্রগতি</span>
+                    <span class="text-sm font-black text-emerald-700" id="progressPct">0%</span>
+                </div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+                </div>
+                <div class="text-xs text-gray-400 mt-1"><span id="kpi-planted2">0</span> / <span id="kpi-target2">0</span> গাছ রোপণ সম্পন্ন</div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                    <p class="text-sm font-bold text-gray-600 mb-3" id="pieLabel">গাছের ধরণের অনুপাত</p>
+                    <div class="max-w-[220px] mx-auto"><canvas id="chartType"></canvas></div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                    <p class="text-sm font-bold text-gray-600 mb-3" id="barLabel">অঞ্চলভিত্তিক চিত্র</p>
+                    <canvas id="chartLocation"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly trend -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <p class="text-sm font-bold text-gray-600 mb-3">মাসভিত্তিক রোপণ ট্রেন্ড</p>
+                <canvas id="chartTrend" height="80"></canvas>
+            </div>
+
+            <!-- Due Followups -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-sm font-bold text-red-600">⚠️ Followup প্রয়োজন এখন</p>
+                    <button onclick="switchTab('monitoring')" class="text-xs text-emerald-600 font-bold underline">সব দেখুন →</button>
+                </div>
+                <div id="dueList" class="space-y-2 text-xs text-gray-600">
+                    <p class="text-gray-400 italic">কোনো pending followup নেই।</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ DATA ENTRY ══════════ -->
+        <div id="tab-entry" class="tab-content space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 class="text-xl font-black text-gray-800">📝 নতুন ডাটা এন্ট্রি</h2>
+                <button id="cancelEditBtn" onclick="clearForm()" class="hidden btn-primary" style="background:#6b7280;padding:8px 16px;">✕ বাতিল</button>
+            </div>
+
+            <form id="plantationForm" class="bg-white rounded-2xl p-6 shadow-sm border max-w-3xl space-y-4">
+                <input type="hidden" id="editRowId">
+
+                <!-- Image upload area -->
+                <div class="border-2 border-dashed border-emerald-300 rounded-xl p-4 text-center bg-emerald-50 cursor-pointer" onclick="document.getElementById('entryImageFile').click()">
+                    <img id="imgPreview" src="" class="hidden mx-auto mb-2 w-24 h-24 object-cover rounded-lg">
+                    <div id="imgPlaceholder">
+                        <div class="text-3xl mb-1">📸</div>
+                        <div class="text-sm font-bold text-emerald-700">গাছের ছবি আপলোড করুন</div>
+                        <div class="text-xs text-gray-400">Google Drive এ স্বয়ংক্রিয়ভাবে সংরক্ষণ হবে</div>
+                    </div>
+                    <input type="file" id="entryImageFile" accept="image/*" class="hidden" onchange="handleImageSelect(this)">
+                    <input type="hidden" id="entryStoredImg">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">বিভাগ *</label>
+                        <select id="entryDiv" required><option value="">বিভাগ বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">জেলা *</label>
+                        <select id="entryDist" required disabled><option value="">আগে বিভাগ বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">উপজেলা *</label>
+                        <select id="entryUpo" required disabled><option value="">আগে জেলা বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">ইউনিয়ন *</label>
+                        <select id="entryUni" required disabled><option value="">আগে উপজেলা বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">গাছের নাম ও ধরণ *</label>
+                        <select id="treeSelect" required><option value="">গাছ নির্বাচন করুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">রোপণের তারিখ *</label>
+                        <input type="date" id="plantDate" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">জিপিএস কোঅর্ডিনেট *</label>
+                        <div class="flex gap-2">
+                            <input type="number" step="any" id="lat" placeholder="Latitude" required>
+                            <input type="number" step="any" id="lng" placeholder="Longitude" required>
+                            <button type="button" onclick="fetchGPS('lat','lng')" class="btn-primary btn-blue flex-shrink-0" style="padding:8px 12px;">📍 GPS</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">তত্ত্বাবধায়ক *</label>
+                        <input type="text" id="caregiver" placeholder="নাম লিখুন" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">মোবাইল নম্বর *</label>
+                        <input type="tel" id="phone" placeholder="01xxxxxxxxx" required>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" id="formSubmitBtn" class="btn-primary flex-1">💾 ডাটা সেভ করুন</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ══════════ MONITORING ══════════ -->
+        <div id="tab-monitoring" class="tab-content space-y-5">
+            <h2 class="text-xl font-black text-gray-800 border-b pb-3">🌿 পর্যায়ক্রমিক তদারকি</h2>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border space-y-3">
+                <div class="font-bold text-xs text-blue-700 uppercase tracking-wider">📍 GPS রেডিয়াস সার্চ</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Latitude</label>
+                        <input type="number" step="any" id="searchLat" placeholder="Latitude">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Longitude</label>
+                        <input type="number" step="any" id="searchLng" placeholder="Longitude">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="fetchGPS('searchLat','searchLng')" class="btn-primary btn-blue flex-1" style="padding:8px;">📍 ক্যাচ</button>
+                        <button onclick="clearMonitoringSearch()" class="btn-primary flex-1" style="padding:8px;background:#9ca3af;">Clear</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">রেডিয়াস (মিটার)</label>
+                        <input type="number" id="searchRadius" value="500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="renderMonitoringTable(true)" class="btn-primary btn-blue w-full" style="padding:9px;">🔍 রেডিয়াস খুঁজুন</button>
+                    </div>
+                </div>
+                <div class="border-t pt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <select id="auditDiv"><option value="">সকল বিভাগ</option></select>
+                    <select id="auditDist"><option value="">সকল জেলা</option></select>
+                    <select id="auditUpo"><option value="">সকল উপজেলা</option></select>
+                    <button onclick="renderMonitoringTable(false)" class="btn-primary" style="padding:9px;">🔍 ফিল্টার করুন</button>
+                </div>
+            </div>
+
+            <!-- Monitoring table -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto">
+                <table class="w-full text-left data-table" style="min-width:1100px;">
+                    <thead>
+                        <tr>
+                            <th class="p-3">ID ও গাছ</th>
+                            <th class="p-3">অবস্থান</th>
+                            <th class="p-3 text-center">ছবি</th>
+                            <th class="p-3">৩ মাস</th>
+                            <th class="p-3">৬ মাস</th>
+                            <th class="p-3">১ বছর</th>
+                            <th class="p-3">২ বছর</th>
+                            <th class="p-3">৩ বছর</th>
+                            <th class="p-3">৫ বছর</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitoringBody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══════════ MAP VIEW ══════════ -->
+        <div id="tab-map" class="tab-content space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 class="text-xl font-black text-gray-800">🗺️ ম্যাপ ভিউ</h2>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="filterMap('all')" id="mapAll" class="px-3 py-1.5 rounded-full bg-emerald-600 text-white font-bold">সব</button>
+                    <button onclick="filterMap('Healthy')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-green-100">🟢 সতেজ</button>
+                    <button onclick="filterMap('NeedsCare')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-yellow-100">🟡 যত্ন</button>
+                    <button onclick="filterMap('Dead')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-red-100">🔴 মৃত</button>
+                </div>
+            </div>
+            <div id="treeMap" class="shadow-sm"></div>
+            <div class="grid grid-cols-3 gap-3 text-center text-xs">
+                <div class="bg-green-50 rounded-xl p-3 border border-green-200">
+                    <div class="text-2xl font-black text-green-600" id="mapHealthy">0</div>
+                    <div class="text-green-700 font-bold mt-1">🟢 সতেজ</div>
+                </div>
+                <div class="bg-yellow-50 rounded-xl p-3 border border-yellow-200">
+                    <div class="text-2xl font-black text-yellow-600" id="mapNeedsCare">0</div>
+                    <div class="text-yellow-700 font-bold mt-1">🟡 যত্ন প্রয়োজন</div>
+                </div>
+                <div class="bg-red-50 rounded-xl p-3 border border-red-200">
+                    <div class="text-2xl font-black text-red-600" id="mapDead">0</div>
+                    <div class="text-red-700 font-bold mt-1">🔴 মৃত/নষ্ট</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════ REPORT ══════════ -->
+        <div id="tab-report" class="tab-content space-y-5">
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b pb-3 gap-3">
+                <h2 class="text-xl font-black text-gray-800">📋 ফিল্ড মাস্টার রিপোর্ট</h2>
+                <div class="flex flex-wrap gap-2 text-xs items-center">
+                    <input type="text" id="reportSearch" placeholder="🔍 ID, তত্ত্বাবধায়ক বা গাছ খুঁজুন…" oninput="renderReport()" style="width:220px;padding:7px 10px;">
+                    <select id="repDiv" onchange="syncReportDropdowns();renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব বিভাগ</option></select>
+                    <select id="repDist" onchange="renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব জেলা</option></select>
+                    <select id="repUpo" onchange="renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব উপজেলা</option></select>
+                    <button onclick="exportCSV()" class="btn-primary" style="padding:7px 14px;background:#059669;">⬇️ CSV</button>
+                    <button onclick="exportPDF()" class="btn-primary btn-danger" style="padding:7px 14px;">⬇️ PDF</button>
+                </div>
+            </div>
+
+            <div id="printArea" class="bg-white rounded-2xl shadow-sm border overflow-x-auto">
+                <table class="w-full text-left data-table" style="min-width:900px;">
+                    <thead>
+                        <tr>
+                            <th class="p-3">Tree ID</th>
+                            <th class="p-3">ভৌগোলিক তথ্য</th>
+                            <th class="p-3">গাছের নাম</th>
+                            <th class="p-3">ছবি</th>
+                            <th class="p-3">অবস্থা</th>
+                            <th class="p-3">তত্ত্বাবধায়ক</th>
+                            <th class="p-3 print:hidden text-center">অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══════════ SETTINGS ══════════ -->
+        <div id="tab-settings" class="tab-content space-y-5">
+            <h2 class="text-xl font-black text-gray-800 border-b pb-3">⚙️ সেটিংস ইঞ্জিন</h2>
+
+            <!-- Google Apps Script URL -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+                <h3 class="font-black text-amber-900">🔗 Google Apps Script কনফিগারেশন</h3>
+                <p class="text-xs text-amber-800">Google Sheets ও Drive এ ডাটা সংরক্ষণের জন্য আপনার Web App URL বসান।</p>
+                <div class="flex gap-2">
+                    <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:11px;">
+                    <button onclick="saveAppsScriptUrl()" class="btn-primary flex-shrink-0" style="padding:8px 16px;">💾 Save</button>
+                </div>
+                <div id="sheetConnectStatus" class="text-xs font-bold"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                <!-- Location Management -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="font-bold text-gray-700">🗺️ লোকেশন স্ট্রাকচার ও লক্ষ্যমাত্রা</h3>
+                        <button onclick="downloadTemplate('location')" class="text-blue-600 text-xs font-bold underline">📥 Template</button>
+                    </div>
+                    <div class="p-3 bg-orange-50 border border-orange-200 rounded-xl text-xs space-y-2">
+                        <p class="font-bold text-orange-900">CSV Bulk Upload (বিভাগ,জেলা,উপজেলা,ইউনিয়ন,লক্ষ্যমাত্রা)</p>
+                        <div class="flex gap-2">
+                            <input type="file" id="locFile" accept=".csv,.txt" style="font-size:11px;padding:4px;">
+                            <button onclick="bulkUpload('location')" class="btn-primary flex-shrink-0" style="padding:6px 12px;background:#92400e;">Upload</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><label class="font-bold text-gray-600 block mb-1">বিভাগ</label><input type="text" id="setDiv" placeholder="রংপুর"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">জেলা</label><input type="text" id="setDist" placeholder="রংপুর"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">উপজেলা</label><input type="text" id="setUpo" placeholder="পীরগাছা"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">ইউনিয়ন</label><input type="text" id="setUni" placeholder="কৈকুড়ী"></div>
+                        <div class="col-span-2"><label class="font-bold text-gray-600 block mb-1">লক্ষ্যমাত্রা (চারা)</label><input type="number" id="setGoal" value="500"></div>
+                    </div>
+                    <button onclick="saveLocation()" class="btn-primary w-full">💾 লোকেশন সেভ করুন</button>
+                </div>
+
+                <!-- Tree Inventory -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="font-bold text-gray-700">🌳 গাছের তালিকা ব্যবস্থাপনা</h3>
+                        <button onclick="downloadTemplate('tree')" class="text-blue-600 text-xs font-bold underline">📥 Template</button>
+                    </div>
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs space-y-2">
+                        <p class="font-bold text-blue-900">CSV Bulk Upload (গাছের নাম, ধরণ)</p>
+                        <div class="flex gap-2">
+                            <input type="file" id="treeFile" accept=".csv,.txt" style="font-size:11px;padding:4px;">
+                            <button onclick="bulkUpload('tree')" class="btn-primary flex-shrink-0" style="padding:6px 12px;background:#1d4ed8;">Upload</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="newTreeName" placeholder="গাছের নাম" style="flex:1;">
+                        <select id="newTreeType" style="width:auto;padding:8px;">
+                            <option value="Fruit">ফলজ</option>
+                            <option value="Timber">বনজ</option>
+                            <option value="Medicinal">ঔষধি</option>
+                            <option value="Ornamental">শোভাবর্ধনকারী</option>
+                        </select>
+                        <button onclick="addTree()" class="btn-primary flex-shrink-0" style="padding:8px 12px;">➕</button>
+                    </div>
+                    <ul id="treeList" class="divide-y max-h-48 overflow-y-auto text-xs text-gray-600"></ul>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-5 space-y-3">
+                <h3 class="font-bold text-red-700">⚠️ Danger Zone</h3>
+                <p class="text-xs text-red-600">সমস্ত local ডাটা মুছে ফেলবে। Google Sheets এর ডাটা অক্ষুণ্ণ থাকবে।</p>
+                <button onclick="clearAllLocalData()" class="btn-primary btn-danger" style="padding:8px 20px;">🗑️ সমস্ত Local ডাটা মুছুন</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══════════ MOBILE NAV ═══════════ -->
+<nav id="mobileNav">
+    <button onclick="switchTab('dashboard')"  id="mob-dashboard"  class="mob-btn active"><span class="icon">📊</span>Dashboard</button>
+    <button onclick="switchTab('entry')"      id="mob-entry"      class="mob-btn"><span class="icon">📝</span>Entry</button>
+    <button onclick="switchTab('monitoring')" id="mob-monitoring" class="mob-btn"><span class="icon">🌿</span>Monitor</button>
+    <button onclick="switchTab('map')"        id="mob-map"        class="mob-btn"><span class="icon">🗺️</span>Map</button>
+    <button onclick="switchTab('report')"     id="mob-report"     class="mob-btn"><span class="icon">📋</span>Report</button>
+    <button onclick="switchTab('settings')"   id="mob-settings"   class="mob-btn"><span class="icon">⚙️</span>Settings</button>
+</nav>
+
+<!-- ═══════════ SYNC BADGE ═══════════ -->
+<div id="syncBadge"></div>
+
+<!-- ═══════════════════════════════════════
+     SCRIPT ENGINE
+═══════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════
+// CONFIG — আপনার Apps Script URL এখানে
+// ═══════════════════════════════════════
+let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "https://script.google.com/macros/s/AKfycbxpcA9R6-15A8kC3aIVuuc6iWRU8-CGim1dV0Iyryk7gixNgcWhOHLtXeGfPr-7V67qBQ/exec";
+
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let geoDb = JSON.parse(localStorage.getItem('dphe_geo_db')) || {
+    "রংপুর": {
+        "রংপুর": {
+            "মিঠাপুকুর": { unions: ["মিঠাপুকুর সদর","বালুয়া মাসিমপুর"], target: 1200 },
+            "পীরগাছা":   { unions: ["কৈকুড়ী","পিরগাছা সদর"], target: 500 }
+        },
+        "দিনাজপুর": {
+            "দিনাজপুর সদর": { unions: ["১নং চেহেলগাজী"], target: 900 }
+        }
+    },
+    "রাজশাহী": {
+        "বগুড়া": {
+            "বগুড়া সদর": { unions: ["ফাঁপোর","শাজাহানপুর"], target: 500 }
+        }
+    }
+};
+
+let treeInv = JSON.parse(localStorage.getItem('dphe_tree_inv')) || [
+    { name:"আম (Mango)",              type:"Fruit"      },
+    { name:"মেহগনি (Mahogany)",       type:"Timber"     },
+    { name:"নিম (Neem)",              type:"Medicinal"  },
+    { name:"কৃষ্ণচূড়া (Krishna Chura)", type:"Ornamental" }
+];
+
+let db = JSON.parse(localStorage.getItem('dphe_master_db')) || [
+    { id:"DPHE-001", division:"রংপুর", district:"রংপুর", upojela:"পীরগাছা", union:"কৈকুড়ী",
+      tree:"আম (Mango)", type:"Fruit", date:"2026-03-10",
+      lat:25.57810, lng:89.26340, caregiver:"রফিক ইসলাম", phone:"01712345678",
+      m3:"Healthy", m6:"Healthy", y1:"Healthy", y2:"Healthy", y3:"Healthy", y5:"Healthy",
+      img:"", driveImgUrl:"" },
+    { id:"DPHE-002", division:"রাজশাহী", district:"বগুড়া", upojela:"বগুড়া সদর", union:"ফাঁপোর",
+      tree:"মেহগনি (Mahogany)", type:"Timber", date:"2026-05-12",
+      lat:24.84810, lng:89.37340, caregiver:"আলমগীর", phone:"01987654321",
+      m3:"NeedsCare", m6:"Dead", y1:"", y2:"", y3:"", y5:"",
+      img:"", driveImgUrl:"" }
+];
+
+let typeChart = null, locChart = null, trendChart = null;
+let leafletMap = null, mapMarkers = [];
+let isSyncing = false;
+
+// ════════════════════════════════
+// BOOT
+// ════════════════════════════════
+window.onload = async function() {
+    document.getElementById('appsScriptUrl').value = APPS_SCRIPT_URL;
+    document.getElementById('plantDate').valueAsDate = new Date();
+    initCascadingDropdowns();
+    initTreeUI();
+    await loadFromSheets();
+    updateDashboard();
+    checkReminders();
+    document.getElementById('loader').style.display = 'none';
+};
+
+// ════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.mob-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${id}`).classList.add('active');
+    document.getElementById(`btn-${id}`)?.classList.add('active');
+    document.getElementById(`mob-${id}`)?.classList.add('active');
+
+    if (id === 'dashboard')  { updateDashboard(); checkReminders(); }
+    if (id === 'monitoring') { initMonitoringSelectors(); renderMonitoringTable(false); }
+    if (id === 'map')        { initMap(); }
+    if (id === 'report')     { initReportSelectors(); renderReport(); }
+}
+
+let sidebarCollapsed = false;
+function toggleSidebar() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+}
+
+// ════════════════════════════════
+// SYNC STATUS
+// ════════════════════════════════
+function showSync(msg, color='blue') {
+    const el = document.getElementById('syncBadge');
+    const colors = { blue:'#2563eb', green:'#059669', red:'#dc2626', orange:'#d97706' };
+    el.style.background = colors[color] || colors.blue;
+    el.innerText = msg;
+    el.classList.add('show');
+    if (color === 'green' || color === 'red') setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ════════════════════════════════
+// LOCAL STORAGE PERSIST
+// ════════════════════════════════
+function persist() {
+    localStorage.setItem('dphe_geo_db',    JSON.stringify(geoDb));
+    localStorage.setItem('dphe_tree_inv',  JSON.stringify(treeInv));
+    localStorage.setItem('dphe_master_db', JSON.stringify(db));
+    saveToSheets();
+}
+
+// ════════════════════════════════
+// GOOGLE SHEETS INTEGRATION
+// ════════════════════════════════
+function saveAppsScriptUrl() {
+    const url = document.getElementById('appsScriptUrl').value.trim();
+    APPS_SCRIPT_URL = url;
+    localStorage.setItem('dphe_script_url', url);
+    const statusEl = document.getElementById('sheetConnectStatus');
+    const sideStatus = document.getElementById('sheetStatus');
+    if (url && url !== 'YOUR_URL_HERE') {
+        statusEl.innerHTML = '✅ URL সংরক্ষিত হয়েছে। পরবর্তী sync এ কাজ করবে।';
+        statusEl.style.color = '#059669';
+        sideStatus.innerText = '✅ Sheet: Connected';
+    } else {
+        statusEl.innerHTML = '⚠️ URL দেওয়া হয়নি।';
+        statusEl.style.color = '#d97706';
+    }
+}
+
+function proxyFetch(url) {
+    const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
+    return fetch(proxy).then(r => r.json());
+}
+function proxyPost(url, data) {
+    const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
+    return fetch(proxy, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(data)
+    }).then(r => r.json());
+}
+
+async function saveToSheets() {
+    if (!APPS_SCRIPT_URL || isSyncing) return;
+    isSyncing = true;
+    showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
+    try {
+        const payload = {
+            action: "saveAll",
+            geoDb: geoDb,
+            treeInv: treeInv,
+            masterDb: db.map(r => ({ ...r, img: "" })) // img base64 sheets এ পাঠাই না
+        };
+        const res = await proxyPost(APPS_SCRIPT_URL, payload);
+        showSync(res?.success ? "✅ Sheets সেভ সফল!" : "⚠️ সেভ verify হয়নি", res?.success ? 'green' : 'orange');
+    } catch(e) {
+        showSync("❌ Sheets সেভ ব্যর্থ: " + e.message, 'red');
+    } finally { isSyncing = false; }
+}
+
+async function loadFromSheets() {
+    if (!APPS_SCRIPT_URL) return;
+    showSync("☁️ Sheets থেকে লোড হচ্ছে…", 'orange');
+    try {
+        const data = await proxyFetch(APPS_SCRIPT_URL + "?action=getAll");
+        if (!data?.success) { showSync("⚠️ Local ডাটা ব্যবহার হচ্ছে", 'orange'); return; }
+        if (data.geoDb && Object.keys(data.geoDb).length > 0) {
+            geoDb = data.geoDb;
+            localStorage.setItem('dphe_geo_db', JSON.stringify(geoDb));
+        }
+        if (data.treeInv?.length > 0) {
+            treeInv = data.treeInv;
+            localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInv));
+        }
+        if (data.masterDb?.length > 0) {
+            const local = JSON.parse(localStorage.getItem('dphe_master_db')) || [];
+            data.masterDb.forEach(row => {
+                const lr = local.find(r => r.id === row.id);
+                if (lr?.img) row.img = lr.img;
+            });
+            db = data.masterDb;
+            localStorage.setItem('dphe_master_db', JSON.stringify(db));
+        }
+        showSync("✅ Sheets লোড সফল!", 'green');
+        initCascadingDropdowns();
+        initTreeUI();
+    } catch(e) {
+        showSync("⚠️ Sheets লোড ব্যর্থ, Local ব্যবহার হচ্ছে", 'red');
+    }
+}
+
+// ════════════════════════════════
+// GOOGLE DRIVE IMAGE UPLOAD
+// ════════════════════════════════
+async function uploadImageToDrive(base64Data, filename) {
+    if (!APPS_SCRIPT_URL) return null;
+    try {
+        const payload = { action: "uploadImage", filename: filename, imageData: base64Data };
+        const res = await proxyPost(APPS_SCRIPT_URL, payload);
+        if (res?.success && res?.url) return res.url;
+    } catch(e) { console.warn("Drive upload failed:", e); }
+    return null;
+}
+
+// ════════════════════════════════
+// IMAGE HANDLING
+// ════════════════════════════════
+function handleImageSelect(inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > 1200) { h = h * 1200 / w; w = 1200; }
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            let q = 0.75;
+            let dataUrl = canvas.toDataURL('image/jpeg', q);
+            while (dataUrl.length > 200000 * 1.37 && q > 0.15) {
+                q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q);
+            }
+            document.getElementById('entryStoredImg').value = dataUrl;
+            const preview = document.getElementById('imgPreview');
+            const placeholder = document.getElementById('imgPlaceholder');
+            preview.src = dataUrl;
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        };
+    };
+}
+
+function compressAuditImg(inputEl, idx) {
+    const file = inputEl.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > 1000) { h = h * 1000 / w; w = 1000; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            let q = 0.7, dataUrl = canvas.toDataURL('image/jpeg', q);
+            while (dataUrl.length > 200000 * 1.37 && q > 0.15) {
+                q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q);
+            }
+            db[idx].img = dataUrl;
+            persist();
+            renderMonitoringTable(document.getElementById('searchLat').value !== "");
+        };
+    };
+}
+
+function openImgModal(src) {
+    document.getElementById('imgModalSrc').src = src;
+    document.getElementById('imgModal').classList.add('show');
+}
+
+// ════════════════════════════════
+// GPS
+// ════════════════════════════════
+function fetchGPS(latId, lngId) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            p => {
+                document.getElementById(latId).value = p.coords.latitude.toFixed(5);
+                document.getElementById(lngId).value = p.coords.longitude.toFixed(5);
+            },
+            () => showSync("⚠️ GPS পাওয়া যায়নি", 'orange')
+        );
+    }
+}
+
+function haversine(lat1,lng1,lat2,lng2) {
+    const R=6371e3, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180;
+    const dp=(lat2-lat1)*Math.PI/180, dl=(lng2-lng1)*Math.PI/180;
+    const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ════════════════════════════════
+// CASCADING DROPDOWNS
+// ════════════════════════════════
+function initCascadingDropdowns() {
+    const div = document.getElementById('entryDiv');
+    const dist = document.getElementById('entryDist');
+    const upo = document.getElementById('entryUpo');
+    const uni = document.getElementById('entryUni');
+    if (!div) return;
+    div.innerHTML = '<option value="">বিভাগ বাছুন</option>';
+    Object.keys(geoDb).forEach(d => div.innerHTML += `<option value="${d}">${d}</option>`);
+
+    div.onchange = () => {
+        dist.innerHTML = '<option value="">জেলা বাছুন</option>';
+        upo.innerHTML = '<option value="">আগে জেলা বাছুন</option>';
+        uni.innerHTML = '<option value="">আগে উপজেলা বাছুন</option>';
+        dist.disabled = !div.value; upo.disabled = true; uni.disabled = true;
+        if (div.value) Object.keys(geoDb[div.value]).forEach(d => dist.innerHTML += `<option value="${d}">${d}</option>`);
+    };
+    dist.onchange = () => {
+        upo.innerHTML = '<option value="">উপজেলা বাছুন</option>';
+        uni.innerHTML = '<option value="">আগে উপজেলা বাছুন</option>';
+        upo.disabled = !dist.value; uni.disabled = true;
+        if (dist.value) Object.keys(geoDb[div.value][dist.value]).forEach(u => upo.innerHTML += `<option value="${u}">${u}</option>`);
+    };
+    upo.onchange = () => {
+        uni.innerHTML = '<option value="">ইউনিয়ন বাছুন</option>';
+        uni.disabled = !upo.value;
+        if (upo.value) geoDb[div.value][dist.value][upo.value].unions.forEach(u => uni.innerHTML += `<option value="${u}">${u}</option>`);
+    };
+}
+
+// ════════════════════════════════
+// TREE INVENTORY UI
+// ════════════════════════════════
+function initTreeUI() {
+    const sel = document.getElementById('treeSelect');
+    const list = document.getElementById('treeList');
+    if (!sel || !list) return;
+    sel.innerHTML = '<option value="">গাছ নির্বাচন করুন</option>';
+    list.innerHTML = '';
+    treeInv.forEach((t, i) => {
+        sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+        const used = db.some(r => r.tree === t.name);
+        list.innerHTML += `<li class="flex justify-between py-1.5 items-center">
+            <span>${t.name} <span class="text-gray-400">(${t.type})</span></span>
+            ${used ? '<span class="text-gray-300 text-[10px]">Locked</span>' : `<button onclick="deleteTree(${i})" class="text-red-500 font-bold text-xs">✕</button>`}
+        </li>`;
+    });
+}
+
+function addTree() {
+    const name = document.getElementById('newTreeName').value.trim();
+    const type = document.getElementById('newTreeType').value;
+    if (!name) return;
+    treeInv.push({ name, type });
+    document.getElementById('newTreeName').value = '';
+    persist(); initTreeUI();
+}
+
+function deleteTree(i) {
+    treeInv.splice(i, 1);
+    persist(); initTreeUI();
+}
+
+// ════════════════════════════════
+// FORM SUBMIT
+// ════════════════════════════════
+document.getElementById('plantationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const rowId = document.getElementById('editRowId').value;
+    const treeName = document.getElementById('treeSelect').value;
+    const treeObj = treeInv.find(t => t.name === treeName);
+    const imgBase64 = document.getElementById('entryStoredImg').value;
+    
+    showSync("💾 সেভ হচ্ছে…", 'blue');
+
+    let driveImgUrl = "";
+    if (imgBase64 && APPS_SCRIPT_URL) {
+        showSync("📤 Drive এ ছবি আপলোড হচ্ছে…", 'blue');
+        driveImgUrl = await uploadImageToDrive(imgBase64, `DPHE_${Date.now()}.jpg`) || "";
+    }
+
+    const record = {
+        division: document.getElementById('entryDiv').value,
+        district:  document.getElementById('entryDist').value,
+        upojela:   document.getElementById('entryUpo').value,
+        union:     document.getElementById('entryUni').value,
+        tree:      treeName,
+        type:      treeObj ? treeObj.type : 'Fruit',
+        date:      document.getElementById('plantDate').value,
+        lat:       parseFloat(document.getElementById('lat').value),
+        lng:       parseFloat(document.getElementById('lng').value),
+        caregiver: document.getElementById('caregiver').value,
+        phone:     document.getElementById('phone').value,
+        img:       imgBase64,
+        driveImgUrl: driveImgUrl
+    };
+
+    if (rowId) {
+        const idx = db.findIndex(r => r.id === rowId);
+        db[idx] = { ...db[idx], ...record };
+        if (!driveImgUrl && db[idx].driveImgUrl) record.driveImgUrl = db[idx].driveImgUrl;
+    } else {
+        const newId = 'DPHE-' + String(db.length + 1).padStart(4, '0');
+        record.id = newId;
+        record.m3 = ""; record.m6 = ""; record.y1 = ""; record.y2 = ""; record.y3 = ""; record.y5 = "";
+        db.push(record);
+    }
+
+    persist();
+    clearForm();
+    switchTab('dashboard');
+    showSync("✅ সেভ সফল!", 'green');
+    checkReminders();
+});
+
+function clearForm() {
+    document.getElementById('plantationForm').reset();
+    document.getElementById('editRowId').value = '';
+    document.getElementById('entryStoredImg').value = '';
+    document.getElementById('imgPreview').classList.add('hidden');
+    document.getElementById('imgPlaceholder').classList.remove('hidden');
+    document.getElementById('formSubmitBtn').innerText = '💾 ডাটা সেভ করুন';
+    document.getElementById('cancelEditBtn').classList.add('hidden');
+    document.getElementById('plantDate').valueAsDate = new Date();
+    initCascadingDropdowns();
+}
+
+// ════════════════════════════════
+// REMINDERS
+// ════════════════════════════════
+function getTreeStatus(row) {
+    if (row.y5==='Dead'||row.y3==='Dead'||row.y2==='Dead'||row.y1==='Dead'||row.m6==='Dead'||row.m3==='Dead') return 'Dead';
+    if (row.y5==='NeedsCare'||row.y3==='NeedsCare'||row.y2==='NeedsCare'||row.y1==='NeedsCare'||row.m6==='NeedsCare'||row.m3==='NeedsCare') return 'NeedsCare';
+    return 'Healthy';
+}
+
+function getNextDuePhase(row) {
+    const phases = ['m3','m6','y1','y2','y3','y5'];
+    const labels = ['৩ মাস','৬ মাস','১ বছর','২ বছর','৩ বছর','৫ বছর'];
+    const dayOffsets = [90,180,365,730,1095,1825];
+    const planted = new Date(row.date);
+    const today = new Date();
+
+    for (let i = 0; i < phases.length; i++) {
+        const due = new Date(planted.getTime() + dayOffsets[i] * 86400000);
+        if (!row[phases[i]] && today >= due) return labels[i];
+        if (!row[phases[i]] && today < due) return null;
+        if (row[phases[i]] === 'Dead') return null;
+    }
+    return null;
+}
+
+function checkReminders() {
+    const due = db.filter(r => getNextDuePhase(r) !== null);
+    const btn = document.getElementById('reminderBtn');
+    const dueList = document.getElementById('dueList');
+
+    document.getElementById('reminderCount').innerText = due.length;
+    btn.classList.toggle('hidden', due.length === 0);
+
+    if (dueList) {
+        if (due.length === 0) {
+            dueList.innerHTML = '<p class="text-gray-400 italic">কোনো pending followup নেই। 🎉</p>';
+        } else {
+            dueList.innerHTML = due.slice(0,5).map(r => `
+                <div class="flex items-center justify-between bg-red-50 rounded-lg px-3 py-2 border border-red-100">
+                    <span><span class="font-bold text-red-700">${r.id}</span> — ${r.tree} — ${r.district}</span>
+                    <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${getNextDuePhase(r)} বাকি</span>
+                </div>`).join('') +
+                (due.length > 5 ? `<p class="text-center text-xs text-gray-400 pt-1">এবং আরো ${due.length-5}টি…</p>` : '');
+        }
+    }
+}
+
+// ════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════
+function handleDashTierChange() {
+    const tier = document.getElementById('dashTier').value;
+    const divSel = document.getElementById('dashDivision');
+    const distSel = document.getElementById('dashDistrict');
+    divSel.classList.add('hidden'); distSel.classList.add('hidden');
+    if (tier === 'Division' || tier === 'District') {
+        divSel.innerHTML = '<option value="">বিভাগ বাছুন</option>';
+        Object.keys(geoDb).forEach(d => divSel.innerHTML += `<option value="${d}">${d}</option>`);
+        divSel.classList.remove('hidden');
+    }
+    if (tier === 'District') {
+        divSel.onchange = function() {
+            distSel.innerHTML = '<option value="">জেলা বাছুন</option>';
+            distSel.classList.remove('hidden');
+            if (this.value) Object.keys(geoDb[this.value]).forEach(d => distSel.innerHTML += `<option value="${d}">${d}</option>`);
+            updateDashboard();
+        };
+    } else { divSel.onchange = updateDashboard; }
+    updateDashboard();
+}
+
+function updateDashboard() {
+    const tier  = document.getElementById('dashTier').value;
+    const sDiv  = document.getElementById('dashDivision').value;
+    const sDist = document.getElementById('dashDistrict').value;
+
+    let pool = db;
+    if (tier === 'Division' && sDiv)             pool = pool.filter(r => r.division === sDiv);
+    if (tier === 'District' && sDiv && sDist)    pool = pool.filter(r => r.division === sDiv && r.district === sDist);
+
+    let target = 0;
+    Object.keys(geoDb).forEach(dv => Object.keys(geoDb[dv]).forEach(ds => Object.keys(geoDb[dv][ds]).forEach(up => {
+        const ok = (tier === 'Country') ||
+                   (tier === 'Division' && dv === sDiv) ||
+                   (tier === 'District' && dv === sDiv && ds === sDist);
+        if (ok) target += geoDb[dv][ds][up].target;
+    })));
+
+    const dead = pool.filter(r => getTreeStatus(r) === 'Dead').length;
+    const pct  = pool.length > 0 ? ((pool.length - dead) / pool.length * 100).toFixed(1) : 0;
+    const prog = target > 0 ? Math.min((pool.length / target * 100), 100).toFixed(1) : 0;
+
+    document.getElementById('kpi-target').innerText   = target.toLocaleString('bn');
+    document.getElementById('kpi-planted').innerText  = pool.length.toLocaleString('bn');
+    document.getElementById('kpi-survival').innerText = pct + '%';
+    document.getElementById('kpi-dead').innerText     = dead.toLocaleString('bn');
+    document.getElementById('progressPct').innerText  = prog + '%';
+    document.getElementById('progressBar').style.width = prog + '%';
+    document.getElementById('kpi-planted2').innerText = pool.length.toLocaleString('bn');
+    document.getElementById('kpi-target2').innerText  = target.toLocaleString('bn');
+
+    // Pie chart
+    const fr = pool.filter(r => r.type==='Fruit').length;
+    const tm = pool.filter(r => r.type==='Timber').length;
+    const md = pool.filter(r => r.type==='Medicinal').length;
+    const or = pool.filter(r => r.type==='Ornamental').length;
+    if (typeChart) typeChart.destroy();
+    typeChart = new Chart(document.getElementById('chartType').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['ফলজ','বনজ','ঔষধি','শোভাবর্ধনকারী'],
+            datasets: [{ data:[fr,tm,md,or], backgroundColor:['#10b981','#3b82f6','#f59e0b','#ec4899'], borderWidth:2 }]
+        },
+        options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11} } } } }
+    });
+
+    // Bar chart
+    const countsObj = {};
+    if (tier === 'Country') pool.forEach(r => countsObj[r.division] = (countsObj[r.division]||0)+1);
+    else if (tier === 'Division') pool.forEach(r => countsObj[r.district] = (countsObj[r.district]||0)+1);
+    else pool.forEach(r => countsObj[r.upojela] = (countsObj[r.upojela]||0)+1);
+    if (locChart) locChart.destroy();
+    locChart = new Chart(document.getElementById('chartLocation').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(countsObj).length ? Object.keys(countsObj) : ['কোনো ডাটা নেই'],
+            datasets: [{ label:'গাছ', data: Object.values(countsObj).length ? Object.values(countsObj) : [0], backgroundColor:'#059669', borderRadius:6 }]
+        },
+        options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+
+    // Monthly trend (all data, last 12 months)
+    const now = new Date();
+    const months = [];
+    const counts = {};
+    for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        months.push(key); counts[key] = 0;
+    }
+    db.forEach(r => { const k = r.date?.substring(0,7); if (counts[k]!==undefined) counts[k]++; });
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('chartTrend').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: months.map(m => m.replace('-','/')),
+            datasets: [{
+                label:'রোপণ', data: months.map(m=>counts[m]),
+                borderColor:'#059669', backgroundColor:'rgba(5,150,105,0.08)',
+                fill:true, tension:0.4, pointRadius:4
+            }]
+        },
+        options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+}
+
+// ════════════════════════════════
+// MONITORING TABLE
+// ════════════════════════════════
+function initMonitoringSelectors() {
+    const dv = document.getElementById('auditDiv');
+    if (!dv) return;
+    dv.innerHTML = '<option value="">সকল বিভাগ</option>';
+    Object.keys(geoDb).forEach(d => dv.innerHTML += `<option value="${d}">${d}</option>`);
+    dv.onchange = function() {
+        const dist = document.getElementById('auditDist');
+        const upo  = document.getElementById('auditUpo');
+        dist.innerHTML = '<option value="">সকল জেলা</option>';
+        upo.innerHTML  = '<option value="">সকল উপজেলা</option>';
+        if (this.value && geoDb[this.value])
+            Object.keys(geoDb[this.value]).forEach(d => dist.innerHTML += `<option value="${d}">${d}</option>`);
+    };
+}
+
+function clearMonitoringSearch() {
+    document.getElementById('searchLat').value = '';
+    document.getElementById('searchLng').value = '';
+    renderMonitoringTable(false);
+}
+
+function renderMonitoringTable(useRadius) {
+    const tbody = document.getElementById('monitoringBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    let pool = [...db];
+
+    if (useRadius) {
+        const sLat = parseFloat(document.getElementById('searchLat').value);
+        const sLng = parseFloat(document.getElementById('searchLng').value);
+        const rad  = parseFloat(document.getElementById('searchRadius').value) || 500;
+        if (!isNaN(sLat) && !isNaN(sLng)) {
+            pool = pool.map(r => ({ ...r, dist: haversine(sLat,sLng,r.lat,r.lng) }))
+                       .filter(r => r.dist <= rad)
+                       .sort((a,b) => a.dist - b.dist);
+        }
+    } else {
+        const dv   = document.getElementById('auditDiv').value;
+        const dist = document.getElementById('auditDist').value;
+        const upo  = document.getElementById('auditUpo').value;
+        if (dv)   pool = pool.filter(r => r.division === dv);
+        if (dist) pool = pool.filter(r => r.district === dist);
+        if (upo)  pool = pool.filter(r => r.upojela === upo);
+    }
+
+    pool.forEach(row => {
+        const idx = db.findIndex(r => r.id === row.id);
+        const isM3 = false;
+        const isM6 = !row.m3 || row.m3==='Dead';
+        const isY1 = isM6 || !row.m6 || row.m6==='Dead';
+        const isY2 = isY1 || !row.y1 || row.y1==='Dead';
+        const isY3 = isY2 || !row.y2 || row.y2==='Dead';
+        const isY5 = isY3 || !row.y3 || row.y3==='Dead';
+
+        const imgCell = row.driveImgUrl
+            ? `<a href="${row.driveImgUrl}" target="_blank"><span class="text-xs font-bold text-emerald-600">🖼️ Drive</span></a><br>`
+            : (row.img ? `<img src="${row.img}" class="img-preview" onclick="openImgModal('${row.img}')" title="ক্লিক করুন"><br>` : `<span class="text-gray-300 text-[10px]">ছবি নেই</span><br>`);
+
+        const due = getNextDuePhase(row);
+        tbody.innerHTML += `
+        <tr class="hover:bg-gray-50 border-b">
+            <td class="p-3">
+                <div class="font-bold text-gray-800">${row.id}</div>
+                <div class="text-emerald-700 font-semibold">${row.tree}</div>
+                ${due ? `<span class="text-[10px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded-full">${due} বাকি</span>` : ''}
+            </td>
+            <td class="p-3 font-mono text-[11px] text-gray-500">${row.lat?.toFixed(4)}, ${row.lng?.toFixed(4)}<br>
+                <span class="text-gray-400 not-italic">${row.division} › ${row.district}</span>
+            </td>
+            <td class="p-3 text-center">
+                ${imgCell}
+                <input type="file" accept="image/*" class="text-[10px] w-24" onchange="compressAuditImg(this, ${idx})">
+            </td>
+            <td class="p-1">${auditSel(idx,'m3',row.m3,isM3)}</td>
+            <td class="p-1">${auditSel(idx,'m6',row.m6,isM6)}</td>
+            <td class="p-1">${auditSel(idx,'y1',row.y1,isY1)}</td>
+            <td class="p-1">${auditSel(idx,'y2',row.y2,isY2)}</td>
+            <td class="p-1">${auditSel(idx,'y3',row.y3,isY3)}</td>
+            <td class="p-1">${auditSel(idx,'y5',row.y5,isY5)}</td>
+        </tr>`;
+    });
+
+    if (!pool.length) tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-gray-400">কোনো ডাটা পাওয়া যায়নি।</td></tr>';
+}
+
+function auditSel(idx, phase, val, locked) {
+    if (locked) return `<select disabled class="text-[11px] p-1 border rounded bg-gray-100 text-gray-400 w-24"><option>🔒</option></select>`;
+    return `<select onchange="updateMonitor(${idx},'${phase}',this.value)" class="text-[11px] p-1 border rounded bg-white w-28">
+        <option value="" ${val===''?'selected':''}>— বাছুন</option>
+        <option value="Healthy" ${val==='Healthy'?'selected':''}>🟢 সতেজ</option>
+        <option value="NeedsCare" ${val==='NeedsCare'?'selected':''}>🟡 যত্ন</option>
+        <option value="Dead" ${val==='Dead'?'selected':''}>🔴 মৃত</option>
+    </select>`;
+}
+
+function updateMonitor(idx, phase, val) {
+    db[idx][phase] = val;
+    persist(); checkReminders();
+    renderMonitoringTable(document.getElementById('searchLat').value !== "");
+}
+
+// ════════════════════════════════
+// MAP
+// ════════════════════════════════
+function initMap() {
+    const mapEl = document.getElementById('treeMap');
+    if (!mapEl) return;
+
+    if (!leafletMap) {
+        leafletMap = L.map('treeMap').setView([23.685, 90.356], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
+    }
+
+    filterMap('all');
+}
+
+function filterMap(statusFilter) {
+    if (!leafletMap) return;
+    mapMarkers.forEach(m => leafletMap.removeLayer(m));
+    mapMarkers = [];
+
+    const colorMap = { Healthy:'#10b981', NeedsCare:'#f59e0b', Dead:'#ef4444', '':'#94a3b8' };
+    let healthy=0, needsCare=0, dead=0;
+
+    db.forEach(row => {
+        if (!row.lat || !row.lng) return;
+        const status = getTreeStatus(row);
+        if (statusFilter !== 'all' && status !== statusFilter) return;
+
+        if (status==='Healthy') healthy++;
+        else if (status==='NeedsCare') needsCare++;
+        else if (status==='Dead') dead++;
+
+        const color = colorMap[status] || colorMap[''];
+        const icon = L.divIcon({
+            className: '',
+            html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>`,
+            iconSize: [16,16], iconAnchor:[8,8]
+        });
+
+        const imgTag = row.driveImgUrl
+            ? `<a href="${row.driveImgUrl}" target="_blank" class="text-blue-500 underline text-xs">📷 Drive ছবি</a>`
+            : (row.img ? `<img src="${row.img}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;margin-top:4px;">` : '');
+
+        const marker = L.marker([row.lat, row.lng], { icon })
+            .bindPopup(`
+                <div style="font-family:sans-serif;min-width:160px;">
+                    <div style="font-weight:900;font-size:13px;">${row.id}</div>
+                    <div style="font-size:12px;color:#059669;">${row.tree}</div>
+                    <div style="font-size:11px;color:#6b7280;">${row.district} › ${row.upojela}</div>
+                    <div style="font-size:11px;">👤 ${row.caregiver}</div>
+                    <div style="font-size:11px;">📅 ${row.date}</div>
+                    <div style="margin-top:4px;">${imgTag}</div>
+                </div>
+            `).addTo(leafletMap);
+        mapMarkers.push(marker);
+    });
+
+    document.getElementById('mapHealthy').innerText   = healthy;
+    document.getElementById('mapNeedsCare').innerText = needsCare;
+    document.getElementById('mapDead').innerText      = dead;
+}
+
+// ════════════════════════════════
+// REPORT
+// ════════════════════════════════
+function initReportSelectors() {
+    const rd = document.getElementById('repDiv');
+    if (!rd) return;
+    rd.innerHTML = '<option value="">সব বিভাগ</option>';
+    Object.keys(geoDb).forEach(d => rd.innerHTML += `<option value="${d}">${d}</option>`);
+}
+
+function syncReportDropdowns() {
+    const div = document.getElementById('repDiv').value;
+    const dist = document.getElementById('repDist');
+    const upo  = document.getElementById('repUpo');
+    if (!dist || !upo) return;
+    dist.innerHTML = '<option value="">সব জেলা</option>';
+    upo.innerHTML  = '<option value="">সব উপজেলা</option>';
+    if (div && geoDb[div]) Object.keys(geoDb[div]).forEach(d => dist.innerHTML += `<option value="${d}">${d}</option>`);
+}
+
+function renderReport() {
+    const txt  = document.getElementById('reportSearch').value.toLowerCase();
+    const dv   = document.getElementById('repDiv').value;
+    const dist = document.getElementById('repDist').value;
+    const upo  = document.getElementById('repUpo').value;
+    const tbody = document.getElementById('reportBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    db.filter(r => {
+        const matchTxt = r.id.toLowerCase().includes(txt) ||
+                         r.caregiver.toLowerCase().includes(txt) ||
+                         r.tree.toLowerCase().includes(txt);
+        return matchTxt && (!dv||r.division===dv) && (!dist||r.district===dist) && (!upo||r.upojela===upo);
+    }).forEach(row => {
+        const status = getTreeStatus(row);
+        const badge = status==='Dead' ? '🔴 মৃত' : status==='NeedsCare' ? '🟡 যত্ন প্রয়োজন' : '🟢 সতেজ';
+        const imgEl = row.driveImgUrl
+            ? `<a href="${row.driveImgUrl}" target="_blank"><img src="${row.driveImgUrl}" class="img-preview" title="Drive এ খুলুন"></a>`
+            : (row.img ? `<img src="${row.img}" class="img-preview" onclick="openImgModal('${row.img}')">` : `<span class="text-gray-300 text-[10px]">No Pic</span>`);
+
+        tbody.innerHTML += `
+        <tr class="hover:bg-gray-50 border-b">
+            <td class="p-3 font-bold text-gray-800">${row.id}</td>
+            <td class="p-3 text-xs">
+                <div class="font-semibold">${row.division} › ${row.district} › ${row.upojela}</div>
+                <div class="text-gray-400">তারিখ: ${row.date}</div>
+                <div class="font-mono text-[10px] text-gray-400">${row.lat?.toFixed(4)}, ${row.lng?.toFixed(4)}</div>
+            </td>
+            <td class="p-3 font-bold text-emerald-800">${row.tree}</td>
+            <td class="p-3">${imgEl}</td>
+            <td class="p-3 font-bold">${badge}</td>
+            <td class="p-3 text-xs">${row.caregiver}<br><span class="text-gray-400">${row.phone}</span></td>
+            <td class="p-3 text-center space-x-2 print:hidden">
+                <button onclick="secureEdit('${row.id}')" class="text-blue-600 font-bold text-xs hover:underline">✏️ Edit</button>
+                <button onclick="secureDelete('${row.id}')" class="text-red-600 font-bold text-xs hover:underline">🗑️ Del</button>
+            </td>
+        </tr>`;
+    });
+}
+
+function secureEdit(id) {
+    const pw = prompt("Admin পাসওয়ার্ড দিন (Edit):");
+    if (pw !== "0123") { alert("ভুল পাসওয়ার্ড!"); return; }
+    const item = db.find(r => r.id === id);
+    if (!item) return;
+
+    switchTab('entry');
+    document.getElementById('editRowId').value = item.id;
+    // Re-init dropdowns then fill
+    initCascadingDropdowns();
+    setTimeout(() => {
+        document.getElementById('entryDiv').value  = item.division;
+        document.getElementById('entryDiv').dispatchEvent(new Event('change'));
+        setTimeout(() => {
+            document.getElementById('entryDist').value = item.district;
+            document.getElementById('entryDist').dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                document.getElementById('entryUpo').value  = item.upojela;
+                document.getElementById('entryUpo').dispatchEvent(new Event('change'));
+                setTimeout(() => {
+                    document.getElementById('entryUni').value  = item.union;
+                    document.getElementById('treeSelect').value = item.tree;
+                    document.getElementById('lat').value       = item.lat;
+                    document.getElementById('lng').value       = item.lng;
+                    document.getElementById('caregiver').value = item.caregiver;
+                    document.getElementById('phone').value     = item.phone;
+                    document.getElementById('plantDate').value = item.date;
+                    document.getElementById('entryStoredImg').value = item.img || '';
+                    if (item.img) {
+                        document.getElementById('imgPreview').src = item.img;
+                        document.getElementById('imgPreview').classList.remove('hidden');
+                        document.getElementById('imgPlaceholder').classList.add('hidden');
+                    }
+                    document.getElementById('formSubmitBtn').innerText = '🔄 আপডেট করুন';
+                    document.getElementById('cancelEditBtn').classList.remove('hidden');
+                }, 100);
+            }, 100);
+        }, 100);
+    }, 50);
+}
+
+function secureDelete(id) {
+    const pw = prompt("Admin পাসওয়ার্ড দিন (Delete):");
+    if (pw !== "0124") { alert("ভুল পাসওয়ার্ড!"); return; }
+    if (!confirm(`${id} সত্যিই ডিলিট করবেন?`)) return;
+    db = db.filter(r => r.id !== id);
+    persist(); renderReport(); checkReminders();
+}
+
+// ════════════════════════════════
+// EXPORT
+// ════════════════════════════════
+function exportCSV() {
+    let csv = "\uFEFFTree ID,Division,District,Upazila,Union,Tree,Type,Date,Lat,Lng,Caregiver,Phone,3M,6M,1Y,2Y,3Y,5Y,Drive Image URL\n";
+    db.forEach(r => {
+        csv += `"${r.id}","${r.division}","${r.district}","${r.upojela}","${r.union}","${r.tree}","${r.type}","${r.date}","${r.lat}","${r.lng}","${r.caregiver}","${r.phone}","${r.m3||''}","${r.m6||''}","${r.y1||''}","${r.y2||''}","${r.y3||''}","${r.y5||''}","${r.driveImgUrl||''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'DPHE_Green_Tracker_Export.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function exportPDF() {
+    const w = window.open('','','height=700,width=1100');
+    w.document.write(`<html><head><title>DPHE Green Tracker Report</title>
+        <style>body{font-family:sans-serif;font-size:12px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:6px;} th{background:#d1fae5;}</style>
+        </head><body>
+        <h2 style="color:#064e3b;">DPHE Green Tracker — Field Master Report</h2>
+        <p>তারিখ: ${new Date().toLocaleDateString('bn-BD')}</p>
+        ${document.getElementById('printArea').innerHTML}
+        </body></html>`);
+    w.document.close(); w.print();
+}
+
+// ════════════════════════════════
+// SETTINGS
+// ════════════════════════════════
+function saveLocation() {
+    const dv = document.getElementById('setDiv').value.trim();
+    const ds = document.getElementById('setDist').value.trim();
+    const up = document.getElementById('setUpo').value.trim();
+    const un = document.getElementById('setUni').value.trim();
+    const gl = parseInt(document.getElementById('setGoal').value) || 0;
+    if (!dv || !ds || !up || !un) { alert("সব ঘর পূরণ করুন।"); return; }
+    if (!geoDb[dv]) geoDb[dv] = {};
+    if (!geoDb[dv][ds]) geoDb[dv][ds] = {};
+    if (!geoDb[dv][ds][up]) geoDb[dv][ds][up] = { unions:[], target:0 };
+    if (!geoDb[dv][ds][up].unions.includes(un)) geoDb[dv][ds][up].unions.push(un);
+    geoDb[dv][ds][up].target = gl;
+    persist(); initCascadingDropdowns();
+    showSync("✅ লোকেশন সেভ হয়েছে!", 'green');
+}
+
+function downloadTemplate(type) {
+    let csv = "\uFEFF", name = "";
+    if (type === 'location') {
+        csv += "বিভাগ,জেলা,উপজেলা,ইউনিয়ন,লক্ষ্যমাত্রা\nরংপুর,রংপুর,পীরগাছা,কৈকুড়ী,500";
+        name = "Location_Template.csv";
+    } else {
+        csv += "গাছের নাম,ধরণ\nকাঁঠাল (Jackfruit),Fruit\nহিজল (Hijol),Timber";
+        name = "Tree_Template.csv";
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+    a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function bulkUpload(type) {
+    const fileId = type === 'location' ? 'locFile' : 'treeFile';
+    const file = document.getElementById(fileId).files[0];
+    if (!file) { alert("আগে একটি CSV ফাইল বাছুন।"); return; }
+    const reader = new FileReader();
+    reader.readAsText(file, "UTF-8");
+    reader.onload = function(e) {
+        const lines = e.target.result.split(/\r?\n/);
+        let count = 0;
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const cols = lines[i].split(",");
+            if (type === 'location' && cols.length >= 5) {
+                const [dv,ds,up,un,gl] = cols.map(c=>c.trim());
+                if (!geoDb[dv]) geoDb[dv] = {};
+                if (!geoDb[dv][ds]) geoDb[dv][ds] = {};
+                if (!geoDb[dv][ds][up]) geoDb[dv][ds][up] = { unions:[], target:0 };
+                if (!geoDb[dv][ds][up].unions.includes(un)) geoDb[dv][ds][up].unions.push(un);
+                geoDb[dv][ds][up].target = parseInt(gl)||0;
+                count++;
+            } else if (type === 'tree' && cols.length >= 2) {
+                const [name, tp] = cols.map(c=>c.trim());
+                if (name && tp) { treeInv.push({name, type:tp}); count++; }
+            }
+        }
+        persist(); initCascadingDropdowns(); initTreeUI();
+        alert(`${count}টি রো সফলভাবে আপলোড হয়েছে!`);
+    };
+}
+
+function clearAllLocalData() {
+    if (!confirm("সমস্ত local ডাটা মুছে ফেলবেন? এটা undo করা যাবে না।")) return;
+    localStorage.removeItem('dphe_geo_db');
+    localStorage.removeItem('dphe_tree_inv');
+    localStorage.removeItem('dphe_master_db');
+    location.reload();
+}
+</script>
+
+<!-- ════════════════════════════════════════
+     GOOGLE APPS SCRIPT SETUP GUIDE
+     (comment — GitHub এ দেখা যাবে)
+═══════════════════════════════════════════
+
 APPS SCRIPT কোড (Google Apps Script এ নতুন Project তৈরি করে এই কোড বসান):
 
 ---
