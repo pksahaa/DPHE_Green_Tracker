@@ -647,7 +647,7 @@
 // ═══════════════════════════════════════
 // CONFIG — আপনার Apps Script URL এখানে
 // ═══════════════════════════════════════
-let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "https://script.google.com/macros/s/AKfycbxpcA9R6-15A8kC3aIVuuc6iWRU8-CGim1dV0Iyryk7gixNgcWhOHLtXeGfPr-7V67qBQ/exec";
+let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "";
 
 // ════════════════════════════════
 // STATE
@@ -771,17 +771,35 @@ function saveAppsScriptUrl() {
     }
 }
 
-function proxyFetch(url) {
-    const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
-    return fetch(proxy).then(r => r.json());
+const PROXIES = [
+    u => "https://corsproxy.io/?" + encodeURIComponent(u),
+    u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+    u => "https://proxy.cors.sh/" + u,
+];
+
+async function proxyFetch(url) {
+    for (const p of PROXIES) {
+        try {
+            const res = await fetch(p(url), {signal: AbortSignal.timeout(8000)});
+            if (res.ok) return await res.json();
+        } catch(e) { continue; }
+    }
+    throw new Error("সব proxy ব্যর্থ হয়েছে");
 }
-function proxyPost(url, data) {
-    const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
-    return fetch(proxy, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(data)
-    }).then(r => r.json());
+
+async function proxyPost(url, data) {
+    for (const p of PROXIES) {
+        try {
+            const res = await fetch(p(url), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(data),
+                signal: AbortSignal.timeout(15000)
+            });
+            if (res.ok) return await res.json();
+        } catch(e) { continue; }
+    }
+    throw new Error("সব proxy ব্যর্থ হয়েছে");
 }
 
 async function saveToSheets() {
