@@ -1,3 +1,617 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPHE Green Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --green-deep: #064e3b;
+            --green-mid:  #059669;
+            --green-light:#d1fae5;
+            --amber:      #f59e0b;
+            --red-alert:  #ef4444;
+            --gray-bg:    #f8fafc;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans Bengali', 'Inter', sans-serif;
+            background: var(--gray-bg);
+        }
+
+        /* ── Sidebar ─────────────────────────────────── */
+        #sidebar {
+            width: 220px;
+            min-width: 220px;
+            background: var(--green-deep);
+            transition: width 0.3s;
+            overflow: hidden;
+        }
+        #sidebar.collapsed { width: 60px; min-width: 60px; }
+        #sidebar.collapsed .nav-label { display: none; }
+        #sidebar.collapsed .logo-text { display: none; }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            color: #a7f3d0;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            width: 100%;
+            text-align: left;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .tab-btn.active {
+            background: rgba(5,150,105,0.25);
+            border-left-color: #10b981;
+            color: #fff;
+        }
+        .tab-btn .icon { font-size: 18px; flex-shrink: 0; }
+
+        /* ── Cards ──────────────────────────────────── */
+        .stat-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border-top: 4px solid var(--green-mid);
+        }
+        .stat-card.amber { border-top-color: var(--amber); }
+        .stat-card.blue  { border-top-color: #3b82f6; }
+        .stat-card.red   { border-top-color: var(--red-alert); }
+
+        /* ── Map ────────────────────────────────────── */
+        #treeMap { height: 400px; border-radius: 12px; z-index: 1; }
+
+        /* ── Progress bar ───────────────────────────── */
+        .progress-bar-outer {
+            background: #e2e8f0;
+            border-radius: 99px;
+            height: 10px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            background: linear-gradient(90deg, var(--green-mid), #10b981);
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+
+        /* ── Sync badge ─────────────────────────────── */
+        #syncBadge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+        #syncBadge.show { opacity: 1; }
+
+        /* ── Tabs content ───────────────────────────── */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Table ──────────────────────────────────── */
+        .data-table th { background: #f0fdf4; color: #065f46; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .data-table td { font-size: 12px; }
+        .data-table tr:hover td { background: #f8fafc; }
+
+        /* ── Mobile nav ────────────────!!!!!!!!─────── */
+        @media (max-width: 768px) {
+            #sidebar { display: none; }
+            #mobileNav { display: flex; }
+            main { padding-bottom: 80px !important; }
+        }
+        #mobileNav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--green-deep);
+            z-index: 1000;
+            justify-content: space-around;
+            padding: 8px 4px;
+            border-top: 1px solid #065f46;
+        }
+        .mob-btn {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 2px; color: #6ee7b7; font-size: 10px; padding: 4px 8px;
+            border-radius: 8px; transition: all 0.2s;
+        }
+        .mob-btn.active { color: #fff; background: rgba(5,150,105,0.3); }
+        .mob-btn .icon { font-size: 20px; }
+
+        /* ── Image preview ──────────────────────────── */
+        .img-preview {
+            width: 56px; height: 56px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #d1fae5;
+            cursor: pointer;
+        }
+
+        /* ── Loader overlay ─────────────────────────── */
+        #loader {
+            position: fixed; inset: 0;
+            background: rgba(6,78,59,0.92);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 99999; color: #fff;
+        }
+        .loader-spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Alert reminder badge ───────────────────── */
+        .reminder-dot {
+            width: 8px; height: 8px;
+            background: var(--red-alert);
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 4px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        select, input[type=text], input[type=number], input[type=date], input[type=tel] {
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            width: 100%;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px #d1fae5; }
+
+        .btn-primary {
+            background: var(--green-mid);
+            color: #fff;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary:hover { background: #047857; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-blue { background: #3b82f6; }
+        .btn-blue:hover { background: #2563eb; }
+
+        /* Modal */
+        #imgModal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 99998;
+            align-items: center;
+            justify-content: center;
+        }
+        #imgModal.show { display: flex; }
+        #imgModal img { max-width: 90vw; max-height: 85vh; border-radius: 12px; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+<div id="loader">
+    <div class="loader-spinner mb-4"></div>
+    <div class="text-lg font-bold mb-1">DPHE Green Tracker</div>
+    <div class="text-sm text-emerald-300">ডাটা লোড হচ্ছে…</div>
+</div>
+
+<div id="imgModal" onclick="this.classList.remove('show')">
+    <img id="imgModalSrc" src="" alt="tree">
+</div>
+
+<header class="bg-emerald-900 text-white px-5 py-3 flex justify-between items-center shadow-lg z-10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="text-emerald-300 hover:text-white text-xl mr-1 hidden md:block">☰</button>
+        <span class="text-2xl">🌳</span>
+        <div>
+            <div class="font-black text-base leading-tight">DPHE Green Tracker</div>
+            <div class="text-[10px] text-emerald-300">বৃক্ষরোপণ কর্মসূচি | Department of Public Health Engineering</div>
+        </div>
+    </div>
+    <div class="flex items-center gap-3">
+        <div id="reminderBtn" onclick="switchTab('monitoring')" class="hidden cursor-pointer bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full animate-pulse">
+            ⚠️ <span id="reminderCount">0</span>টি followup বাকি
+        </div>
+        <div class="hidden md:block text-xs bg-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-700">Government of Bangladesh</div>
+    </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden">
+
+    <aside id="sidebar" class="flex flex-col flex-shrink-0 overflow-hidden">
+        <div class="p-4 border-b border-emerald-800">
+            <div class="logo-text text-[10px] font-black text-emerald-400 uppercase tracking-widest">Navigation</div>
+        </div>
+        <nav class="flex-1 flex flex-col py-2">
+            <button onclick="switchTab('dashboard')"  id="btn-dashboard"  class="tab-btn active"><span class="icon">📊</span><span class="nav-label text-sm font-semibold">Dashboard</span></button>
+            <button onclick="switchTab('entry')"      id="btn-entry"      class="tab-btn"><span class="icon">📝</span><span class="nav-label text-sm font-semibold">Data Entry</span></button>
+            <button onclick="switchTab('monitoring')" id="btn-monitoring" class="tab-btn"><span class="icon">🌿</span><span class="nav-label text-sm font-semibold">Monitoring</span></button>
+            <button onclick="switchTab('map')"        id="btn-map"        class="tab-btn"><span class="icon">🗺️</span><span class="nav-label text-sm font-semibold">Map View</span></button>
+            <button onclick="switchTab('report')"     id="btn-report"     class="tab-btn"><span class="icon">📋</span><span class="nav-label text-sm font-semibold">Report</span></button>
+            <button onclick="switchTab('settings')"   id="btn-settings"   class="tab-btn mt-auto" style="color:#fcd34d;"><span class="icon">⚙️</span><span class="nav-label text-sm font-semibold" style="color:#fcd34d;">Settings</span></button>
+        </nav>
+        <div class="p-3 border-t border-emerald-800">
+            <div id="sheetStatus" class="logo-text text-[10px] text-emerald-400 text-center">⚙️ Sheet: Not Configured</div>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-6" id="mainContent">
+
+        <div id="tab-dashboard" class="tab-content active space-y-5">
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b">
+                <h2 class="text-xl font-black text-gray-800">📊 সার্বিক ড্যাশবোর্ড</h2>
+                <div class="flex flex-wrap gap-2 items-center text-xs">
+                    <span class="font-bold text-gray-500">ভিউ লেভেল:</span>
+                    <select id="dashTier" onchange="handleDashTierChange()" style="width:auto;padding:6px 10px;">
+                        <option value="Country">সমগ্র দেশ</option>
+                        <option value="Division">বিভাগ</option>
+                        <option value="District">জেলা</option>
+                    </select>
+                    <select id="dashDivision" onchange="updateDashboard()" class="hidden" style="width:auto;padding:6px 10px;"></select>
+                    <select id="dashDistrict" onchange="updateDashboard()" class="hidden" style="width:auto;padding:6px 10px;"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="stat-card">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মোট লক্ষ্যমাত্রা</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-target">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মোট রোপণকৃত</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-planted">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">বেঁচে আছে</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-survival">0%</div>
+                    <div class="text-xs text-gray-400 mt-1">survival rate</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">মৃত/নষ্ট</div>
+                    <div class="text-3xl font-black text-gray-800" id="kpi-dead">0</div>
+                    <div class="text-xs text-gray-400 mt-1">গাছ</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-bold text-gray-700">লক্ষ্যমাত্রা অর্জনের অগ্রগতি</span>
+                    <span class="text-sm font-black text-emerald-700" id="progressPct">0%</span>
+                </div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+                </div>
+                <div class="text-xs text-gray-400 mt-1"><span id="kpi-planted2">0</span> / <span id="kpi-target2">0</span> গাছ রোপণ সম্পন্ন</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                    <p class="text-sm font-bold text-gray-600 mb-3" id="pieLabel">গাছের ধরণের অনুপাত</p>
+                    <div class="max-w-[220px] mx-auto"><canvas id="chartType"></canvas></div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                    <p class="text-sm font-bold text-gray-600 mb-3" id="barLabel">অঞ্চলভিত্তিক চিত্র</p>
+                    <canvas id="chartLocation"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <p class="text-sm font-bold text-gray-600 mb-3">মাসভিত্তিক রোপণ ট্রেন্ড</p>
+                <canvas id="chartTrend" height="80"></canvas>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-sm font-bold text-red-600">⚠️ Followup প্রয়োজন এখন</p>
+                    <button onclick="switchTab('monitoring')" class="text-xs text-emerald-600 font-bold underline">সব দেখুন →</button>
+                </div>
+                <div id="dueList" class="space-y-2 text-xs text-gray-600">
+                    <p class="text-gray-400 italic">কোনো pending followup নেই।</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-entry" class="tab-content space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 class="text-xl font-black text-gray-800">📝 নতুন ডাটা এন্ট্রি</h2>
+                <button id="cancelEditBtn" onclick="clearForm()" class="hidden btn-primary" style="background:#6b7280;padding:8px 16px;">✕ বাতিল</button>
+            </div>
+
+            <form id="plantationForm" class="bg-white rounded-2xl p-6 shadow-sm border max-w-3xl space-y-4">
+                <input type="hidden" id="editRowId">
+
+                <div class="border-2 border-dashed border-emerald-300 rounded-xl p-4 text-center bg-emerald-50 cursor-pointer" onclick="document.getElementById('entryImageFile').click()">
+                    <img id="imgPreview" src="" class="hidden mx-auto mb-2 w-24 h-24 object-cover rounded-lg">
+                    <div id="imgPlaceholder">
+                        <div class="text-3xl mb-1">📸</div>
+                        <div class="text-sm font-bold text-emerald-700">গাছের ছবি আপলোড করুন</div>
+                        <div class="text-xs text-gray-400">Google Drive এ স্বয়ংক্রিয়ভাবে সংরক্ষণ হবে</div>
+                    </div>
+                    <input type="file" id="entryImageFile" accept="image/*" class="hidden" onchange="handleImageSelect(this)">
+                    <input type="hidden" id="entryStoredImg">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">বিভাগ *</label>
+                        <select id="entryDiv" required><option value="">বিভাগ বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">জেলা *</label>
+                        <select id="entryDist" required disabled><option value="">আগে বিভাগ বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">উপজেলা *</label>
+                        <select id="entryUpo" required disabled><option value="">আগে জেলা বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">ইউনিয়ন *</label>
+                        <select id="entryUni" required disabled><option value="">আগে উপজেলা বাছুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">গাছের নাম ও ধরণ *</label>
+                        <select id="treeSelect" required><option value="">গাছ নির্বাচন করুন</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">রোপণের তারিখ *</label>
+                        <input type="date" id="plantDate" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">জিপিএস কোঅর্ডিনেট *</label>
+                        <div class="flex gap-2">
+                            <input type="number" step="any" id="lat" placeholder="Latitude" required>
+                            <input type="number" step="any" id="lng" placeholder="Longitude" required>
+                            <button type="button" onclick="fetchGPS('lat','lng')" class="btn-primary btn-blue flex-shrink-0" style="padding:8px 12px;">📍 GPS</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">তত্ত্বাবধায়ক *</label>
+                        <input type="text" id="caregiver" placeholder="নাম লিখুন" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">মোবাইল নম্বর *</label>
+                        <input type="tel" id="phone" placeholder="01xxxxxxxxx" required>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" id="formSubmitBtn" class="btn-primary flex-1">💾 ডাটা সেভ করুন</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="tab-monitoring" class="tab-content space-y-5">
+            <h2 class="text-xl font-black text-gray-800 border-b pb-3">🌿 পর্যায়ক্রমিক তদারকি</h2>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border space-y-3">
+                <div class="font-bold text-xs text-blue-700 uppercase tracking-wider">📍 GPS রেডিয়াস সার্চ</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Latitude</label>
+                        <input type="number" step="any" id="searchLat" placeholder="Latitude">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Longitude</label>
+                        <input type="number" step="any" id="searchLng" placeholder="Longitude">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="fetchGPS('searchLat','searchLng')" class="btn-primary btn-blue flex-1" style="padding:8px;">📍 ক্যাচ</button>
+                        <button onclick="clearMonitoringSearch()" class="btn-primary flex-1" style="padding:8px;background:#9ca3af;">Clear</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">রেডিয়াস (মিটার)</label>
+                        <input type="number" id="searchRadius" value="500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="renderMonitoringTable(true)" class="btn-primary btn-blue w-full" style="padding:9px;">🔍 রেডিয়াস খুঁজুন</button>
+                    </div>
+                </div>
+                <div class="border-t pt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <select id="auditDiv"><option value="">সকল বিভাগ</option></select>
+                    <select id="auditDist"><option value="">সকল জেলা</option></select>
+                    <select id="auditUpo"><option value="">সকল উপজেলা</option></select>
+                    <button onclick="renderMonitoringTable(false)" class="btn-primary" style="padding:9px;">🔍 ফিল্টার করুন</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border overflow-x-auto">
+                <table class="w-full text-left data-table" style="min-width:1100px;">
+                    <thead>
+                        <tr>
+                            <th class="p-3">ID ও গাছ</th>
+                            <th class="p-3">অবস্থান</th>
+                            <th class="p-3 text-center">ছবি</th>
+                            <th class="p-3">৩ মাস</th>
+                            <th class="p-3">৬ মাস</th>
+                            <th class="p-3">১ বছর</th>
+                            <th class="p-3">২ বছর</th>
+                            <th class="p-3">৩ বছর</th>
+                            <th class="p-3">৫ বছর</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitoringBody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-map" class="tab-content space-y-5">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h2 class="text-xl font-black text-gray-800">🗺️ ম্যাপ ভিউ</h2>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="filterMap('all')" id="mapAll" class="px-3 py-1.5 rounded-full bg-emerald-600 text-white font-bold">সব</button>
+                    <button onclick="filterMap('Healthy')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-green-100">🟢 সতেজ</button>
+                    <button onclick="filterMap('NeedsCare')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-yellow-100">🟡 যত্ন</button>
+                    <button onclick="filterMap('Dead')" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-bold hover:bg-red-100">🔴 মৃত</button>
+                </div>
+            </div>
+            <div id="treeMap" class="shadow-sm"></div>
+            <div class="grid grid-cols-3 gap-3 text-center text-xs">
+                <div class="bg-green-50 rounded-xl p-3 border border-green-200">
+                    <div class="text-2xl font-black text-green-600" id="mapHealthy">0</div>
+                    <div class="text-green-700 font-bold mt-1">🟢 সতেজ</div>
+                </div>
+                <div class="bg-yellow-50 rounded-xl p-3 border border-yellow-200">
+                    <div class="text-2xl font-black text-yellow-600" id="mapNeedsCare">0</div>
+                    <div class="text-yellow-700 font-bold mt-1">🟡 যত্ন প্রয়োজন</div>
+                </div>
+                <div class="bg-red-50 rounded-xl p-3 border border-red-200">
+                    <div class="text-2xl font-black text-red-600" id="mapDead">0</div>
+                    <div class="text-red-700 font-bold mt-1">🔴 মৃত/নষ্ট</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-report" class="tab-content space-y-5">
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b pb-3 gap-3">
+                <h2 class="text-xl font-black text-gray-800">📋 ফিল্ড মাস্টার রিপোর্ট</h2>
+                <div class="flex flex-wrap gap-2 text-xs items-center">
+                    <input type="text" id="reportSearch" placeholder="🔍 ID, তত্ত্বাবধায়ক বা গাছ খুঁজুন…" oninput="renderReport()" style="width:220px;padding:7px 10px;">
+                    <select id="repDiv" onchange="syncReportDropdowns();renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব বিভাগ</option></select>
+                    <select id="repDist" onchange="renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব জেলা</option></select>
+                    <select id="repUpo" onchange="renderReport();" style="width:auto;padding:7px 10px;"><option value="">সব উপজেলা</option></select>
+                    <button onclick="exportCSV()" class="btn-primary" style="padding:7px 14px;background:#059669;">⬇️ CSV</button>
+                    <button onclick="exportPDF()" class="btn-primary btn-danger" style="padding:7px 14px;">⬇️ PDF</button>
+                </div>
+            </div>
+
+            <div id="printArea" class="bg-white rounded-2xl shadow-sm border overflow-x-auto">
+                <table class="w-full text-left data-table" style="min-width:900px;">
+                    <thead>
+                        <tr>
+                            <th class="p-3">Tree ID</th>
+                            <th class="p-3">ভৌগোলিক তথ্য</th>
+                            <th class="p-3">গাছের নাম</th>
+                            <th class="p-3">ছবি</th>
+                            <th class="p-3">অবস্থা</th>
+                            <th class="p-3">তত্ত্বাবধায়ক</th>
+                            <th class="p-3 print:hidden text-center">অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content space-y-5">
+            <h2 class="text-xl font-black text-gray-800 border-b pb-3">⚙️ সেটিংস ইঞ্জিন</h2>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+                <h3 class="font-black text-amber-900">🔗 Google Apps Script কনফিগারেশন</h3>
+                <p class="text-xs text-amber-800">Google Sheets ও Drive এ ডাটা সংরক্ষণের জন্য আপনার Web App URL বসান।</p>
+                <div class="flex gap-2">
+                    <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:11px;">
+                    <button onclick="saveAppsScriptUrl()" class="btn-primary flex-shrink-0" style="padding:8px 16px;">💾 Save</button>
+                </div>
+                <div id="sheetConnectStatus" class="text-xs font-bold"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="font-bold text-gray-700">🗺️ লোকেশন স্ট্রাকচার ও লক্ষ্যমাত্রা</h3>
+                        <button onclick="downloadTemplate('location')" class="text-blue-600 text-xs font-bold underline">📥 Template</button>
+                    </div>
+                    <div class="p-3 bg-orange-50 border border-orange-200 rounded-xl text-xs space-y-2">
+                        <p class="font-bold text-orange-900">CSV Bulk Upload (বিভাগ,জেলা,উপজেলা,ইউনিয়ন,লক্ষ্যমাত্রা)</p>
+                        <div class="flex gap-2">
+                            <input type="file" id="locFile" accept=".csv,.txt" style="font-size:11px;padding:4px;">
+                            <button onclick="bulkUpload('location')" class="btn-primary flex-shrink-0" style="padding:6px 12px;background:#92400e;">Upload</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><label class="font-bold text-gray-600 block mb-1">বিভাগ</label><input type="text" id="setDiv" placeholder="রংপুর"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">জেলা</label><input type="text" id="setDist" placeholder="রংপুর"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">উপজেলা</label><input type="text" id="setUpo" placeholder="পীরগাছা"></div>
+                        <div><label class="font-bold text-gray-600 block mb-1">ইউনিয়ন</label><input type="text" id="setUni" placeholder="কৈকুড়ী"></div>
+                        <div class="col-span-2"><label class="font-bold text-gray-600 block mb-1">লক্ষ্যমাত্রা (চারা)</label><input type="number" id="setGoal" value="500"></div>
+                    </div>
+                    <button onclick="saveLocation()" class="btn-primary w-full">💾 লোকেশন সেভ করুন</button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-5 shadow-sm border space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="font-bold text-gray-700">🌳 গাছের তালিকা ব্যবস্থাপনা</h3>
+                        <button onclick="downloadTemplate('tree')" class="text-blue-600 text-xs font-bold underline">📥 Template</button>
+                    </div>
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs space-y-2">
+                        <p class="font-bold text-blue-900">CSV Bulk Upload (গাছের নাম, ধরণ)</p>
+                        <div class="flex gap-2">
+                            <input type="file" id="treeFile" accept=".csv,.txt" style="font-size:11px;padding:4px;">
+                            <button onclick="bulkUpload('tree')" class="btn-primary flex-shrink-0" style="padding:6px 12px;background:#1d4ed8;">Upload</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="newTreeName" placeholder="গাছের নাম" style="flex:1;">
+                        <select id="newTreeType" style="width:auto;padding:8px;">
+                            <option value="Fruit">ফলজ</option>
+                            <option value="Timber">বনজ</option>
+                            <option value="Medicinal">ঔষধি</option>
+                            <option value="Ornamental">শোভাবর্ধনকারী</option>
+                        </select>
+                        <button onclick="addTree()" class="btn-primary flex-shrink-0" style="padding:8px 12px;">➕</button>
+                    </div>
+                    <ul id="treeList" class="divide-y max-h-48 overflow-y-auto text-xs text-gray-600"></ul>
+                </div>
+            </div>
+
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-5 space-y-3">
+                <h3 class="font-bold text-red-700">⚠️ Danger Zone</h3>
+                <p class="text-xs text-red-600">সমস্ত local ডাটা মুছে ফেলবে। Google Sheets এর ডাটা অক্ষুণ্ণ থাকবে।</p>
+                <button onclick="clearAllLocalData()" class="btn-primary btn-danger" style="padding:8px 20px;">🗑️ সমস্ত Local ডাটা মুছুন</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<nav id="mobileNav">
+    <button onclick="switchTab('dashboard')" id="mob-dashboard" class="mob-btn active"><span class="icon">📊</span>Dashboard</button>
+    <button onclick="switchTab('entry')" id="mob-entry" class="mob-btn"><span class="icon">📝</span>Entry</button>
+    <button onclick="switchTab('monitoring')" id="mob-monitoring" class="mob-btn"><span class="icon">🌿</span>Monitor</button>
+    <button onclick="switchTab('map')" id="mob-map" class="mob-btn"><span class="icon">🗺️</span>Map</button>
+    <button onclick="switchTab('report')" id="mob-report" class="mob-btn"><span class="icon">📋</span>Report</button>
+    <button onclick="switchTab('settings')" id="mob-settings" class="mob-btn"><span class="icon">⚙️</span>Settings</button>
+</nav>
+
+<div id="syncBadge"></div>
+
 <script>
     let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "https://script.google.com/macros/s/AKfycbyv96ByiqK0XrwdPlmdd4kn4jQFJ3quWIhRq_2wjMo6uBn16yo95WNFDkxlagp_YxrZ/exec";
 
@@ -1015,3 +1629,4 @@
         location.reload();
     }
 </script>
+</html>
