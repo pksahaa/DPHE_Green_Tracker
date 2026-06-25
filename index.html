@@ -1594,4 +1594,15 @@
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = name;
-        a.
+        a.click();
+    }
+
+    function clearAllLocalData() {
+        if (!confirm("⚠️ আপনি কি নিশ্চিতভাবে সমস্ত লোকাল ক্যাশ মেমোরি ডাটা মুছতে চান?")) return;
+        localStorage.clear();
+        alert("লোকাল ক্যাশ মেমোরি ডাটা পরিষ্কার করা হয়েছে। পেজটি রিলোড দিন।");
+        location.reload();
+    }
+</script>
+</body>
+</html>
