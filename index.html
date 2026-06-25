@@ -556,13 +556,16 @@
             <!-- Google Apps Script URL -->
             <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
                 <h3 class="font-black text-amber-900">🔗 Google Apps Script কনফিগারেশন</h3>
-                <p class="text-xs text-amber-800">Google Sheets ও Drive এ ডাটা সংরক্ষণের জন্য আপনার Web App URL বসান।</p>
+                <p class="text-xs text-amber-800">এই অ্যাপে URL আগে থেকেই সেট করা আছে। সাধারণ ব্যবহারকারীদের কিছু করতে হবে না।</p>
                 <div class="flex gap-2">
                     <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:11px;">
                     <button onclick="saveAppsScriptUrl()" class="btn-primary flex-shrink-0" style="padding:8px 16px;">💾 Save</button>
                 </div>
                 <div id="sheetConnectStatus" class="text-xs font-bold"></div>
-
+                <div id="syncNowSection">
+                    <button onclick="loadFromSheets()" class="btn-primary btn-blue" style="padding:7px 16px;font-size:12px;">🔄 এখনই Sheets থেকে লোড করুন</button>
+                    <button onclick="saveToSheets()" class="btn-primary" style="padding:7px 16px;font-size:12px;background:#059669;margin-left:8px;">☁️ এখনই Sheets এ সেভ করুন</button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -646,9 +649,10 @@
 ═══════════════════════════════════════ -->
 <script>
 // ═══════════════════════════════════════
-// CONFIG — আপনার Apps Script URL এখানে
+// CONFIG — Apps Script URL (hardcoded — কাউকে manually বসাতে হবে না)
 // ═══════════════════════════════════════
-let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "";
+const HARDCODED_URL = "https://script.google.com/macros/s/AKfycbxpcA9R6-15A8kC3aIVuuc6iWRU8-CGim1dV0Iyryk7gixNgcWhOHLtXeGfPr-7V67qBQ/exec";
+let APPS_SCRIPT_URL = HARDCODED_URL || localStorage.getItem('dphe_script_url') || "";
 
 // ════════════════════════════════
 // STATE
@@ -698,7 +702,26 @@ let isSyncing = false;
 // BOOT
 // ════════════════════════════════
 window.onload = async function() {
-    document.getElementById('appsScriptUrl').value = APPS_SCRIPT_URL;
+    // URL status দেখান
+    const sideStatus = document.getElementById('sheetStatus');
+    const urlInput = document.getElementById('appsScriptUrl');
+    const statusEl = document.getElementById('sheetConnectStatus');
+
+    if (HARDCODED_URL && HARDCODED_URL.includes('script.google.com') && !HARDCODED_URL.includes('PLACEYOUR')) {
+        // URL hardcoded আছে — কারো input লাগবে না
+        urlInput.value = HARDCODED_URL;
+        urlInput.readOnly = true;
+        urlInput.style.background = '#f0fdf4';
+        urlInput.style.color = '#065f46';
+        if(statusEl) { statusEl.innerHTML = '✅ Built-in URL সক্রিয় — কোনো কনফিগ দরকার নেই।'; statusEl.style.color = '#059669'; }
+        if(sideStatus) sideStatus.innerText = '✅ Sheet: Connected';
+    } else if (APPS_SCRIPT_URL) {
+        urlInput.value = APPS_SCRIPT_URL;
+        if(sideStatus) sideStatus.innerText = '✅ Sheet: Connected';
+    } else {
+        if(sideStatus) sideStatus.innerText = '⚠️ Sheet: Not Configured';
+    }
+
     document.getElementById('plantDate').valueAsDate = new Date();
     initCascadingDropdowns();
     initTreeUI();
@@ -758,16 +781,20 @@ function persist() {
 // ════════════════════════════════
 function saveAppsScriptUrl() {
     const url = document.getElementById('appsScriptUrl').value.trim();
-    APPS_SCRIPT_URL = url;
-    localStorage.setItem('dphe_script_url', url);
     const statusEl = document.getElementById('sheetConnectStatus');
     const sideStatus = document.getElementById('sheetStatus');
-    if (url && url !== 'YOUR_URL_HERE') {
-        statusEl.innerHTML = '✅ URL সংরক্ষিত হয়েছে। পরবর্তী sync এ কাজ করবে।';
+    if (url && url.startsWith('https://script.google.com')) {
+        APPS_SCRIPT_URL = url;
+        localStorage.setItem('dphe_script_url', url);
+        statusEl.innerHTML = '✅ URL সংরক্ষিত। পরের sync এ কাজ করবে।';
+        statusEl.style.color = '#059669';
+        sideStatus.innerText = '✅ Sheet: Connected';
+    } else if (HARDCODED_URL && HARDCODED_URL.includes('script.google.com') && !HARDCODED_URL.includes('PLACEYOUR')) {
+        statusEl.innerHTML = '✅ Built-in URL সক্রিয় — কোনো কনফিগ দরকার নেই।';
         statusEl.style.color = '#059669';
         sideStatus.innerText = '✅ Sheet: Connected';
     } else {
-        statusEl.innerHTML = '⚠️ URL দেওয়া হয়নি।';
+        statusEl.innerHTML = '⚠️ সঠিক Apps Script URL দিন।';
         statusEl.style.color = '#d97706';
     }
 }
@@ -854,14 +881,20 @@ async function uploadImageToDrive(base64Data, filename) {
     try {
         const res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data })
+            body: JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data }),
+            redirect: 'follow',
+            signal: AbortSignal.timeout(30000)
         });
-        // no-cors response opaque — Drive এ গেছে, URL getAll থেকে load হবে
+        const text = await res.text();
+        const data = JSON.parse(text);
+        if (data?.success && data?.url) return data.url;
+        console.warn("Drive upload response:", data);
         return null;
-    } catch(e) { console.warn("Drive upload failed:", e); }
-    return null;
+    } catch(e) {
+        console.warn("Drive upload failed:", e);
+        return null;
+    }
 }
 
 // ════════════════════════════════
@@ -1023,15 +1056,25 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
     const treeName = document.getElementById('treeSelect').value;
     const treeObj = treeInv.find(t => t.name === treeName);
     const imgBase64 = document.getElementById('entryStoredImg').value;
-    
-    showSync("💾 সেভ হচ্ছে…", 'blue');
 
+    // বাটন disable করুন যাতে double submit না হয়
+    const submitBtn = document.getElementById('formSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = '⏳ সেভ হচ্ছে…';
+
+    // ১. আগে ছবি আপলোড করুন Drive এ
     let driveImgUrl = "";
     if (imgBase64 && APPS_SCRIPT_URL) {
         showSync("📤 Drive এ ছবি আপলোড হচ্ছে…", 'blue');
         driveImgUrl = await uploadImageToDrive(imgBase64, `DPHE_${Date.now()}.jpg`) || "";
+        if (driveImgUrl) {
+            showSync("✅ ছবি Drive এ গেছে!", 'green');
+        } else {
+            showSync("⚠️ ছবি Drive এ যায়নি, data তবুও সেভ হবে…", 'orange');
+        }
     }
 
+    // ২. তারপর record তৈরি করুন driveImgUrl সহ
     const record = {
         division: document.getElementById('entryDiv').value,
         district:  document.getElementById('entryDist').value,
@@ -1050,8 +1093,11 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
 
     if (rowId) {
         const idx = db.findIndex(r => r.id === rowId);
-        db[idx] = { ...db[idx], ...record };
-        if (!driveImgUrl && db[idx].driveImgUrl) record.driveImgUrl = db[idx].driveImgUrl;
+        if (idx !== -1) {
+            // পুরনো driveImgUrl রাখুন যদি নতুন না পাওয়া যায়
+            if (!driveImgUrl && db[idx].driveImgUrl) record.driveImgUrl = db[idx].driveImgUrl;
+            db[idx] = { ...db[idx], ...record };
+        }
     } else {
         const newId = 'DPHE-' + String(db.length + 1).padStart(4, '0');
         record.id = newId;
@@ -1059,11 +1105,16 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
         db.push(record);
     }
 
+    // ৩. data save করুন (localStorage + Google Sheets)
+    showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     persist();
     clearForm();
     switchTab('dashboard');
-    showSync("✅ সেভ সফল!", 'green');
     checkReminders();
+
+    // বাটন re-enable করুন
+    submitBtn.disabled = false;
+    submitBtn.innerText = '💾 ডাটা সেভ করুন';
 });
 
 function clearForm() {
