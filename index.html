@@ -802,11 +802,53 @@ function saveAppsScriptUrl() {
 // ════════════════════════════════
 // GOOGLE SHEETS SYNC (GET-based, no CORS issue)
 // ════════════════════════════════
+// Apps Script GET — Script-tag injection (truly CORS-safe)
+// fetch() দিয়ে Apps Script redirect follow করতে গেলে browser block করে।
+// Script tag দিয়ে call করলে CORS issue হয় না।
+// ════════════════════════════════
+function scriptFetch(url) {
+    return new Promise((resolve, reject) => {
+        const cbName = '_gasCallback_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        const timeout = setTimeout(() => {
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+            reject(new Error("Timeout — Apps Script সাড়া দেয়নি"));
+        }, 35000);
+
+        window[cbName] = function(data) {
+            clearTimeout(timeout);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+            resolve(data);
+        };
+
+        const sep = url.includes('?') ? '&' : '?';
+        const script = document.createElement('script');
+        script.src = url + sep + 'callback=' + cbName;
+        script.onerror = function() {
+            clearTimeout(timeout);
+            delete window[cbName];
+            reject(new Error("Script load error — URL চেক করুন"));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// Apps Script কে JSONP support দিতে হবে — doGet এ callback parameter handle করতে হবে
+// সেটা appsscript.js এ যোগ আছে (makeResponse JSONP-aware)
+// Fallback: fetch দিয়েও try করুন যদি script fail করে
 async function proxyFetch(url) {
-    // Apps Script GET is CORS-safe when accessed directly
-    const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(20000) });
-    const text = await res.text();
-    return JSON.parse(text);
+    try {
+        return await scriptFetch(url);
+    } catch(e1) {
+        // Script tag fail করলে fetch try করুন
+        try {
+            const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(25000) });
+            return JSON.parse(await res.text());
+        } catch(e2) {
+            throw new Error(e1.message + " | fetch fallback: " + e2.message);
+        }
+    }
 }
 
 async function saveToSheets(force = false) {
@@ -837,12 +879,16 @@ async function saveToSheets(force = false) {
                 treeInv: ci === 0 ? JSON.stringify(treeInv) : "skip",
                 masterChunk: JSON.stringify(chunks[ci])
             });
-            const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
-                redirect: 'follow',
-                signal: AbortSignal.timeout(30000)
-            });
-            const text = await res.text();
-            const data = JSON.parse(text);
+            let data;
+            try {
+                data = await scriptFetch(APPS_SCRIPT_URL + "?" + params.toString());
+            } catch(se) {
+                // script tag fail — fetch fallback
+                const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
+                    redirect: 'follow', signal: AbortSignal.timeout(30000)
+                });
+                data = JSON.parse(await res.text());
+            }
             if (!data?.success) throw new Error(data?.error || "Chunk " + ci + " failed");
         }
         showSync("✅ Sheets সেভ সফল!", 'green');
@@ -905,12 +951,15 @@ async function uploadImageToDrive(base64Data, filename) {
             });
             if (fileId) params.set('fileId', fileId);
 
-            const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
-                redirect: 'follow',
-                signal: AbortSignal.timeout(30000)
-            });
-            const text = await res.text();
-            const resp = JSON.parse(text);
+            let resp;
+            try {
+                resp = await scriptFetch(APPS_SCRIPT_URL + "?" + params.toString());
+            } catch(se) {
+                const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
+                    redirect: 'follow', signal: AbortSignal.timeout(30000)
+                });
+                resp = JSON.parse(await res.text());
+            }
             if (!resp?.success) throw new Error(resp?.error || "chunk " + i + " failed");
             if (resp.fileId) fileId = resp.fileId;
             if (i === 0 && !fileId) throw new Error("Apps Script থেকে fileId পাওয়া যায়নি");
@@ -922,12 +971,15 @@ async function uploadImageToDrive(base64Data, filename) {
             fileId:   fileId,
             filename: filename
         });
-        const finRes  = await fetch(APPS_SCRIPT_URL + "?" + finParams.toString(), {
-            redirect: 'follow',
-            signal: AbortSignal.timeout(30000)
-        });
-        const finText = await finRes.text();
-        const finData = JSON.parse(finText);
+        let finData;
+        try {
+            finData = await scriptFetch(APPS_SCRIPT_URL + "?" + finParams.toString());
+        } catch(se) {
+            const finRes = await fetch(APPS_SCRIPT_URL + "?" + finParams.toString(), {
+                redirect: 'follow', signal: AbortSignal.timeout(30000)
+            });
+            finData = JSON.parse(await finRes.text());
+        }
         if (finData?.success && finData?.url) return finData.url;
         throw new Error(finData?.error || "finalize ব্যর্থ");
     } catch(e) {
