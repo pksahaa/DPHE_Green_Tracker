@@ -769,11 +769,11 @@ function showSync(msg, color='blue') {
 // ════════════════════════════════
 // LOCAL STORAGE PERSIST
 // ════════════════════════════════
-function persist() {
+async function persist(force = false) {
     localStorage.setItem('dphe_geo_db',    JSON.stringify(geoDb));
     localStorage.setItem('dphe_tree_inv',  JSON.stringify(treeInv));
     localStorage.setItem('dphe_master_db', JSON.stringify(db));
-    saveToSheets();
+    await saveToSheets(force);
 }
 
 // ════════════════════════════════
@@ -809,8 +809,15 @@ async function proxyFetch(url) {
     return JSON.parse(text);
 }
 
-async function saveToSheets() {
-    if (!APPS_SCRIPT_URL || isSyncing) return;
+async function saveToSheets(force = false) {
+    if (!APPS_SCRIPT_URL) return;
+    // force=true হলে (form submit) isSyncing শেষ হওয়ার জন্য অপেক্ষা করুন
+    if (isSyncing) {
+        if (!force) return;
+        // force হলে আগের sync শেষ হওয়া পর্যন্ত wait করুন (max 60s)
+        let waited = 0;
+        while (isSyncing && waited < 60000) { await new Promise(r => setTimeout(r, 500)); waited += 500; }
+    }
     isSyncing = true;
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     try {
@@ -879,18 +886,50 @@ async function loadFromSheets() {
 async function uploadImageToDrive(base64Data, filename) {
     if (!APPS_SCRIPT_URL) return null;
     try {
-        const res = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data }),
+        // POST CORS block করে — তাই chunked GET দিয়ে image পাঠানো হচ্ছে
+        const CHUNK_SIZE = 8000; // 8KB per chunk — PropertiesService limit (9KB) এর নিচে safe
+        // data:image/jpeg;base64,.... থেকে শুধু base64 অংশ নিন
+        const pureBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+        const total = Math.ceil(pureBase64.length / CHUNK_SIZE);
+
+        let fileId = null;
+
+        for (let i = 0; i < total; i++) {
+            const chunk = pureBase64.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+            const params = new URLSearchParams({
+                action:   "imgChunk",
+                filename: filename,
+                chunk:    i,
+                total:    total,
+                data:     chunk
+            });
+            if (fileId) params.set('fileId', fileId);
+
+            const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
+                redirect: 'follow',
+                signal: AbortSignal.timeout(30000)
+            });
+            const text = await res.text();
+            const resp = JSON.parse(text);
+            if (!resp?.success) throw new Error(resp?.error || "chunk " + i + " failed");
+            if (resp.fileId) fileId = resp.fileId;
+            if (i === 0 && !fileId) throw new Error("Apps Script থেকে fileId পাওয়া যায়নি");
+        }
+
+        // সব chunk গেলে finalize করুন
+        const finParams = new URLSearchParams({
+            action:   "imgFinalize",
+            fileId:   fileId,
+            filename: filename
+        });
+        const finRes  = await fetch(APPS_SCRIPT_URL + "?" + finParams.toString(), {
             redirect: 'follow',
             signal: AbortSignal.timeout(30000)
         });
-        const text = await res.text();
-        const data = JSON.parse(text);
-        if (data?.success && data?.url) return data.url;
-        console.warn("Drive upload response:", data);
-        return null;
+        const finText = await finRes.text();
+        const finData = JSON.parse(finText);
+        if (finData?.success && finData?.url) return finData.url;
+        throw new Error(finData?.error || "finalize ব্যর্থ");
     } catch(e) {
         console.warn("Drive upload failed:", e);
         return null;
@@ -1107,7 +1146,7 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
 
     // ৩. data save করুন (localStorage + Google Sheets)
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
-    persist();
+    await persist(true);  // force=true — অন্য sync চললেও এটা সেভ হবেই
     clearForm();
     switchTab('dashboard');
     checkReminders();
