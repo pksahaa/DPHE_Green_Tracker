@@ -620,7 +620,7 @@
 // ═══════════════════════════════════════
 
 // ── Apps Script URL ──────────────────────────────────────
-let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "";
+let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "https://script.google.com/macros/s/AKfycbyv96ByiqK0XrwdPlmdd4kn4jQFJ3quWIhRq_2wjMo6uBn16yo95WNFDkxlagp_YxrZ/exec";
 
 // ── বাংলাদেশের ৬৪ জেলার ডিফল্ট ডাটা (Admin Hard-coded) ──
 const DEFAULT_GEO_DB = {
@@ -857,59 +857,89 @@ function pullAllDataFromSheets() {
 function pushAllDataToSheets() {
     if(!APPS_SCRIPT_URL) return;
     showNotification("ক্লাউডে ডাটা ব্যাকআপ হচ্ছে...");
-    
-    const payload = {
-        action: "saveAll",
-        masterDb: db,
-        geoDb: geoDb,
-        treeInv: treeInv
-    };
 
-    // ফ্লেক্সিবল অ্যাসিনক্রোনাস ব্যাকআপের জন্য Image chunk মেথডোলজি ছাড়াই সরাসরি ফর্ম ডাটা পুশ
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = APPS_SCRIPT_URL;
-    form.style.display = 'none';
+    const CHUNK_SIZE = 20;
+    const chunks = [];
+    for(let i = 0; i < db.length; i += CHUNK_SIZE) {
+        chunks.push(db.slice(i, i + CHUNK_SIZE));
+    }
+    if(chunks.length === 0) chunks.push([]);
 
-    const input = document.createElement('input');
-    input.name = 'payload';
-    input.value = JSON.stringify(payload);
-    form.appendChild(input);
+    const total = chunks.length;
+    let current = 0;
 
-    document.body.appendChild(form);
-    
-    // Hidden iframe ব্যবহার করে CORS বাইপাস করে POST রিকোয়েস্ট প্রেরণ
-    const iframe = document.createElement('iframe');
-    iframe.name = 'sync_frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    form.target = 'sync_frame';
+    function sendChunk(idx) {
+        let url = APPS_SCRIPT_URL + '?action=saveChunk'
+            + '&chunk=' + idx
+            + '&total=' + total
+            + '&masterChunk=' + encodeURIComponent(JSON.stringify(chunks[idx] || []));
 
-    form.submit();
-    setTimeout(() => {
-        form.remove();
-        iframe.remove();
-        showNotification("ক্লাউড ব্যাকআপ সিঙ্ক্রোনাইজেশন কমপ্লিট!");
-    }, 2500);
+        if(idx === 0) {
+            url += '&geoDb='   + encodeURIComponent(JSON.stringify(geoDb));
+            url += '&treeInv=' + encodeURIComponent(JSON.stringify(treeInv));
+        } else {
+            url += '&geoDb=skip&treeInv=skip';
+        }
+
+        executeJsonp(url)
+            .then(res => {
+                if(!res || !res.success) {
+                    showNotification("ব্যাকআপ chunk " + idx + " ব্যর্থ!", false);
+                    return;
+                }
+                current++;
+                if(current < total) {
+                    sendChunk(current);
+                } else {
+                    showNotification("✅ Google Sheets এ সফলভাবে সেভ হয়েছে! (" + db.length + " রেকর্ড)");
+                }
+            })
+            .catch(err => {
+                console.error("Chunk push error:", err);
+                showNotification("ক্লাউড সংযোগ ব্যর্থ!", false);
+            });
+    }
+
+    sendChunk(0);
 }
 
 function executeJsonp(url) {
     return new Promise((resolve, reject) => {
         const callbackName = 'dphe_cb_' + Math.round(Math.random() * 1000000);
+        const scriptId = 'jsonp_' + callbackName;   // আগে declare করতে হবে
+
         window[callbackName] = function(data) {
             delete window[callbackName];
-            document.getElementById(scriptId).remove();
+            const el = document.getElementById(scriptId);
+            if(el) el.remove();
             resolve(data);
         };
-        const scriptId = 'jsonp_' + callbackName;
+
         const script = document.createElement('script');
         script.id = scriptId;
-        script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+        // url এ ইতিমধ্যে ? আছে কিনা check করে & বা ? লাগাই
+        const sep = url.includes('?') ? '&' : '?';
+        script.src = url + sep + 'callback=' + callbackName;
         script.onerror = () => {
             delete window[callbackName];
             script.remove();
-            reject(new Error("Network cross-origin transport layer failure."));
+            reject(new Error("JSONP network error — Apps Script URL চেক করুন।"));
         };
+        // timeout: ৩০ সেকেন্ডের মধ্যে response না আসলে reject
+        const timer = setTimeout(() => {
+            delete window[callbackName];
+            const el = document.getElementById(scriptId);
+            if(el) el.remove();
+            reject(new Error("JSONP timeout — Apps Script সাড়া দিচ্ছে না।"));
+        }, 30000);
+
+        // resolve হলে timer বন্ধ করি
+        const origFn = window[callbackName];
+        window[callbackName] = function(data) {
+            clearTimeout(timer);
+            origFn(data);
+        };
+
         document.body.appendChild(script);
     });
 }
