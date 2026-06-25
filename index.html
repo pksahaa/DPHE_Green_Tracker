@@ -115,7 +115,7 @@
         .data-table td { font-size: 12px; }
         .data-table tr:hover td { background: #f8fafc; }
 
-        /* ── Mobile nav ─────────────────────────────── */
+        /* ── Mobile nav ────────────────!!!!!!!!─────── */
         @media (max-width: 768px) {
             #sidebar { display: none; }
             #mobileNav { display: flex; }
@@ -815,7 +815,7 @@
             "&total=" + total +
             "&geoDb=" + encodeURIComponent(geoParam) +
             "&treeInv=" + encodeURIComponent(treeParam) +
-            "&masterChunk=" + encodeURIComponent(masterStr);
+            "&masterChunk=" + encodeURIComponent(masterStr); // এখানে masterChunk প্যারামিটার ঠিক করা হয়েছে
 
         return jsonpCall(url).then(res => {
             if (res && res.success && chunk === total - 1) {
@@ -1167,7 +1167,6 @@
 
     // ── CHARTS RENDERING ENGINE ─────────────────────────
     function renderDashboardCharts(pool, tier, sDiv) {
-        // 1. Type Pie Chart
         const types = {};
         pool.forEach(r => types[r.type] = (types[r.type] || 0) + 1);
         
@@ -1182,7 +1181,6 @@
             options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
         });
 
-        // 2. Regional Bar Chart
         const barLabels = [];
         const barData = [];
         if (tier === 'Country') {
@@ -1209,7 +1207,6 @@
             options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
         });
 
-        // 3. Monthly Trend Chart
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const trendCounts = Array(12).fill(0);
         pool.forEach(r => {
@@ -1551,7 +1548,7 @@
             
             if(type === 'location') {
                 lines.forEach((line, idx) => {
-                    if (idx === 0 && line.includes("বিভাগ")) return; // Skip Header
+                    if (idx === 0 && line.includes("বিভাগ")) return; 
                     const parts = line.split(",");
                     if (parts.length >= 5) {
                         const [dv, ds, up, un, tg] = parts.map(p => p.trim());
@@ -1597,15 +1594,4 @@
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = name;
-        a.click();
-    }
-
-    function clearAllLocalData() {
-        if (!confirm("⚠️ আপনি কি নিশ্চিতভাবে সমস্ত লোকাল ক্যাশ মেমোরি ডাটা মুছতে চান?")) return;
-        localStorage.clear();
-        alert("লোকাল ক্যাশ মেমোরি ডাটা পরিষ্কার করা হয়েছে। পেজটি রিলোড দিন।");
-        location.reload();
-    }
-</script>
-</body>
-</html>
+        a.
