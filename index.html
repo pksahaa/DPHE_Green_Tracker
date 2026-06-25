@@ -556,16 +556,13 @@
             <!-- Google Apps Script URL -->
             <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
                 <h3 class="font-black text-amber-900">🔗 Google Apps Script কনফিগারেশন</h3>
-                <p class="text-xs text-amber-800">এই অ্যাপে URL আগে থেকেই সেট করা আছে। সাধারণ ব্যবহারকারীদের কিছু করতে হবে না।</p>
+                <p class="text-xs text-amber-800">Google Sheets ও Drive এ ডাটা সংরক্ষণের জন্য আপনার Web App URL বসান।</p>
                 <div class="flex gap-2">
                     <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/..." style="font-size:11px;">
                     <button onclick="saveAppsScriptUrl()" class="btn-primary flex-shrink-0" style="padding:8px 16px;">💾 Save</button>
                 </div>
                 <div id="sheetConnectStatus" class="text-xs font-bold"></div>
-                <div id="syncNowSection">
-                    <button onclick="loadFromSheets()" class="btn-primary btn-blue" style="padding:7px 16px;font-size:12px;">🔄 এখনই Sheets থেকে লোড করুন</button>
-                    <button onclick="saveToSheets()" class="btn-primary" style="padding:7px 16px;font-size:12px;background:#059669;margin-left:8px;">☁️ এখনই Sheets এ সেভ করুন</button>
-                </div>
+
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -649,10 +646,9 @@
 ═══════════════════════════════════════ -->
 <script>
 // ═══════════════════════════════════════
-// CONFIG — Apps Script URL (hardcoded — কাউকে manually বসাতে হবে না)
+// CONFIG — আপনার Apps Script URL এখানে
 // ═══════════════════════════════════════
-const HARDCODED_URL = "https://script.google.com/macros/s/AKfycbxpcA9R6-15A8kC3aIVuuc6iWRU8-CGim1dV0Iyryk7gixNgcWhOHLtXeGfPr-7V67qBQ/exec";
-let APPS_SCRIPT_URL = HARDCODED_URL || localStorage.getItem('dphe_script_url') || "";
+let APPS_SCRIPT_URL = localStorage.getItem('dphe_script_url') || "https://script.google.com/macros/s/AKfycbxpcA9R6-15A8kC3aIVuuc6iWRU8-CGim1dV0Iyryk7gixNgcWhOHLtXeGfPr-7V67qBQ/exec";
 
 // ════════════════════════════════
 // STATE
@@ -702,26 +698,7 @@ let isSyncing = false;
 // BOOT
 // ════════════════════════════════
 window.onload = async function() {
-    // URL status দেখান
-    const sideStatus = document.getElementById('sheetStatus');
-    const urlInput = document.getElementById('appsScriptUrl');
-    const statusEl = document.getElementById('sheetConnectStatus');
-
-    if (HARDCODED_URL && HARDCODED_URL.includes('script.google.com') && !HARDCODED_URL.includes('PLACEYOUR')) {
-        // URL hardcoded আছে — কারো input লাগবে না
-        urlInput.value = HARDCODED_URL;
-        urlInput.readOnly = true;
-        urlInput.style.background = '#f0fdf4';
-        urlInput.style.color = '#065f46';
-        if(statusEl) { statusEl.innerHTML = '✅ Built-in URL সক্রিয় — কোনো কনফিগ দরকার নেই।'; statusEl.style.color = '#059669'; }
-        if(sideStatus) sideStatus.innerText = '✅ Sheet: Connected';
-    } else if (APPS_SCRIPT_URL) {
-        urlInput.value = APPS_SCRIPT_URL;
-        if(sideStatus) sideStatus.innerText = '✅ Sheet: Connected';
-    } else {
-        if(sideStatus) sideStatus.innerText = '⚠️ Sheet: Not Configured';
-    }
-
+    document.getElementById('appsScriptUrl').value = APPS_SCRIPT_URL;
     document.getElementById('plantDate').valueAsDate = new Date();
     initCascadingDropdowns();
     initTreeUI();
@@ -769,11 +746,11 @@ function showSync(msg, color='blue') {
 // ════════════════════════════════
 // LOCAL STORAGE PERSIST
 // ════════════════════════════════
-async function persist(force = false) {
+function persist() {
     localStorage.setItem('dphe_geo_db',    JSON.stringify(geoDb));
     localStorage.setItem('dphe_tree_inv',  JSON.stringify(treeInv));
     localStorage.setItem('dphe_master_db', JSON.stringify(db));
-    await saveToSheets(force);
+    saveToSheets(); // fire-and-forget — no-cors POST, response নেই
 }
 
 // ════════════════════════════════
@@ -781,45 +758,45 @@ async function persist(force = false) {
 // ════════════════════════════════
 function saveAppsScriptUrl() {
     const url = document.getElementById('appsScriptUrl').value.trim();
+    APPS_SCRIPT_URL = url;
+    localStorage.setItem('dphe_script_url', url);
     const statusEl = document.getElementById('sheetConnectStatus');
     const sideStatus = document.getElementById('sheetStatus');
-    if (url && url.startsWith('https://script.google.com')) {
-        APPS_SCRIPT_URL = url;
-        localStorage.setItem('dphe_script_url', url);
-        statusEl.innerHTML = '✅ URL সংরক্ষিত। পরের sync এ কাজ করবে।';
-        statusEl.style.color = '#059669';
-        sideStatus.innerText = '✅ Sheet: Connected';
-    } else if (HARDCODED_URL && HARDCODED_URL.includes('script.google.com') && !HARDCODED_URL.includes('PLACEYOUR')) {
-        statusEl.innerHTML = '✅ Built-in URL সক্রিয় — কোনো কনফিগ দরকার নেই।';
+    if (url && url !== 'YOUR_URL_HERE') {
+        statusEl.innerHTML = '✅ URL সংরক্ষিত হয়েছে। পরবর্তী sync এ কাজ করবে।';
         statusEl.style.color = '#059669';
         sideStatus.innerText = '✅ Sheet: Connected';
     } else {
-        statusEl.innerHTML = '⚠️ সঠিক Apps Script URL দিন।';
+        statusEl.innerHTML = '⚠️ URL দেওয়া হয়নি।';
         statusEl.style.color = '#d97706';
     }
 }
 
-// ════════════════════════════════
-// GOOGLE SHEETS SYNC (GET-based, no CORS issue)
 // ════════════════════════════════════════════════════════════════
-// GOOGLE SHEETS SYNC — no-cors fire-and-forget
+// GOOGLE SHEETS SYNC
 //
-// Browser থেকে Apps Script এ CORS header পাওয়া impossible।
-// Script tag JSONP ও Firefox/Chrome এ Apps Script redirect block করে।
-//
-// Solution: no-cors mode এ fetch পাঠানো — response read হবে না,
-// কিন্তু Apps Script সার্ভার side এ request পাবে এবং process করবে।
-// Success verify করা হবে 3 সেকেন্ড পরে getAll দিয়ে।
+// POST no-cors  → saveAll  (write) — response opaque, কিন্তু server পায়
+// XHR GET       → getAll   (read)  — XHR Apps Script redirect handle করে
 // ════════════════════════════════════════════════════════════════
 
-async function gasGET(urlWithParams) {
-    // no-cors: response opaque হয়, কিন্তু request Apps Script এ পৌঁছায়
-    await fetch(urlWithParams, {
-        method: 'GET',
-        mode: 'no-cors',
-        cache: 'no-store'
+// XHR দিয়ে GET — fetch এর চেয়ে Apps Script redirect এ বেশি reliable
+function xhrGet(url) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = 25000;
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                try { resolve(JSON.parse(xhr.responseText)); }
+                catch (e) { reject(new Error("JSON parse error: " + xhr.responseText.slice(0, 100))); }
+            } else {
+                reject(new Error("HTTP " + xhr.status));
+            }
+        };
+        xhr.onerror   = () => reject(new Error("Network error"));
+        xhr.ontimeout = () => reject(new Error("Timeout"));
+        xhr.send();
     });
-    // no-cors এ response body পড়া যায় না — তাই void return
 }
 
 async function saveToSheets(force = false) {
@@ -832,53 +809,30 @@ async function saveToSheets(force = false) {
     isSyncing = true;
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     try {
-        const masterClean = db.map(r => ({ ...r, img: "" }));
-        const chunkSize = 50;
-        const chunks = [];
-        for (let i = 0; i < masterClean.length; i += chunkSize)
-            chunks.push(masterClean.slice(i, i + chunkSize));
-        if (chunks.length === 0) chunks.push([]);
-
-        for (let ci = 0; ci < chunks.length; ci++) {
-            const params = new URLSearchParams({
-                action:      "saveChunk",
-                chunk:       ci,
-                total:       chunks.length,
-                geoDb:       ci === 0 ? JSON.stringify(geoDb) : "skip",
-                treeInv:     ci === 0 ? JSON.stringify(treeInv) : "skip",
-                masterChunk: JSON.stringify(chunks[ci])
-            });
-            await gasGET(APPS_SCRIPT_URL + "?" + params.toString());
-            // chunk এর মাঝে Apps Script কে process করার সময় দিন
-            if (chunks.length > 1) await new Promise(r => setTimeout(r, 1500));
-        }
-
-        // সব chunk পাঠানোর পরে ৩ সেকেন্ড অপেক্ষা করে verify করুন
-        await new Promise(r => setTimeout(r, 3000));
-        await verifySheetsSaved();
-
-    } catch(e) {
+        const payload = {
+            action:   "saveAll",
+            geoDb:    geoDb,
+            treeInv:  treeInv,
+            masterDb: db.map(r => ({ ...r, img: "" }))
+        };
+        // no-cors POST: response read হবে না, কিন্তু Apps Script server সাইডে process করবে
+        await fetch(APPS_SCRIPT_URL, {
+            method:  'POST',
+            mode:    'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body:    JSON.stringify(payload)
+        });
+        showSync("✅ Sheets এ পাঠানো হয়েছে!", 'green');
+    } catch (e) {
         showSync("❌ সেভ ব্যর্থ: " + e.message, 'red');
     } finally { isSyncing = false; }
-}
-
-// Sheets এ সত্যিই গেছে কিনা verify করুন — getAll দিয়ে count মিলান
-async function verifySheetsSaved() {
-    try {
-        // no-cors এ response পড়া যায় না — তাই শুধু success message দেখান
-        // (Apps Script server-side এ process করে নেয়, browser শুধু confirm করতে পারে না)
-        showSync("✅ Sheets এ পাঠানো হয়েছে!", 'green');
-    } catch(e) {
-        showSync("⚠️ Sheets verify করা যায়নি — data local এ আছে", 'orange');
-    }
 }
 
 async function loadFromSheets() {
     if (!APPS_SCRIPT_URL) return;
     showSync("☁️ Sheets থেকে লোড হচ্ছে…", 'orange');
     try {
-        // load এর জন্য একটা iframe trick ব্যবহার করুন যা redirect safe
-        const data = await fetchViaIframe(APPS_SCRIPT_URL + "?action=getAll");
+        const data = await xhrGet(APPS_SCRIPT_URL + "?action=getAll");
         if (!data?.success) { showSync("⚠️ Local ডাটা ব্যবহার হচ্ছে", 'orange'); return; }
         if (data.geoDb && Object.keys(data.geoDb).length > 0) {
             geoDb = data.geoDb;
@@ -889,7 +843,7 @@ async function loadFromSheets() {
             localStorage.setItem('dphe_tree_inv', JSON.stringify(treeInv));
         }
         if (data.masterDb?.length > 0) {
-            const local = JSON.parse(localStorage.getItem('dphe_master_db')) || [];
+            const local = JSON.parse(localStorage.getItem('dphe_master_db') || '[]');
             data.masterDb.forEach(row => {
                 const lr = local.find(r => r.id === row.id);
                 if (lr?.img) row.img = lr.img;
@@ -901,66 +855,24 @@ async function loadFromSheets() {
         initCascadingDropdowns();
         initTreeUI();
         updateDashboard();
-    } catch(e) {
+    } catch (e) {
         showSync("⚠️ Sheets লোড ব্যর্থ — local ডাটা ব্যবহার হচ্ছে", 'orange');
+        console.warn("loadFromSheets error:", e.message);
     }
-}
-
-// getAll এর জন্য: Apps Script JSON response পড়তে fetch এর পরিবর্তে
-// XHR with responseType ব্যবহার — কিছু browser এ redirect পরে CORS allow করে
-function fetchViaIframe(url) {
-    return new Promise((resolve) => {
-        // Method 1: plain fetch (Chrome তে redirect পরে CORS allow করে apps script এ)
-        fetch(url, { signal: AbortSignal.timeout(20000) })
-            .then(r => r.text())
-            .then(t => resolve(JSON.parse(t)))
-            .catch(() => {
-                // Method 2: XHR
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', url, true);
-                xhr.timeout = 20000;
-                xhr.onload = function() {
-                    try { resolve(JSON.parse(xhr.responseText)); }
-                    catch(e) { resolve(null); }
-                };
-                xhr.onerror = () => resolve(null);
-                xhr.ontimeout = () => resolve(null);
-                xhr.send();
-            });
-    });
 }
 
 async function uploadImageToDrive(base64Data, filename) {
     if (!APPS_SCRIPT_URL) return null;
     try {
-        // no-cors GET দিয়ে chunk পাঠানো — response read হবে না কিন্তু server এ পৌঁছাবে
-        const CHUNK_SIZE = 8000;
-        const pureBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-        const total = Math.ceil(pureBase64.length / CHUNK_SIZE);
-
-        for (let i = 0; i < total; i++) {
-            const chunk = pureBase64.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-            const params = new URLSearchParams({
-                action:   "imgChunk",
-                filename: filename,
-                chunk:    i,
-                total:    total,
-                data:     chunk
-            });
-            await gasGET(APPS_SCRIPT_URL + "?" + params.toString());
-            await new Promise(r => setTimeout(r, 800)); // Apps Script process করার সময়
-        }
-
-        // finalize — Apps Script Drive এ file বানাবে
-        await gasGET(APPS_SCRIPT_URL + "?" + new URLSearchParams({
-            action: "imgFinalize", filename: filename
-        }).toString());
-
-        // no-cors এ URL পাওয়া সম্ভব না — Drive URL আগে থেকে জানা থাকলে return করুন
-        // বিকল্প: ছবি local এ রাখুন, Drive URL ছাড়াই record save করুন
-        showSync("📤 ছবি Drive এ পাঠানো হয়েছে (URL পরে লোড হবে)", 'green');
-        return "pending"; // placeholder — পরে getAll দিয়ে URL update হবে
-    } catch(e) {
+        await fetch(APPS_SCRIPT_URL, {
+            method:  'POST',
+            mode:    'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body:    JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data })
+        });
+        // no-cors — response পাওয়া যাবে না, image পাঠানো হয়েছে বলে ধরে নিই
+        return null;
+    } catch (e) {
         console.warn("Drive upload failed:", e);
         return null;
     }
@@ -1125,27 +1037,15 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
     const treeName = document.getElementById('treeSelect').value;
     const treeObj = treeInv.find(t => t.name === treeName);
     const imgBase64 = document.getElementById('entryStoredImg').value;
+    
+    showSync("💾 সেভ হচ্ছে…", 'blue');
 
-    // বাটন disable করুন যাতে double submit না হয়
-    const submitBtn = document.getElementById('formSubmitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerText = '⏳ সেভ হচ্ছে…';
-
-    // ১. আগে ছবি আপলোড করুন Drive এ
     let driveImgUrl = "";
     if (imgBase64 && APPS_SCRIPT_URL) {
         showSync("📤 Drive এ ছবি আপলোড হচ্ছে…", 'blue');
         driveImgUrl = await uploadImageToDrive(imgBase64, `DPHE_${Date.now()}.jpg`) || "";
-        if (driveImgUrl) {
-            showSync("✅ ছবি Drive এ পাঠানো হয়েছে!", 'green');
-        } else {
-            showSync("⚠️ ছবি Drive এ যায়নি, data তবুও সেভ হবে…", 'orange');
-        }
     }
-    // "pending" মানে ছবি পাঠানো হয়েছে কিন্তু URL এখনো পাওয়া যায়নি (no-cors)
-    if (driveImgUrl === "pending") driveImgUrl = "";
 
-    // ২. তারপর record তৈরি করুন driveImgUrl সহ
     const record = {
         division: document.getElementById('entryDiv').value,
         district:  document.getElementById('entryDist').value,
@@ -1164,11 +1064,8 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
 
     if (rowId) {
         const idx = db.findIndex(r => r.id === rowId);
-        if (idx !== -1) {
-            // পুরনো driveImgUrl রাখুন যদি নতুন না পাওয়া যায়
-            if (!driveImgUrl && db[idx].driveImgUrl) record.driveImgUrl = db[idx].driveImgUrl;
-            db[idx] = { ...db[idx], ...record };
-        }
+        db[idx] = { ...db[idx], ...record };
+        if (!driveImgUrl && db[idx].driveImgUrl) record.driveImgUrl = db[idx].driveImgUrl;
     } else {
         const newId = 'DPHE-' + String(db.length + 1).padStart(4, '0');
         record.id = newId;
@@ -1176,16 +1073,13 @@ document.getElementById('plantationForm').addEventListener('submit', async funct
         db.push(record);
     }
 
-    // ৩. data save করুন (localStorage + Google Sheets)
-    showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
-    await persist(true);  // force=true — অন্য sync চললেও এটা সেভ হবেই
+    persist();         // localStorage সাথে সাথে save
     clearForm();
     switchTab('dashboard');
+    showSync("✅ সেভ সফল! Sheets এ পাঠানো হচ্ছে…", 'green');
     checkReminders();
-
-    // বাটন re-enable করুন
-    submitBtn.disabled = false;
-    submitBtn.innerText = '💾 ডাটা সেভ করুন';
+    // Sheets এ আলাদাভাবে force-save (no-cors POST, background)
+    saveToSheets(true);
 });
 
 function clearForm() {
