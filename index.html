@@ -787,18 +787,30 @@ async function saveToSheets() {
     isSyncing = true;
     showSync("☁️ Sheets এ সেভ হচ্ছে…", 'blue');
     try {
-        const payload = {
-            action: "saveAll",
-            geoDb: geoDb,
-            treeInv: treeInv,
-            masterDb: db.map(r => ({ ...r, img: "" }))
-        };
-        await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        });
+        const masterClean = db.map(r => ({ ...r, img: "" }));
+        const chunkSize = 50;
+        const chunks = [];
+        for (let i = 0; i < masterClean.length; i += chunkSize)
+            chunks.push(masterClean.slice(i, i + chunkSize));
+        if (chunks.length === 0) chunks.push([]);
+
+        for (let ci = 0; ci < chunks.length; ci++) {
+            const params = new URLSearchParams({
+                action: "saveChunk",
+                chunk: ci,
+                total: chunks.length,
+                geoDb: ci === 0 ? JSON.stringify(geoDb) : "skip",
+                treeInv: ci === 0 ? JSON.stringify(treeInv) : "skip",
+                masterChunk: JSON.stringify(chunks[ci])
+            });
+            const res = await fetch(APPS_SCRIPT_URL + "?" + params.toString(), {
+                redirect: 'follow',
+                signal: AbortSignal.timeout(30000)
+            });
+            const text = await res.text();
+            const data = JSON.parse(text);
+            if (!data?.success) throw new Error(data?.error || "Chunk " + ci + " failed");
+        }
         showSync("✅ Sheets সেভ সফল!", 'green');
     } catch(e) {
         showSync("❌ সেভ ব্যর্থ: " + e.message, 'red');
@@ -840,15 +852,13 @@ async function loadFromSheets() {
 async function uploadImageToDrive(base64Data, filename) {
     if (!APPS_SCRIPT_URL) return null;
     try {
-        // POST with no-cors — response opaque, Drive URL বানাই separately
-        const tempId = 'temp_' + Date.now();
-        await fetch(APPS_SCRIPT_URL, {
+        const res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data, tempId: tempId })
+            body: JSON.stringify({ action: "uploadImage", filename: filename, imageData: base64Data })
         });
-        // no-cors response opaque — image গেছে বলে ধরে নিই, URL later getAll থেকে আসবে
+        // no-cors response opaque — Drive এ গেছে, URL getAll থেকে load হবে
         return null;
     } catch(e) { console.warn("Drive upload failed:", e); }
     return null;
