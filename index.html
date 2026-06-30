@@ -333,15 +333,6 @@ tr:hover td{background:#f8fdf8}
     <p>Department of Public Health Engineering</p>
     <p class="bangla">বাংলাদেশ সরকার — ২৫ কোটি বৃক্ষরোপণ কর্মসূচি</p>
   </div>
-  <div style="margin-bottom:14px">
-    <label style="display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:8px">👤 Login as</label>
-    <div class="role-grid">
-      <div class="role-btn active" onclick="selectRole('admin',this)"><span class="icon2">🛡️</span>HQ Admin</div>
-      <div class="role-btn" onclick="selectRole('divisional',this)"><span class="icon2">🏢</span>Divisional</div>
-      <div class="role-btn" onclick="selectRole('district',this)"><span class="icon2">🏬</span>District</div>
-      <div class="role-btn" onclick="selectRole('upazilla',this)"><span class="icon2">📍</span>Upazilla</div>
-    </div>
-  </div>
   <div class="form-group">
     <label>Username</label>
     <input type="text" id="login-user" value="admin@dphe.gov.bd" placeholder="Enter username">
@@ -351,32 +342,7 @@ tr:hover td{background:#f8fdf8}
     <input type="password" id="login-pass" value="password123" placeholder="Enter password">
   </div>
 
-  <div id="login-location-fields" style="display:none;margin-top:10px;padding:12px;background:#f0f7f0;border-radius:10px;border:1.5px solid #c8e6c9">
-    <div style="font-size:12px;font-weight:700;color:#1a5c2a;margin-bottom:8px">📍 আপনার অফিসের অবস্থান নির্বাচন করুন</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div>
-        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">Division</label>
-        <select id="login-div" onchange="loginDivChange()" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
-          <option value="">— Select Division —</option>
-          <option>Dhaka</option><option>Chittagong</option><option>Rajshahi</option>
-          <option>Khulna</option><option>Barishal</option><option>Sylhet</option>
-          <option>Rangpur</option><option>Mymensingh</option>
-        </select>
-      </div>
-      <div id="login-dis-wrap" style="display:none">
-        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">District</label>
-        <select id="login-dis" onchange="loginDisChange()" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
-          <option value="">— Select District —</option>
-        </select>
-      </div>
-      <div id="login-upa-wrap" style="display:none;grid-column:1/-1">
-        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">Upazilla</label>
-        <select id="login-upa" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
-          <option value="">— Select Upazilla —</option>
-        </select>
-      </div>
-    </div>
-  </div>
+  <div id="login-location-fields" style="display:none"></div>
   <button class="btn-login" onclick="doLogin()" style="margin-top:14px">🔐 Sign in</button>
   <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">🔒 Secured by Google Sheets + Apps Script backend</p>
 </div>
@@ -1732,19 +1698,43 @@ function initDashboard() {
   var sCare  = document.getElementById('s-care');  if (sCare)  sCare.textContent  = care;
 }
 
-// buildChart: delegated to RBAC section (see below) for month-chart
-// This stub keeps compatibility for report-chart
+// Builds the Monthly Trend chart from real plantation records (current year, or
+// most recent year present in the data if no records exist for the current year).
 function buildChart_legacy(id) {
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var vals = [8200,14500,21000,28000,35000,42000,38000,51000,46000,55000,49000,62000];
-  var max = Math.max(...vals);
   var elBC = document.getElementById(id);
   if (!elBC) return;
-  elBC.innerHTML = months.map((m,i) =>
-    '<div class="bar-wrap"><div class="bar-val">' + (vals[i]/1000).toFixed(0) + 'k</div>' +
-    '<div class="bar" style="height:' + Math.round(vals[i]/max*100) + 'px" title="' + m + ': ' + vals[i].toLocaleString() + ' trees"></div>' +
-    '<div class="bar-label">' + m + '</div></div>'
-  ).join('');
+
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var src = (typeof scopedRecords === 'function') ? scopedRecords() : records;
+  src = src || [];
+
+  // Pick the year to display: current year if it has data, else the latest year present.
+  var thisYear = new Date().getFullYear();
+  var yearsWithData = {};
+  src.forEach(function(r){
+    if (r.date) yearsWithData[String(r.date).substring(0,4)] = true;
+  });
+  var year = yearsWithData[String(thisYear)] ? thisYear :
+    (Object.keys(yearsWithData).sort().pop() || String(thisYear));
+  year = String(year);
+
+  var vals = [0,0,0,0,0,0,0,0,0,0,0,0];
+  src.forEach(function(r){
+    if (!r.date || String(r.date).substring(0,4) !== year) return;
+    var m = parseInt(String(r.date).substring(5,7), 10) - 1;
+    if (m < 0 || m > 11) return;
+    vals[m] += Number(r.count) || 0;
+  });
+
+  var titleEl = elBC.parentElement ? elBC.parentElement.querySelector('.card-title span:last-child') : null;
+  if (titleEl) titleEl.textContent = '| মাসিক প্রবণতা (' + year + ')';
+
+  var max = Math.max.apply(null, vals) || 1;
+  elBC.innerHTML = months.map(function(m, i){
+    return '<div class="bar-wrap"><div class="bar-val">' + vals[i].toLocaleString() + '</div>' +
+      '<div class="bar" style="height:' + Math.round(vals[i]/max*100) + 'px" title="' + m + ': ' + vals[i].toLocaleString() + ' trees"></div>' +
+      '<div class="bar-label">' + m + '</div></div>';
+  }).join('');
 }
 
 // ════════════════════════════════
@@ -3694,15 +3684,7 @@ function doLogin() {
     return;
   }
 
-  // Resolve location from login form (used only as a hint; server is the source of truth)
-  var loginDiv = (document.getElementById('login-div')?.value) || '';
-  var loginDis = (document.getElementById('login-dis')?.value) || '';
-  var loginUpa = (document.getElementById('login-upa')?.value) || '';
-  if (currentRole !== 'admin') {
-    if (!loginDiv) { alert('Please select your Division.'); return; }
-    if ((currentRole==='district'||currentRole==='upazilla') && !loginDis) { alert('Please select your District.'); return; }
-    if (currentRole==='upazilla' && !loginUpa) { alert('Please select your Upazilla.'); return; }
-  }
+  // Role & office location now come entirely from the server (each account is dedicated to one role/office).
 
   var btn = document.querySelector('.btn-login');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ যাচাই করা হচ্ছে...'; }
@@ -3719,9 +3701,9 @@ function doLogin() {
     SESSION.role  = roleKeyFromLabel(u.role);
     SESSION.email = u.email;
     SESSION.name  = u.name;
-    SESSION.div   = u.div || (SESSION.role !== 'admin' ? loginDiv : null);
-    SESSION.dis   = u.dis || (SESSION.role==='district'||SESSION.role==='upazilla' ? loginDis : null);
-    SESSION.upa   = u.upa || (SESSION.role==='upazilla' ? loginUpa : null);
+    SESSION.div   = u.div || null;
+    SESSION.dis   = u.dis || null;
+    SESSION.upa   = u.upa || null;
     SESSION.perms = (u.perms && u.perms.length) ? u.perms : (ROLE_DEFAULT_PERMS[u.role] || ROLE_DEFAULT_PERMS['Upazilla'] || []);
     SESSION.fieldPerms = ensureFieldPerms(u);
     if (SESSION.role === 'admin') {
@@ -3741,6 +3723,7 @@ function doLogin() {
 
     applySidebarPermissions();
     lockLocationFields();
+    saveSessionToStorage();
 
     showLoading('ডেটা লোড হচ্ছে...');
     apiCall('getAll', {}).then(function(data) {
@@ -3778,9 +3761,84 @@ function logout() {
   if (!confirm('Logout করতে চান?')) return;
   if (backendConfigured() && AUTH_TOKEN) { apiCall('logout', {}); }
   AUTH_TOKEN = null;
+  clearSessionFromStorage();
   document.getElementById('login-screen').style.display = 'block';
   document.getElementById('main-app').style.display = 'none';
 }
+
+// ── Persist session across page refresh (so reload doesn't log the user out) ──
+var SESSION_STORAGE_KEY = 'dphe_tt_session_v1';
+
+function saveSessionToStorage() {
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+      token: AUTH_TOKEN,
+      session: SESSION,
+      role: currentRole
+    }));
+  } catch (e) { /* storage unavailable — ignore */ }
+}
+
+function clearSessionFromStorage() {
+  try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch (e) {}
+}
+
+function restoreSessionFromStorage() {
+  var saved;
+  try {
+    var raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return;
+    saved = JSON.parse(raw);
+  } catch (e) { return; }
+  if (!saved || !saved.token || !saved.session || !saved.session.email) return;
+
+  AUTH_TOKEN = saved.token;
+  SESSION = saved.session;
+  currentRole = saved.role || SESSION.role;
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+
+  var rm = roleMap[currentRole];
+  if (rm) {
+    document.getElementById('role-badge').className = 'nav-badge ' + rm.badge;
+    document.getElementById('role-badge').textContent = rm.label;
+    document.getElementById('nav-avatar').textContent = rm.initials;
+  }
+  document.getElementById('nav-user-email').textContent = SESSION.email;
+
+  applySidebarPermissions();
+  lockLocationFields();
+
+  showLoading('সেশন পুনরুদ্ধার করা হচ্ছে...');
+  apiCall('getAll', {}).then(function(data) {
+    hideLoading();
+    if (!data || !data.ok) {
+      // Token likely expired/invalid on the server — fall back to a fresh login
+      clearSessionFromStorage();
+      AUTH_TOKEN = null;
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('main-app').style.display = 'none';
+      return;
+    }
+    if (data.records) records = data.records;
+    if (data.users)   users   = data.users;
+    if (data.species) TREE_LIST = data.species;
+    initDashboard();
+    renderRecords();
+    renderUsers();
+    renderMonitoring();
+    buildChart_legacy('report-chart');
+    updateMapCards();
+    renderSpeciesTable();
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mon-date').value = new Date().toISOString().split('T')[0];
+    populateSpeciesDropdown();
+    applyFieldPermissions();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', restoreSessionFromStorage);
 
 // ── Lock location fields in Add Tree for scoped users ──────────────
 function lockLocationFields() {
