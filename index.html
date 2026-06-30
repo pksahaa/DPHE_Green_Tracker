@@ -196,6 +196,67 @@ tr:hover td{background:#f8fdf8}
 /* ── USER TABLE ── */
 .user-role{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 
+
+/* ── RBAC SCOPE BANNER ── */
+.scope-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;margin-bottom:18px;font-size:13px;font-weight:600;border:1.5px solid}
+.scope-admin{background:#fff8e1;color:#e65100;border-color:#ffcc02}
+.scope-div{background:#e3f2fd;color:#0d47a1;border-color:#90caf9}
+.scope-dis{background:#e8f5e9;color:#1b5e20;border-color:#81c784}
+.scope-upa{background:#f3e5f5;color:#6a1b9a;border-color:#ce93d8}
+/* ── RBAC USER FORM location cascades ── */
+.role-location-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;padding:14px;background:#f0f7f0;border-radius:10px;border:1.5px solid #c8e6c9}
+/* ── DASHBOARD role-specific cards ── */
+.dash-compare-section{margin-top:0}
+.compare-table{width:100%;border-collapse:collapse;font-size:12px}
+.compare-table th{background:#1a5c2a;color:#fff;padding:8px 10px;font-size:11px;font-weight:700}
+.compare-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0}
+.compare-table tr:hover td{background:#f8fdf8}
+.compare-table .me-row td{background:#e8f5e9;font-weight:700}
+.rank-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+.rank-1{background:#ffd700;color:#333}
+.rank-2{background:#e0e0e0;color:#333}
+.rank-3{background:#cd7f32;color:#fff}
+.rank-n{background:#f5f5f5;color:#888}
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.kpi-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid #2d8a42;display:flex;flex-direction:column;gap:4px}
+.kpi-val{font-size:26px;font-weight:700;color:#1a5c2a;line-height:1}
+.kpi-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi-sub{font-size:11px;color:#aaa}
+.kpi-card.blue .kpi-val{color:#1976d2} .kpi-card.blue{border-left-color:#1976d2}
+.kpi-card.amber .kpi-val{color:#f57c00} .kpi-card.amber{border-left-color:#f57c00}
+.kpi-card.red .kpi-val{color:#c62828} .kpi-card.red{border-left-color:#c62828}
+.kpi-card.purple .kpi-val{color:#6a1b9a} .kpi-card.purple{border-left-color:#6a1b9a}
+/* ── PERMISSION DENIED ── */
+.perm-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;text-align:center;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.perm-denied-icon{font-size:64px;margin-bottom:16px}
+.perm-denied h2{font-size:18px;color:#c62828;margin-bottom:8px}
+.perm-denied p{font-size:13px;color:#888;max-width:380px;line-height:1.6}
+
+/* ── PERMISSION MODAL ── */
+#perm-modal-grid label{transition:border-color .15s,background .15s}
+#perm-modal-grid label:hover{background:#f0faf0!important;border-color:#81c784!important}
+
+/* ── FIELD-LEVEL PERMISSION ACCORDION ── */
+.perm-acc{border:1.5px solid #e0e0e0;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.perm-acc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f7faf7;cursor:pointer;user-select:none}
+.perm-acc-head:hover{background:#eef6ee}
+.perm-acc-head .arrow{font-size:11px;color:#888;transition:transform .15s;width:14px;text-align:center}
+.perm-acc.open .perm-acc-head .arrow{transform:rotate(90deg)}
+.perm-acc-title{flex:1;font-size:13px;font-weight:700;color:#1a5c2a}
+.perm-acc-count{font-size:11px;color:#888;font-weight:500}
+.perm-acc-body{display:none;padding:6px 14px 12px}
+.perm-acc.open .perm-acc-body{display:block}
+.perm-field-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:12.5px}
+.perm-field-row:last-child{border-bottom:none}
+.perm-field-name{flex:1;color:#333}
+.perm-toggle{display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;padding:3px 8px;border-radius:6px;border:1.5px solid #ddd;background:#fff}
+.perm-toggle.on{border-color:#2d8a42;background:#e8f5e9;color:#1a5c2a;font-weight:600}
+.perm-toggle input{margin:0;cursor:pointer;accent-color:#2d8a42}
+.perm-toggle.edit-toggle.on{border-color:#1976d2;background:#e3f2fd;color:#1565c0}
+.perm-master-row{display:flex;align-items:center;gap:8px;margin-left:auto}
+.perm-master-row .perm-toggle{font-size:10px;padding:2px 7px}
+
 /* ── MONITORING ── */
 .monitoring-timeline{display:flex;gap:0;overflow-x:auto;margin-bottom:16px;padding-bottom:8px}
 .mt-step{flex-shrink:0;text-align:center;position:relative;padding:0 4px}
@@ -289,8 +350,35 @@ tr:hover td{background:#f8fdf8}
     <label>Password</label>
     <input type="password" id="login-pass" value="password123" placeholder="Enter password">
   </div>
-  <button class="btn-login" onclick="doLogin()">🔐 Sign in</button>
-  <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">Demo: any password works for testing</p>
+
+  <div id="login-location-fields" style="display:none;margin-top:10px;padding:12px;background:#f0f7f0;border-radius:10px;border:1.5px solid #c8e6c9">
+    <div style="font-size:12px;font-weight:700;color:#1a5c2a;margin-bottom:8px">📍 আপনার অফিসের অবস্থান নির্বাচন করুন</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">Division</label>
+        <select id="login-div" onchange="loginDivChange()" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
+          <option value="">— Select Division —</option>
+          <option>Dhaka</option><option>Chittagong</option><option>Rajshahi</option>
+          <option>Khulna</option><option>Barishal</option><option>Sylhet</option>
+          <option>Rangpur</option><option>Mymensingh</option>
+        </select>
+      </div>
+      <div id="login-dis-wrap" style="display:none">
+        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">District</label>
+        <select id="login-dis" onchange="loginDisChange()" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
+          <option value="">— Select District —</option>
+        </select>
+      </div>
+      <div id="login-upa-wrap" style="display:none;grid-column:1/-1">
+        <label style="font-size:11px;color:#555;font-weight:600;display:block;margin-bottom:4px">Upazilla</label>
+        <select id="login-upa" style="width:100%;padding:7px 9px;border:1.5px solid #ddd;border-radius:7px;font-size:12px">
+          <option value="">— Select Upazilla —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button class="btn-login" onclick="doLogin()" style="margin-top:14px">🔐 Sign in</button>
+  <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">🔒 Secured by Google Sheets + Apps Script backend</p>
 </div>
 </div>
 </div>
@@ -338,56 +426,62 @@ tr:hover td{background:#f8fdf8}
     <div class="page-title">📊 Dashboard <span style="font-size:14px;font-weight:400;color:#2d8a42">| ড্যাশবোর্ড</span></div>
     <div class="page-sub" id="dash-subtitle">National overview — all 8 divisions</div>
   </div>
-  <div class="stat-grid">
+  <!-- RBAC: scope banner + role-specific analytics (rendered by JS) -->
+  <div id="scope-banner"></div>
+  <div id="role-kpi-grid"></div>
+  <div id="role-compare-section"></div>
+  <div class="stat-grid" id="dash-stat-grid">
     <div class="stat-card">
-      <div class="stat-label">🌳 Total Records | মোট রেকর্ড</div>
+      <div class="stat-label" id="s-total-label">🌳 Total Records | মোট রেকর্ড</div>
       <div class="stat-val" id="s-total">0</div>
-      <div class="stat-sub">Updated: today</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-label">🎯 National target (5 yr)</div>
-      <div class="stat-val">25,00,00,000</div>
-      <div class="stat-sub">Government initiative</div>
+      <div class="stat-sub" id="s-total-sub">In your scope</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">✅ Survival Rate | বেঁচে থাকার হার</div>
-      <div class="stat-val" id="s-survival">—</div>
-      <div class="stat-sub">Across all records</div>
+      <div class="stat-val" id="s-survival" style="color:#2d8a42">—</div>
+      <div class="stat-sub" id="s-alive-sub">Alive trees in scope</div>
     </div>
     <div class="stat-card amber">
-      <div class="stat-label">🏢 Active offices</div>
-      <div class="stat-val">492</div>
-      <div class="stat-sub">Upazilla + District + Div</div>
+      <div class="stat-label">🏢 Active Offices | সক্রিয় দপ্তর</div>
+      <div class="stat-val" id="s-offices">—</div>
+      <div class="stat-sub" id="s-offices-sub">In your scope</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">🎯 National Target (5 yr)</div>
+      <div class="stat-val">25Cr</div>
+      <div class="stat-sub">২৫ কোটি বৃক্ষরোপণ</div>
     </div>
   </div>
   <div class="two-col">
     <div class="card">
-      <div class="card-title"><span>📊</span> Progress by Division <span style="font-weight:400;color:#2d8a42">| বিভাগ ভিত্তিক অগ্রগতি</span></div>
+      <div class="card-title"><span>📊</span> <span id="progress-chart-title">Progress by Division</span></div>
       <div id="div-progress-bars"></div>
     </div>
     <div class="card">
       <div class="card-title"><span>🥧</span> Trees by Category <span style="font-weight:400;color:#2d8a42">| প্রজাতি বিভাগ</span></div>
-      <div class="donut-wrap">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="46" fill="none" stroke="#e0e0e0" stroke-width="20"/>
-          <circle cx="60" cy="60" r="46" fill="none" stroke="#2d8a42" stroke-width="20" stroke-dasharray="115 174" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
-          <circle cx="60" cy="60" r="46" fill="none" stroke="#1976d2" stroke-width="20" stroke-dasharray="66 174" stroke-dashoffset="-115" transform="rotate(-90 60 60)"/>
-          <circle cx="60" cy="60" r="46" fill="none" stroke="#f57c00" stroke-width="20" stroke-dasharray="44 174" stroke-dashoffset="-181" transform="rotate(-90 60 60)"/>
-          <circle cx="60" cy="60" r="46" fill="none" stroke="#9c27b0" stroke-width="20" stroke-dasharray="29 174" stroke-dashoffset="-225" transform="rotate(-90 60 60)"/>
-          <text x="60" y="56" text-anchor="middle" font-size="11" fill="#666">18.4L</text>
-          <text x="60" y="70" text-anchor="middle" font-size="10" fill="#888">trees</text>
-        </svg>
-        <div>
-          <div class="legend-item"><div class="ldot" style="background:#2d8a42"></div>Fruit trees — 40%</div>
-          <div class="legend-item"><div class="ldot" style="background:#1976d2"></div>Timber trees — 22%</div>
-          <div class="legend-item"><div class="ldot" style="background:#f57c00"></div>Medicinal — 15%</div>
-          <div class="legend-item"><div class="ldot" style="background:#9c27b0"></div>Others — 23%</div>
+      <div id="cat-chart-wrap">
+        <div class="donut-wrap">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#e0e0e0" stroke-width="20"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#2d8a42" stroke-width="20" id="donut-fruit" stroke-dasharray="0 174" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#1976d2" stroke-width="20" id="donut-timber" stroke-dasharray="0 174" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#f57c00" stroke-width="20" id="donut-med" stroke-dasharray="0 174" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#9c27b0" stroke-width="20" id="donut-other" stroke-dasharray="0 174" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <text x="60" y="56" text-anchor="middle" font-size="11" fill="#666" id="donut-lbl">Scope</text>
+            <text x="60" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#1a5c2a" id="donut-val">0</text>
+          </svg>
+          <div id="cat-legend">
+            <div class="legend-item"><div class="ldot" style="background:#2d8a42"></div><span id="cat-fruit-lbl">Fruit trees — 0</span></div>
+            <div class="legend-item"><div class="ldot" style="background:#1976d2"></div><span id="cat-timber-lbl">Timber trees — 0</span></div>
+            <div class="legend-item"><div class="ldot" style="background:#f57c00"></div><span id="cat-med-lbl">Medicinal — 0</span></div>
+            <div class="legend-item"><div class="ldot" style="background:#9c27b0"></div><span id="cat-other-lbl">Others — 0</span></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   <div class="card">
-    <div class="card-title"><span>📅</span> Monthly Plantation Trend <span style="font-weight:400;color:#2d8a42">| মাসিক বৃক্ষরোপণ (2025)</span></div>
+    <div class="card-title"><span>📅</span> <span id="trend-chart-title">Monthly Plantation Trend</span> <span style="font-weight:400;color:#2d8a42">| মাসিক বৃক্ষরোপণ (Last 12 months)</span></div>
     <div class="bar-chart" id="month-chart"></div>
   </div>
   <div class="card">
@@ -502,10 +596,10 @@ tr:hover td{background:#f8fdf8}
       <div class="fg">
         <label>Initial Status <span style="font-weight:400;color:#2d8a42">| প্রাথমিক অবস্থা</span></label>
         <select id="f-status">
-          <option value="Alive">🟢 Alive — সতেজ</option>
-          <option value="Care Required">🟡 Care Required — যত্ন প্রয়োজন</option>
-          <option value="Dead">🔴 Dead — মৃত</option>
-          <option value="Pending Check">⚪ Pending Check — যাচাই বাকি</option>
+          <option value="Alive">Alive (সতেজ)</option>
+          <option value="Care Required">Care Required (যত্ন প্রয়োজন)</option>
+          <option value="Dead">Dead (মৃত)</option>
+          <option value="Pending Check">Pending Check (যাচাই বাকি)</option>
         </select>
       </div>
       <div class="fg full">
@@ -533,8 +627,22 @@ tr:hover td{background:#f8fdf8}
     <canvas id="resize-canvas" style="display:none"></canvas>
   </div>
 
+  <!-- Inline Monitoring Editor (shown only during edit mode) -->
+  <div id="inline-mon-panel" class="card" style="display:none;margin-top:0">
+    <div class="card-title"><span>🔍</span> Monitoring History <span style="font-weight:400;color:#2d8a42">| পরিদর্শন ইতিহাস</span> — <span id="inline-mon-rec-id" style="font-size:13px;color:#888;font-weight:400"></span></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Visit</th><th>Date</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody id="inline-mon-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px">
+      <button id="inline-mon-add-btn" class="btn btn-primary btn-sm">➕ Add New Visit</button>
+    </div>
+  </div>
+
   <div class="btn-row">
-    <button class="btn" onclick="clearForm()">🗑️ Clear Form</button>
+    <button class="btn" onclick="clearForm();document.getElementById('inline-mon-panel').style.display='none'">🗑️ Clear Form</button>
     <button class="btn btn-primary" id="save-record-btn" onclick="saveRecord()">💾 Save Record — সংরক্ষণ করুন</button>
   </div>
 </div>
@@ -591,12 +699,11 @@ tr:hover td{background:#f8fdf8}
           <th style="min-width:130px">ID ও গাছ</th>
           <th style="min-width:120px">অবস্থান</th>
           <th style="min-width:90px">ছবি</th>
-          <th style="min-width:105px">৩ মাস</th>
-          <th style="min-width:105px">৬ মাস</th>
-          <th style="min-width:105px">১ বছর</th>
-          <th style="min-width:105px">২ বছর</th>
-          <th style="min-width:105px">৩ বছর</th>
-          <th style="min-width:105px">৫ বছর</th>
+          <th style="min-width:120px">বর্তমান অবস্থা</th>
+          <th style="min-width:160px">সর্বশেষ পরিদর্শন</th>
+          <th style="min-width:80px">মোট পরিদর্শন</th>
+          <th style="min-width:130px">পরিদর্শন ইতিহাস</th>
+          <th style="min-width:120px">নতুন রিপোর্ট</th>
         </tr>
       </thead>
       <tbody id="mon-tbody"></tbody>
@@ -627,10 +734,10 @@ tr:hover td{background:#f8fdf8}
       </select>
       <select id="filter-status" onchange="filterRecords()">
         <option value="">All Statuses</option>
-        <option value="Alive">🟢 Alive — সতেজ</option>
-        <option value="Care Required">🟡 Care Required — যত্ন প্রয়োজন</option>
-        <option value="Dead">🔴 Dead — মৃত</option>
-        <option value="Pending Check">⚪ Pending Check — যাচাই বাকি</option>
+        <option value="Alive">Alive (সতেজ)</option>
+        <option value="Care Required">Care Required (যত্ন প্রয়োজন)</option>
+        <option value="Dead">Dead (মৃত)</option>
+        <option value="Pending Check">Pending Check (যাচাই বাকি)</option>
       </select>
       <input type="text" id="search-q" placeholder="🔍 Search species, officer, upazilla..." oninput="filterRecords()">
     </div>
@@ -817,34 +924,126 @@ tr:hover td{background:#f8fdf8}
     <div class="page-header" style="margin-bottom:0">
       <div class="page-title">👥 User Management <span style="font-size:14px;font-weight:400;color:#2d8a42">| ব্যবহারকারী ব্যবস্থাপনা</span></div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="showAddUserForm()">➕ Add User</button>
+    <button class="btn btn-primary btn-sm" onclick="showAddUserForm()">➕ নতুন ব্যবহারকারী যোগ করুন</button>
   </div>
+
+  <!-- Add User Form -->
   <div id="add-user-form" class="card" style="display:none">
-    <div class="card-title"><span>➕</span> Add New User</div>
+    <div class="card-title"><span>➕</span> নতুন ব্যবহারকারী যোগ করুন</div>
     <div class="form-grid">
-      <div class="fg"><label>Full Name *</label><input type="text" id="u-name" placeholder="Officer full name"></div>
-      <div class="fg"><label>Username / Email *</label><input type="text" id="u-email" placeholder="username@dphe.gov.bd"></div>
+      <div class="fg"><label>পূর্ণ নাম *</label><input type="text" id="u-name" placeholder="কর্মকর্তার পূর্ণ নাম"></div>
+      <div class="fg"><label>ইউজারনেম / ইমেইল *</label><input type="text" id="u-email" placeholder="username@dphe.gov.bd"></div>
       <div class="fg">
-        <label>Role *</label>
-        <select id="u-role">
-          <option>HQ Admin</option><option>Divisional</option><option>District</option><option>Upazilla</option>
+        <label>ভূমিকা (Role) *</label>
+        <select id="u-role" onchange="updateRolePermDefaults()">
+          <option value="HQ Admin">🛡️ HQ Admin</option>
+          <option value="Divisional">🏢 Divisional Officer</option>
+          <option value="District">🏬 District Officer</option>
+          <option value="Upazilla">📍 Upazilla Officer</option>
         </select>
       </div>
-      <div class="fg"><label>Office</label><input type="text" id="u-office" placeholder="Office name and location"></div>
-      <div class="fg"><label>Password *</label><input type="password" id="u-pass" placeholder="Set initial password"></div>
-      <div class="fg"><label>Phone</label><input type="text" id="u-phone" placeholder="01XXXXXXXXX"></div>
+      <div class="fg"><label>অফিস</label><input type="text" id="u-office" placeholder="অফিসের নাম ও অবস্থান"></div>
+      <div class="fg"><label>পাসওয়ার্ড *</label><input type="password" id="u-pass" placeholder="প্রাথমিক পাসওয়ার্ড"></div>
+      <div class="fg"><label>মোবাইল</label><input type="text" id="u-phone" placeholder="01XXXXXXXXX"></div>
+    </div>
+
+    <!-- RBAC: Location assignment (cascading) -->
+    <div id="user-location-fields" style="display:none;margin-top:14px" class="role-location-row">
+      <div class="fg">
+        <label>Division বিভাগ</label>
+        <select id="u-div" onchange="updateUserDistrict()">
+          <option value="">— Select Division —</option>
+          <option>Dhaka</option><option>Chittagong</option><option>Rajshahi</option>
+          <option>Khulna</option><option>Barishal</option><option>Sylhet</option>
+          <option>Rangpur</option><option>Mymensingh</option>
+        </select>
+      </div>
+      <div class="fg" id="u-dis-wrap" style="display:none">
+        <label>District জেলা</label>
+        <select id="u-dis" onchange="updateUserUpazilla()">
+          <option value="">— Select District —</option>
+        </select>
+      </div>
+      <div class="fg" id="u-upa-wrap" style="display:none">
+        <label>Upazilla উপজেলা</label>
+        <select id="u-upa">
+          <option value="">— Select Upazilla —</option>
+        </select>
+      </div>
+    </div>
+    <!-- Permission Checkboxes -->
+    <div style="margin-top:14px;background:#f0f7f0;border-radius:10px;padding:16px">
+      <div style="font-size:13px;font-weight:700;color:#1a5c2a;margin-bottom:10px">🔑 পারমিশন সেটিং — এই ব্যবহারকারী কী করতে পারবে?</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px" id="new-user-perms">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-dashboard" checked> 📊 Dashboard দেখা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-add"> 🌱 রেকর্ড যোগ করা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-edit"> ✏️ রেকর্ড সম্পাদনা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-delete"> 🗑️ রেকর্ড মুছে ফেলা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-monitoring"> 🔍 Monitoring করা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-records"> 📋 সব রেকর্ড দেখা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-map"> 🗺️ Map দেখা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-species"> 🌿 Species পরিচালনা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-reports"> 📈 Reports দেখা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-export"> ⬇️ CSV Export করা
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-photo"> 📷 ছবি আপলোড
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;background:#fff;padding:8px 10px;border-radius:8px;border:1.5px solid #ddd">
+          <input type="checkbox" id="perm-users"> 👥 User Management
+        </label>
+      </div>
     </div>
     <div class="btn-row">
-      <button class="btn" onclick="document.getElementById('add-user-form').style.display='none'">Cancel</button>
-      <button class="btn btn-primary" onclick="addUser()">💾 Add User</button>
+      <button class="btn" onclick="document.getElementById('add-user-form').style.display='none'">বাতিল করুন</button>
+      <button class="btn btn-primary" onclick="addUser()">💾 ব্যবহারকারী সংরক্ষণ করুন</button>
     </div>
   </div>
+
+  <!-- User List Table -->
   <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:0"><span>👥</span> সকল ব্যবহারকারীর তালিকা</div>
+      <input type="text" placeholder="🔍 নাম / ইমেইল খুঁজুন..." oninput="filterUsers(this.value)" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;width:200px;outline:none">
+    </div>
     <div style="overflow-x:auto">
     <table>
-      <thead><tr><th>#</th><th>Name</th><th>Username</th><th>Role</th><th>Office</th><th>Last Login</th><th>Status</th><th>Action</th></tr></thead>
+      <thead><tr><th>#</th><th>নাম</th><th>ইউজারনেম</th><th>ভূমিকা</th><th>অফিস</th><th>শেষ লগইন</th><th>স্ট্যাটাস</th><th style="min-width:220px">অ্যাকশন</th></tr></thead>
       <tbody id="users-tbody"></tbody>
     </table>
+    </div>
+  </div>
+
+  <!-- Permission Edit Modal -->
+  <div id="perm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;overflow-y:auto">
+    <div style="background:#fff;border-radius:14px;max-width:760px;margin:30px auto;padding:24px;position:relative;max-height:90vh;display:flex;flex-direction:column">
+      <div style="font-size:16px;font-weight:700;color:#1a5c2a;margin-bottom:6px">🔑 ফিল্ড-লেভেল পারমিশন পরিচালনা | Field-Level Permission Management</div>
+      <div id="perm-modal-user-info" style="font-size:12px;color:#888;margin-bottom:12px;background:#f0f7f0;padding:8px 12px;border-radius:8px"></div>
+      <div style="font-size:11px;color:#999;margin-bottom:10px">প্রতিটি মডিউল ক্লিক করে এর ভেতরের ফিল্ড দেখুন এবং View / Edit পারমিশন নির্ধারণ করুন। View ছাড়া ফিল্ড সম্পূর্ণ হাইড থাকবে। | Click a module to expand its fields. Without View, a field is fully hidden; View-only makes it read-only.</div>
+      <div id="perm-modal-grid" style="overflow-y:auto;flex:1;padding-right:4px"></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn" onclick="closePermModal()">বাতিল করুন</button>
+        <button class="btn btn-primary" onclick="savePermissions()">✅ পারমিশন সংরক্ষণ করুন</button>
+      </div>
     </div>
   </div>
 </div>
@@ -855,58 +1054,59 @@ tr:hover td{background:#f8fdf8}
 <!-- Monitoring Modal -->
 <div id="mon-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;overflow-y:auto">
   <div style="background:#fff;border-radius:14px;max-width:520px;margin:40px auto;padding:24px;position:relative">
-    <div style="font-size:16px;font-weight:700;color:#1a5c2a;margin-bottom:16px">🔍 Record Monitoring Visit</div>
+    <div id="mon-modal-title" style="font-size:16px;font-weight:700;color:#1a5c2a;margin-bottom:16px">🔍 নতুন পরিদর্শন রেকর্ড করুন</div>
     <div id="mon-modal-info" style="font-size:13px;color:#555;margin-bottom:14px;background:#f0f7f0;padding:10px;border-radius:8px"></div>
     <div class="form-grid">
       <div class="fg">
-        <label>Visit Period *</label>
-        <select id="mon-period">
-          <option value="3m">3 Months — ৩ মাস</option>
-          <option value="6m">6 Months — ৬ মাস</option>
-          <option value="1yr">1 Year — ১ বছর</option>
-          <option value="2yr">2 Years — ২ বছর</option>
-          <option value="3yr">3 Years — ৩ বছর</option>
-          <option value="4yr">4 Years — ৪ বছর</option>
-          <option value="5yr">5 Years — ৫ বছর</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>Visit Date *</label>
+        <label>পরিদর্শনের তারিখ * Visit Date</label>
         <input type="date" id="mon-date">
+        <div id="mon-date-hint" style="font-size:11px;color:#1976d2;margin-top:3px;padding:4px 8px;background:#e3f2fd;border-radius:5px"></div>
       </div>
       <div class="fg">
-        <label>Tree Status * গাছের অবস্থা</label>
+        <label>গাছের অবস্থা * Tree Status</label>
         <select id="mon-tree-status" onchange="toggleMonitoringFields()">
-          <option value="Alive">🟢 Alive — সতেজ</option>
-          <option value="Care Required">🟡 Care Required — যত্ন প্রয়োজন</option>
-          <option value="Dead">🔴 Dead — মৃত</option>
-          <option value="Pending Check">⚪ Pending Check — যাচাই বাকি</option>
+          <option value="Alive">Alive (সতেজ)</option>
+          <option value="Care Required">Care Required (যত্ন প্রয়োজন)</option>
+          <option value="Dead">Dead (মৃত)</option>
+          <option value="Pending Check">Pending Check (যাচাই বাকি)</option>
         </select>
       </div>
       <div class="fg" id="mon-replacement-wrap" style="display:none">
-        <label>Replacement Planted?</label>
+        <label>প্রতিস্থাপন হয়েছে? Replacement Planted?</label>
         <select id="mon-replacement">
-          <option value="no">No replacement yet</option>
-          <option value="yes">Yes — replacement planted</option>
-          <option value="planned">Planned — পরিকল্পিত</option>
+          <option value="no">না — No replacement yet</option>
+          <option value="yes">হ্যাঁ — Yes, replacement planted</option>
+          <option value="planned">পরিকল্পিত — Planned</option>
         </select>
       </div>
       <div class="fg full" id="mon-care-wrap" style="display:none">
-        <label>Care Required — কী পরিচর্যা প্রয়োজন</label>
+        <label>কী পরিচর্যা প্রয়োজন — Care Details</label>
         <input type="text" id="mon-care-detail" placeholder="e.g. Watering, Fertilizer, Pest control...">
       </div>
       <div class="fg full">
-        <label>Monitoring Notes — পর্যবেক্ষণ মন্তব্য</label>
-        <textarea id="mon-notes" placeholder="Describe the tree condition during this visit..."></textarea>
+        <label>পর্যবেক্ষণ মন্তব্য — Monitoring Notes</label>
+        <textarea id="mon-notes" placeholder="এই পরিদর্শনে গাছের অবস্থা বর্ণনা করুন..."></textarea>
       </div>
       <div class="fg full">
-        <label>Visiting Officer</label>
-        <input type="text" id="mon-officer" placeholder="Name of officer who visited">
+        <label>পরিদর্শনকারী কর্মকর্তা — Visiting Officer</label>
+        <input type="text" id="mon-officer" placeholder="কর্মকর্তার নাম লিখুন">
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn" onclick="closeMonModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveMonitoringVisit()">💾 Save Visit</button>
+      <button class="btn" onclick="closeMonModal()">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveMonitoringVisit()">💾 সংরক্ষণ করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visit History Modal -->
+<div id="visit-history-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;overflow-y:auto">
+  <div style="background:#fff;border-radius:14px;max-width:560px;margin:40px auto;padding:24px;position:relative">
+    <div style="font-size:16px;font-weight:700;color:#1a5c2a;margin-bottom:4px">📋 পরিদর্শন ইতিহাস</div>
+    <div id="visit-history-tree-info" style="font-size:12px;color:#888;margin-bottom:14px"></div>
+    <div id="visit-history-body" style="max-height:420px;overflow-y:auto"></div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="document.getElementById('visit-history-modal').style.display='none';currentMonRecordId=null;">বন্ধ করুন</button>
     </div>
   </div>
 </div>
@@ -921,25 +1121,53 @@ tr:hover td{background:#f8fdf8}
 // ════════════════════════════════
 var currentRole = 'admin';
 var currentMonRecordId = null;
+var currentMonEditIndex = null; // null = new visit, number = edit existing
 
 // ════════════════════════════════════════════════════════
 // CONFIGURATION — SET YOUR GOOGLE APPS SCRIPT WEB APP URL
 // ════════════════════════════════════════════════════════
-// 👇 PASTE YOUR APPS SCRIPT WEB APP URL ON THE LINE BELOW (line ~941)
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzGDyLjPV1aLSX4j6RU20jMZo7GwB5fNrZjwE4usfvH5tCJWpx3W7aT66_4Moao5eF4Nw/exec';
+// 👇 Deploy Code.gs as a Web App (Execute as: Me, Access: Anyone) and
+//    paste the deployment URL below. See SETUP_GUIDE.md for full steps.
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOmC8sAXw1X_t0_UoHwir6yL4PiNXV-XySMDT8rb6sx7S2KtWwPNeFUYI0IserBVD2/exec';
 // ════════════════════════════════════════════════════════
 // API HELPERS
 // ════════════════════════════════════════════════════════
+var AUTH_TOKEN = null; // set after successful login, sent with every write call
+
+function backendConfigured() {
+  return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('https://script.google.com') === 0);
+}
+
 function apiCall(action, payload) {
-  if (!APPS_SCRIPT_URL) return Promise.resolve(null); // offline / not configured
-  var body = Object.assign({ action: action }, payload || {});
+  if (!backendConfigured()) return Promise.resolve({ ok:false, error:'Backend not configured (APPS_SCRIPT_URL ফাঁকা)' });
+  var body = Object.assign({ action: action, token: AUTH_TOKEN }, payload || {});
   return fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
     body: JSON.stringify(body)
   })
   .then(function(r){ return r.json(); })
-  .catch(function(e){ console.warn('API error:', e); return null; });
+  .catch(function(e){ console.warn('API error:', e); return { ok:false, error:String(e) }; });
+}
+
+// ── Full-screen loading overlay ─────────────────────────────────────
+(function(){
+  var ov = document.createElement('div');
+  ov.id = 'gas-loading-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,92,42,.94);color:#fff;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:99999;font-family:Arial,sans-serif;font-size:14px;gap:14px';
+  ov.innerHTML = '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:gasspin .8s linear infinite"></div><div id="gas-loading-text">লোড হচ্ছে…</div>';
+  var addOverlay = function(){ document.body.appendChild(ov); };
+  if (document.body) addOverlay(); else document.addEventListener('DOMContentLoaded', addOverlay);
+  var style = document.createElement('style');
+  style.textContent = '@keyframes gasspin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+})();
+function showLoading(msg) {
+  var t = document.getElementById('gas-loading-text'); if (t) t.textContent = msg || 'লোড হচ্ছে…';
+  var ov = document.getElementById('gas-loading-overlay'); if (ov) ov.style.display = 'flex';
+}
+function hideLoading() {
+  var ov = document.getElementById('gas-loading-overlay'); if (ov) ov.style.display = 'none';
 }
 
 function showSyncStatus(msg, ok) {
@@ -953,15 +1181,17 @@ function showSyncStatus(msg, ok) {
 
 // ─── LOAD ALL DATA FROM GOOGLE SHEETS ON LOGIN ───
 function loadAllFromSheets() {
-  if (!APPS_SCRIPT_URL) return;
+  if (!backendConfigured()) return;
   showSyncStatus('⏳ Loading data…', true);
   apiCall('getAll').then(function(data) {
-    if (!data) { showSyncStatus('⚠️ Offline mode — using local data', false); return; }
-    if (data.records)  { records   = data.records; }
-    if (data.treeList) { TREE_LIST = data.treeList; }
+    if (!data || !data.ok) { showSyncStatus('⚠️ Sync failed: ' + (data && data.error || 'unknown'), false); return; }
+    if (data.records) { records = data.records; }
+    if (data.users)   { users   = data.users; }
+    if (data.species) { TREE_LIST = data.species; }
     showSyncStatus('✅ Data loaded from Google Sheets', true);
     initDashboard();
     renderRecords();
+    renderUsers();
     renderMonitoring();
     renderSpeciesTable();
     populateSpeciesDropdown();
@@ -1006,36 +1236,36 @@ var acSelectedIdx = -1;
 
 var records = [
   // ── Dhaka Division ──
-  {id:'TRK-0001',date:'2025-03-10',div:'Dhaka',dis:'Gazipur',upa:'Kapasia',site:'DPHE Kapasia Office Compound',species:'Mango (আম)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Jamal Hossain',caregiverPhone:'01711-100001',fund:'Government Revenue',status:'Alive',lat:'24.0830',lon:'90.6714',remarks:'Planted along office boundary wall.',monitoring:[{period:'3m',date:'2025-06-12',status:'Alive',notes:'All saplings healthy. Watered regularly.',officer:'—'}]},
+  {id:'TRK-0001',date:'2025-03-10',div:'Dhaka',dis:'Gazipur',upa:'Kapasia',site:'DPHE Kapasia Office Compound',species:'Mango (আম)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Jamal Hossain',caregiverPhone:'01711-100001',fund:'Government Revenue',status:'Alive',lat:'24.0830',lon:'90.6714',remarks:'Planted along office boundary wall.',monitoring:[{visitNo:1,date:'2025-06-12',status:'Alive',notes:'All saplings healthy. Watered regularly.',officer:'—'}]},
   {id:'TRK-0002',date:'2025-04-05',div:'Dhaka',dis:'Narsingdi',upa:'Palash',site:'Palash DPHE Rest House',species:'Neem (নিম)',cat:'Medicinal',count:0,officer:'—',caregiver:'Razia Khatun',caregiverPhone:'01711-100002',fund:'Development Budget',status:'Alive',lat:'23.9743',lon:'90.7152',remarks:'Roadside plantation near rest house.',monitoring:[]},
 
   // ── Chittagong Division ──
   {id:'TRK-0003',date:'2025-03-20',div:'Chittagong',dis:'Comilla',upa:'Chandina',site:'Chandina Upazilla DPHE Office',species:'Mahogany (মেহগনি)',cat:'Timber tree',count:0,officer:'—',caregiver:'Alam Sheikh',caregiverPhone:'01711-200001',fund:'Government Revenue',status:'Alive',lat:'23.2323',lon:'90.7085',remarks:'Planted in front of the office.',monitoring:[]},
-  {id:'TRK-0004',date:'2025-05-01',div:'Chittagong',dis:'Feni',upa:'Sonagazi',site:'Sonagazi School Ground',species:'Krishnachura (কৃষ্ণচূড়া)',cat:'Ornamental',count:0,officer:'—',caregiver:'Nurul Islam',caregiverPhone:'01711-200002',fund:'Own Fund',status:'Alive',lat:'22.9378',lon:'91.4039',remarks:'School beautification project.',monitoring:[{period:'3m',date:'2025-08-03',status:'Care Required',notes:'Some trees need extra watering.',officer:'—'}]},
+  {id:'TRK-0004',date:'2025-05-01',div:'Chittagong',dis:'Feni',upa:'Sonagazi',site:'Sonagazi School Ground',species:'Krishnachura (কৃষ্ণচূড়া)',cat:'Ornamental',count:0,officer:'—',caregiver:'Nurul Islam',caregiverPhone:'01711-200002',fund:'Own Fund',status:'Alive',lat:'22.9378',lon:'91.4039',remarks:'School beautification project.',monitoring:[{visitNo:1,date:'2025-08-03',status:'Care Required',notes:'Some trees need extra watering.',officer:'—'}]},
 
   // ── Rajshahi Division ──
-  {id:'TRK-0005',date:'2025-02-15',div:'Rajshahi',dis:'Bogura',upa:'Sariakandi',site:'Sariakandi River Bank',species:'Bamboo (বাঁশ)',cat:'Timber tree',count:0,officer:'—',caregiver:'Selim Mia',caregiverPhone:'01711-300001',fund:'Government Revenue',status:'Alive',lat:'24.8533',lon:'89.6509',remarks:'Bank erosion prevention project along Jamuna.',monitoring:[{period:'3m',date:'2025-05-18',status:'Alive',notes:'Strong growth observed.',officer:'—'}]},
+  {id:'TRK-0005',date:'2025-02-15',div:'Rajshahi',dis:'Bogura',upa:'Sariakandi',site:'Sariakandi River Bank',species:'Bamboo (বাঁশ)',cat:'Timber tree',count:0,officer:'—',caregiver:'Selim Mia',caregiverPhone:'01711-300001',fund:'Government Revenue',status:'Alive',lat:'24.8533',lon:'89.6509',remarks:'Bank erosion prevention project along Jamuna.',monitoring:[{visitNo:1,date:'2025-05-18',status:'Alive',notes:'Strong growth observed.',officer:'—'}]},
   {id:'TRK-0006',date:'2025-04-20',div:'Rajshahi',dis:'Pabna',upa:'Ishwardi',site:'Ishwardi DPHE Office',species:'Jackfruit (কাঁঠাল)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Fatema Begum',caregiverPhone:'01711-300002',fund:'Government Revenue',status:'Alive',lat:'24.1304',lon:'89.0567',remarks:'Compound greening initiative.',monitoring:[]},
 
   // ── Khulna Division ──
-  {id:'TRK-0007',date:'2025-03-05',div:'Khulna',dis:'Satkhira',upa:'Shyamnagar',site:'Shyamnagar Coastal Belt',species:'Mangrove (Sundari) (সুন্দরী)',cat:'Others',count:0,officer:'—',caregiver:'Habib Khan',caregiverPhone:'01711-400001',fund:'ADB / World Bank',status:'Alive',lat:'21.8915',lon:'89.0513',remarks:'Coastal afforestation near Sundarbans buffer zone.',monitoring:[{period:'3m',date:'2025-06-07',status:'Alive',notes:'Excellent coastal adaptation.',officer:'—'}]},
+  {id:'TRK-0007',date:'2025-03-05',div:'Khulna',dis:'Satkhira',upa:'Shyamnagar',site:'Shyamnagar Coastal Belt',species:'Mangrove (Sundari) (সুন্দরী)',cat:'Others',count:0,officer:'—',caregiver:'Habib Khan',caregiverPhone:'01711-400001',fund:'ADB / World Bank',status:'Alive',lat:'21.8915',lon:'89.0513',remarks:'Coastal afforestation near Sundarbans buffer zone.',monitoring:[{visitNo:1,date:'2025-06-07',status:'Alive',notes:'Excellent coastal adaptation.',officer:'—'}]},
   {id:'TRK-0008',date:'2025-05-10',div:'Khulna',dis:'Jessore',upa:'Jhikargachha',site:'Jhikargachha Upazilla Road',species:'Rain tree (রেইনট্রি)',cat:'Timber tree',count:0,officer:'—',caregiver:'Sabina Yasmin',caregiverPhone:'01711-400002',fund:'Development Budget',status:'Alive',lat:'23.0327',lon:'89.0419',remarks:'Roadside shade tree project.',monitoring:[]},
 
   // ── Barishal Division ──
   {id:'TRK-0009',date:'2025-04-12',div:'Barishal',dis:'Patuakhali',upa:'Kalapara',site:'Kalapara DPHE Compound',species:'Coconut (নারিকেল)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Pial Das',caregiverPhone:'01711-500001',fund:'Government Revenue',status:'Alive',lat:'21.8988',lon:'90.2386',remarks:'Coastal variety selected for saline tolerance.',monitoring:[]},
-  {id:'TRK-0010',date:'2025-05-25',div:'Barishal',dis:'Bhola',upa:'Charfasson',site:'Charfasson Embankment',species:'Arjun (অর্জুন)',cat:'Medicinal',count:0,officer:'—',caregiver:'Sonia Das',caregiverPhone:'01711-500002',fund:'Government Revenue',status:'Alive',lat:'22.1855',lon:'90.7484',remarks:'Embankment stabilization and greening.',monitoring:[{period:'3m',date:'2025-08-27',status:'Alive',notes:'Trees adapting well to riverbank.',officer:'—'}]},
+  {id:'TRK-0010',date:'2025-05-25',div:'Barishal',dis:'Bhola',upa:'Charfasson',site:'Charfasson Embankment',species:'Arjun (অর্জুন)',cat:'Medicinal',count:0,officer:'—',caregiver:'Sonia Das',caregiverPhone:'01711-500002',fund:'Government Revenue',status:'Alive',lat:'22.1855',lon:'90.7484',remarks:'Embankment stabilization and greening.',monitoring:[{visitNo:1,date:'2025-08-27',status:'Alive',notes:'Trees adapting well to riverbank.',officer:'—'}]},
 
   // ── Sylhet Division ──
   {id:'TRK-0011',date:'2025-03-18',div:'Sylhet',dis:'Moulvibazar',upa:'Sreemangal',site:'Sreemangal Tea Estate Road',species:'Teak (সেগুন)',cat:'Timber tree',count:0,officer:'—',caregiver:'Rafiq Islam',caregiverPhone:'01711-600001',fund:'Development Budget',status:'Alive',lat:'24.3030',lon:'91.7285',remarks:'Timber plantation alongside tea garden boundary.',monitoring:[]},
-  {id:'TRK-0012',date:'2025-04-28',div:'Sylhet',dis:'Habiganj',upa:'Chunarughat',site:'Chunarughat DPHE Office',species:'Guava (পেয়ারা)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Nasrin Akter',caregiverPhone:'01711-600002',fund:'Own Fund',status:'Care Required',lat:'24.1313',lon:'91.5438',remarks:'Some trees affected by fruit fly. Treatment ongoing.',monitoring:[{period:'3m',date:'2025-07-30',status:'Care Required',notes:'Pest control treatment applied.',officer:'—'}]},
+  {id:'TRK-0012',date:'2025-04-28',div:'Sylhet',dis:'Habiganj',upa:'Chunarughat',site:'Chunarughat DPHE Office',species:'Guava (পেয়ারা)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Nasrin Akter',caregiverPhone:'01711-600002',fund:'Own Fund',status:'Care Required',lat:'24.1313',lon:'91.5438',remarks:'Some trees affected by fruit fly. Treatment ongoing.',monitoring:[{visitNo:1,date:'2025-07-30',status:'Care Required',notes:'Pest control treatment applied.',officer:'—'}]},
 
   // ── Rangpur Division ──
-  {id:'TRK-0013',date:'2025-02-20',div:'Rangpur',dis:'Dinajpur',upa:'Birganj',site:'Birganj Upazilla Office',species:'Litchi (লিচু)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Belal Hossain',caregiverPhone:'01711-700001',fund:'Government Revenue',status:'Alive',lat:'25.8414',lon:'88.7542',remarks:'Litchi orchard development near office.',monitoring:[{period:'3m',date:'2025-05-22',status:'Alive',notes:'Good growth; flowering expected next season.',officer:'—'}]},
-  {id:'TRK-0014',date:'2025-04-15',div:'Rangpur',dis:'Gaibandha',upa:'Palashbari',site:'Palashbari Flood Shelter',species:'Eucalyptus (ইউক্যালিপটাস)',cat:'Timber tree',count:0,officer:'—',caregiver:'Mizanur Rahman',caregiverPhone:'01711-700002',fund:'Development Budget',status:'Dead',lat:'25.2156',lon:'89.3764',remarks:'Trees died due to standing water after flood.',monitoring:[{period:'3m',date:'2025-07-18',status:'Dead',notes:'All trees dead. Flood damage. Replanting with flood-resistant species planned.',officer:'—'}]},
+  {id:'TRK-0013',date:'2025-02-20',div:'Rangpur',dis:'Dinajpur',upa:'Birganj',site:'Birganj Upazilla Office',species:'Litchi (লিচু)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Belal Hossain',caregiverPhone:'01711-700001',fund:'Government Revenue',status:'Alive',lat:'25.8414',lon:'88.7542',remarks:'Litchi orchard development near office.',monitoring:[{visitNo:1,date:'2025-05-22',status:'Alive',notes:'Good growth; flowering expected next season.',officer:'—'}]},
+  {id:'TRK-0014',date:'2025-04-15',div:'Rangpur',dis:'Gaibandha',upa:'Palashbari',site:'Palashbari Flood Shelter',species:'Eucalyptus (ইউক্যালিপটাস)',cat:'Timber tree',count:0,officer:'—',caregiver:'Mizanur Rahman',caregiverPhone:'01711-700002',fund:'Development Budget',status:'Dead',lat:'25.2156',lon:'89.3764',remarks:'Trees died due to standing water after flood.',monitoring:[{visitNo:1,date:'2025-07-18',status:'Dead',notes:'All trees dead. Flood damage. Replanting with flood-resistant species planned.',officer:'—'}]},
 
   // ── Mymensingh Division ──
   {id:'TRK-0015',date:'2025-03-25',div:'Mymensingh',dis:'Jamalpur',upa:'Islampur',site:'Islampur DPHE Office Compound',species:'Sonalu (সোনালু)',cat:'Ornamental',count:0,officer:'—',caregiver:'Kamal Uddin',caregiverPhone:'01711-800001',fund:'Government Revenue',status:'Alive',lat:'24.9729',lon:'89.8139',remarks:'Office beautification and shade project.',monitoring:[]},
-  {id:'TRK-0016',date:'2025-05-08',div:'Mymensingh',dis:'Netrokona',upa:'Mohanganj',site:'Mohanganj Canal Side',species:'Date Palm (খেজুর)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Asha Khatun',caregiverPhone:'01711-800002',fund:'Government Revenue',status:'Alive',lat:'24.5388',lon:'90.9902',remarks:'Canal bank plantation for erosion control.',monitoring:[{period:'3m',date:'2025-08-10',status:'Alive',notes:'Healthy growth. Roots stabilising bank.',officer:'—'}]},
+  {id:'TRK-0016',date:'2025-05-08',div:'Mymensingh',dis:'Netrokona',upa:'Mohanganj',site:'Mohanganj Canal Side',species:'Date Palm (খেজুর)',cat:'Fruit tree',count:0,officer:'—',caregiver:'Asha Khatun',caregiverPhone:'01711-800002',fund:'Government Revenue',status:'Alive',lat:'24.5388',lon:'90.9902',remarks:'Canal bank plantation for erosion control.',monitoring:[{visitNo:1,date:'2025-08-10',status:'Alive',notes:'Healthy growth. Roots stabilising bank.',officer:'—'}]},
 ];
 
 
@@ -1136,14 +1366,237 @@ var upazillaMap = {
   'Netrokona':['Atpara','Barhatta','Durgapur','Kalmakanda','Kendua','Khaliajuri','Madan','Mohanganj','Netrokona Sadar','Purbadhala'],
 };
 
-var users = [
-  {name:'Abdur Rahman',email:'a.rahman@dphe.gov.bd',role:'HQ Admin',office:'DPHE HQ, Dhaka',phone:'01711-000001',last:'Today, 10:30 AM',active:true},
-  {name:'Farida Khanam',email:'f.khanam@dhaka.dphe.gov.bd',role:'Divisional',office:'Dhaka Division Office',phone:'01711-000002',last:'Yesterday, 3:15 PM',active:true},
-  {name:'Motiur Rahman',email:'m.rahman@ctg.dphe.gov.bd',role:'Divisional',office:'Chittagong Division Office',phone:'01711-000003',last:'2 days ago',active:true},
-  {name:'Rashida Begum',email:'r.begum@raj.dphe.gov.bd',role:'District',office:'Rajshahi District Office',phone:'01711-000004',last:'Today, 9:00 AM',active:true},
-  {name:'Kamal Hossain',email:'k.hossain@rgp.dphe.gov.bd',role:'Upazilla',office:'Pirganj, Rangpur',phone:'01711-000005',last:'3 days ago',active:false},
-  {name:'Sabina Yasmin',email:'s.yasmin@khu.dphe.gov.bd',role:'District',office:'Khulna District Office',phone:'01711-000006',last:'Today, 11:20 AM',active:true},
+// ── পারমিশনের সংজ্ঞা ──
+// প্রতিটি পারমিশনের নাম ও বাংলা লেবেল
+var PERM_DEFS = [
+  {key:'dashboard', label:'📊 Dashboard দেখা'},
+  {key:'add',       label:'🌱 রেকর্ড যোগ করা'},
+  {key:'edit',      label:'✏️ রেকর্ড সম্পাদনা'},
+  {key:'delete',    label:'🗑️ রেকর্ড মুছে ফেলা'},
+  {key:'monitoring',label:'🔍 Monitoring করা'},
+  {key:'records',   label:'📋 সব রেকর্ড দেখা'},
+  {key:'map',       label:'🗺️ Map দেখা'},
+  {key:'species',   label:'🌿 Species পরিচালনা'},
+  {key:'reports',   label:'📈 Reports দেখা'},
+  {key:'export',    label:'⬇️ CSV Export করা'},
+  {key:'photo',     label:'📷 ছবি আপলোড'},
+  {key:'users',     label:'👥 User Management'},
 ];
+
+// ডিফল্ট পারমিশন — নতুন ব্যবহারকারী যোগ করার সময় শুরুতে কী চেক থাকবে
+// (Admin যেকোনো সময় যেকোনো পারমিশন যোগ বা বাদ দিতে পারবেন)
+var ROLE_DEFAULT_PERMS = {
+  'HQ Admin':    ['dashboard','add','edit','delete','monitoring','records','map','species','reports','export','photo','users'],
+  'Divisional':  ['dashboard','add','monitoring','records','map','reports','photo'],
+  'District':    ['dashboard','add','monitoring','records','map','photo'],
+  'Upazilla':    ['dashboard','add','monitoring','records','photo'],
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   GRANULAR / FIELD-LEVEL PERMISSION SYSTEM
+   ════════════════════════════════════════════════════════════════════
+   Conceptual DB schema (for backend implementation):
+
+   CREATE TABLE field_permissions (
+     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+     role_id         INT NOT NULL,             -- or user_id for per-user override
+     module_key      VARCHAR(60)  NOT NULL,    -- e.g. 'add_tree_record'
+     field_key       VARCHAR(60)  NOT NULL,    -- e.g. 'division'
+     slug            VARCHAR(150) NOT NULL,    -- e.g. 'add_tree_record.division'
+     can_view        BOOLEAN NOT NULL DEFAULT 0,
+     can_edit        BOOLEAN NOT NULL DEFAULT 0,
+     UNIQUE KEY uniq_role_slug (role_id, slug)
+   );
+
+   In the browser/demo, the same model is kept in-memory on each user object as:
+     user.fieldPerms = {
+       'add_tree_record.division': {view:true, edit:true},
+       'add_tree_record.site_name': {view:true, edit:false},
+       ...
+     }
+   The slug 'module.field' maps 1:1 to the DB `slug` column above, and
+   view/edit map to `can_view` / `can_edit`. This lets the same record be
+   referenced as 'add_tree_record.division.view' / '...edit' if a flat
+   boolean-per-row schema is preferred on the backend.
+   ════════════════════════════════════════════════════════════════════ */
+
+// Level-1 (module) + Level-2 (field) definitions.
+// type:'field'  -> normal input, supports View + Edit toggles, hidden entirely if no View
+// type:'display'-> read-only output (chart/stat/table), only View toggle is meaningful
+// type:'action'  -> a button/capability (e.g. Delete, Export), single "Allowed" toggle (mapped to Edit)
+var FIELD_SCHEMA = [
+  { key:'dashboard', legacy:'dashboard', label:'📊 Dashboard | ড্যাশবোর্ড', fields:[
+      {key:'total_records',  label:'Total Records | মোট রেকর্ড',                 el:'s-total',          wrapper:'stat-card', type:'display'},
+      {key:'survival_rate',  label:'Survival Rate | বেঁচে থাকার হার',             el:'s-survival',       wrapper:'stat-card', type:'display'},
+      {key:'active_offices', label:'Active Offices | সক্রিয় অফিস',               el:'s-offices',        wrapper:'stat-card', type:'display'},
+      {key:'progress_chart', label:'Progress by Division Chart | বিভাগ অনুযায়ী অগ্রগতি', el:'div-progress-bars', wrapper:'card', type:'display'},
+      {key:'category_chart', label:'Category Donut Chart | শ্রেণি চার্ট',         el:'cat-chart-wrap',   wrapper:'self', type:'display'},
+      {key:'trend_chart',    label:'Monthly Trend Chart | মাসিক ট্রেন্ড চার্ট',    el:'month-chart',      wrapper:'card', type:'display'},
+      {key:'recent_table',   label:'Recent Records Table | সাম্প্রতিক রেকর্ড টেবিল', el:'recent-tbody',  wrapper:'table', type:'display'},
+  ]},
+  { key:'add_tree_record', legacy:'add', label:'🌱 Add Tree Record | বৃক্ষরোপণ রেকর্ড যুক্ত করুন', fields:[
+      {key:'division',        label:'Division * | বিভাগ',                       el:'f-div',              wrapper:'fg', type:'field'},
+      {key:'district',        label:'District * | জেলা',                        el:'f-dis',              wrapper:'fg', type:'field'},
+      {key:'upazilla',        label:'Upazilla * | উপজেলা',                       el:'f-upa',              wrapper:'fg', type:'field'},
+      {key:'site_name',       label:'Site Name * | স্থানের নাম',                 el:'f-site',             wrapper:'fg', type:'field'},
+      {key:'gps_coordinates',  label:'GPS Coordinates | জিপিএস স্থানাংক',         el:'f-lat',              wrapper:'gps-box', type:'field'},
+      {key:'tree_species',    label:'Tree Species * | গাছের প্রজাতি',            el:'f-species-sel',      wrapper:'fg', type:'field'},
+      {key:'plantation_date', label:'Date of Plantation * | তারিখ',              el:'f-date',             wrapper:'fg', type:'field'},
+      {key:'caregiver_name',  label:'Caregiver Name | পরিচর্যাকারীর নাম',        el:'f-caregiver',        wrapper:'fg', type:'field'},
+      {key:'caregiver_phone', label:'Caregiver Contact | পরিচর্যাকারীর মোবাইল',  el:'f-caregiver-phone',  wrapper:'fg', type:'field'},
+      {key:'funding_source',  label:'Funding Source | অর্থায়নের উৎস',           el:'f-fund',             wrapper:'fg', type:'field'},
+      {key:'initial_status',  label:'Initial Status | প্রাথমিক অবস্থা',          el:'f-status',           wrapper:'fg', type:'field'},
+      {key:'remarks',         label:'Remarks / Notes | মন্তব্য',                 el:'f-remarks',          wrapper:'fg', type:'field'},
+      {key:'photo_upload',    label:'Photo Upload | ছবি আপলোড',                 el:'upload-drop-zone',   wrapper:'card', type:'field', legacy:'photo'},
+  ]},
+  { key:'monitoring', legacy:'monitoring', label:'🔍 Monitoring | পর্যবেক্ষণ', fields:[
+      {key:'gps_radius_check', label:'GPS Radius Check | জিপিএস ব্যাসার্ধ যাচাই', el:'mon-gps-lat',     wrapper:'card', type:'field'},
+      {key:'division_filter',  label:'Division Filter | বিভাগ ফিল্টার',          el:'mon-filter-div',  wrapper:'self', type:'field'},
+      {key:'search_box',       label:'Search | অনুসন্ধান',                      el:'mon-search',       wrapper:'self', type:'field'},
+      {key:'monitoring_table', label:'Monitoring Table | পর্যবেক্ষণ টেবিল',     el:'mon-tbody',        wrapper:'table', type:'display'},
+  ]},
+  { key:'all_records', legacy:'records', label:'📋 All Records | সব রেকর্ড', fields:[
+      {key:'division_filter', label:'Division Filter | বিভাগ ফিল্টার',          el:'filter-div',    wrapper:'self', type:'field'},
+      {key:'category_filter', label:'Category Filter | শ্রেণি ফিল্টার',         el:'filter-cat',    wrapper:'self', type:'field'},
+      {key:'status_filter',   label:'Status Filter | অবস্থা ফিল্টার',          el:'filter-status', wrapper:'self', type:'field'},
+      {key:'search_box',      label:'Search | অনুসন্ধান',                      el:'search-q',      wrapper:'self', type:'field'},
+      {key:'records_table',   label:'Records Table | রেকর্ড টেবিল',            el:'records-tbody', wrapper:'table', type:'display'},
+      {key:'edit_action',     label:'Edit Record Action | রেকর্ড সম্পাদনা',     el:null,            wrapper:null,   type:'action', legacy:'edit'},
+      {key:'delete_action',   label:'Delete Record Action | রেকর্ড মুছে ফেলা',  el:null,            wrapper:null,   type:'action', legacy:'delete'},
+  ]},
+  { key:'map_view', legacy:'map', label:'🗺️ Map View | মানচিত্র', fields:[
+      {key:'map_filter',     label:'Map Filter | মানচিত্র ফিল্টার',     el:'map-filter',         wrapper:'self', type:'field'},
+      {key:'map_display',    label:'Map Display | মানচিত্র প্রদর্শন',  el:'leaflet-map',        wrapper:'self', type:'display'},
+      {key:'summary_cards',  label:'Summary Cards | সারসংক্ষেপ কার্ড',  el:'map-summary-cards', wrapper:'self', type:'display'},
+  ]},
+  { key:'plant_species', legacy:'species', label:'🌿 Plant Species | বৃক্ষ প্রজাতি', fields:[
+      {key:'add_species_form', label:'Add Species Form | নতুন প্রজাতি যোগ',     el:'add-species-form', wrapper:'self', type:'field'},
+      {key:'species_search',   label:'Species Search | প্রজাতি অনুসন্ধান',      el:'species-search',   wrapper:'self', type:'field'},
+      {key:'species_table',    label:'Species Table | প্রজাতি তালিকা',         el:'species-tbody',    wrapper:'table', type:'display'},
+      {key:'bulk_csv_upload',  label:'Bulk CSV Upload | বাল্ক সিএসভি আপলোড',    el:'bulk-csv-input',   wrapper:'self', type:'field'},
+  ]},
+  { key:'reports', legacy:'reports', label:'📈 Reports | প্রতিবেদন', fields:[
+      {key:'from_date',      label:'From Date | শুরুর তারিখ',           el:'rep-from', wrapper:'fg', type:'field'},
+      {key:'to_date',        label:'To Date | শেষের তারিখ',             el:'rep-to',   wrapper:'fg', type:'field'},
+      {key:'division_filter',label:'Division Filter | বিভাগ ফিল্টার',  el:'rep-div',  wrapper:'fg', type:'field'},
+      {key:'report_type',    label:'Report Type | প্রতিবেদনের ধরন',    el:'rep-type', wrapper:'fg', type:'field'},
+      {key:'report_chart',   label:'Report Chart | প্রতিবেদন চার্ট',   el:'report-chart', wrapper:'card', type:'display'},
+      {key:'csv_export',     label:'CSV Export | সিএসভি এক্সপোর্ট',   el:null, wrapper:null, type:'action', legacy:'export'},
+  ]},
+  { key:'user_management', legacy:'users', label:'👥 User Management | ব্যবহারকারী ব্যবস্থাপনা', fields:[
+      {key:'add_user_form',  label:'Add User Form | নতুন ব্যবহারকারী ফর্ম', el:'add-user-form', wrapper:'self', type:'field'},
+      {key:'users_table',    label:'Users Table | ব্যবহারকারী তালিকা',     el:'users-tbody',   wrapper:'table', type:'display'},
+      {key:'permissions_action', label:'Manage Permissions Action | পারমিশন পরিচালনা', el:null, wrapper:null, type:'action'},
+  ]},
+];
+
+// Build default field-level permissions from a role's legacy module-level perm list.
+// View-only modules (dashboard, map, reports-charts) default Edit=false even for full roles.
+function buildDefaultFieldPerms(legacyPerms) {
+  var fp = {};
+  FIELD_SCHEMA.forEach(function(mod) {
+    var moduleAllowed = legacyPerms.indexOf(mod.legacy) !== -1;
+    mod.fields.forEach(function(f) {
+      var slug = mod.key + '.' + f.key;
+      var fieldLegacyOK = f.legacy ? legacyPerms.indexOf(f.legacy) !== -1 : true;
+      var view = moduleAllowed;
+      var edit = moduleAllowed && fieldLegacyOK && (f.type !== 'display');
+      fp[slug] = { view: view, edit: edit };
+    });
+  });
+  return fp;
+}
+
+// Ensure a user object has fieldPerms (auto-migrate legacy users.perms on first access)
+function ensureFieldPerms(u) {
+  if (!u.fieldPerms) u.fieldPerms = buildDefaultFieldPerms(u.perms || []);
+  return u.fieldPerms;
+}
+
+// Derive legacy module-level perms array from fieldPerms (keeps sidebar/route-guard code working)
+function deriveLegacyPermsFromFieldPerms(fieldPerms) {
+  var legacy = [];
+  FIELD_SCHEMA.forEach(function(mod) {
+    var anyView = mod.fields.some(function(f) { var s = fieldPerms[mod.key + '.' + f.key]; return s && s.view; });
+    if (anyView && legacy.indexOf(mod.legacy) === -1) legacy.push(mod.legacy);
+    mod.fields.forEach(function(f) {
+      if (f.legacy) {
+        var s = fieldPerms[mod.key + '.' + f.key];
+        if (s && s.edit && legacy.indexOf(f.legacy) === -1) legacy.push(f.legacy);
+      }
+    });
+  });
+  return legacy;
+}
+
+// Find a field's DOM wrapper element to show/hide as a whole unit
+function getFieldWrapperEl(f) {
+  if (!f.el) return null;
+  var el = document.getElementById(f.el);
+  if (!el) return null;
+  if (f.wrapper === 'self' || !f.wrapper) return el;
+  if (f.wrapper === 'fg') return el.closest('.fg') || el;
+  if (f.wrapper === 'gps-box') return (el.closest('.gps-box') && el.closest('.gps-box').parentElement) || el.closest('.fg') || el;
+  if (f.wrapper === 'card') return el.closest('.card') || el;
+  if (f.wrapper === 'stat-card') return el.closest('.stat-card') || el;
+  if (f.wrapper === 'table') return el.closest('table') || el;
+  return el;
+}
+
+// Apply the logged-in user's field-level permissions to the live DOM:
+// - No View  -> wrapper hidden entirely
+// - View only (no Edit) -> input/select/textarea disabled (read-only), buttons disabled
+function applyFieldPermissions() {
+  if (SESSION.role === 'admin') return; // HQ Admin always sees/edits everything
+  var fp = SESSION.fieldPerms || {};
+  FIELD_SCHEMA.forEach(function(mod) {
+    mod.fields.forEach(function(f) {
+      if (f.type === 'action' && !f.el) return; // pure action toggles enforced via hasFieldPerm() in code, not DOM
+      var slug = mod.key + '.' + f.key;
+      var perm = fp[slug] || { view:false, edit:false };
+      var wrap = getFieldWrapperEl(f);
+      var el = f.el ? document.getElementById(f.el) : null;
+      if (!wrap) return;
+      if (!perm.view) {
+        wrap.style.display = 'none';
+      } else {
+        wrap.style.display = '';
+        if (!perm.edit && el && ['INPUT','SELECT','TEXTAREA'].indexOf(el.tagName) !== -1) {
+          el.disabled = true;
+          el.title = 'View only — শুধুমাত্র দেখার অনুমতি';
+        } else if (el && ['INPUT','SELECT','TEXTAREA'].indexOf(el.tagName) !== -1) {
+          if (el.title === 'View only — শুধুমাত্র দেখার অনুমতি') { el.disabled = false; el.title = ''; }
+        }
+      }
+    });
+  });
+}
+
+// Field/action-level permission check usable inside business logic (e.g. action buttons)
+function hasFieldPerm(slug, mode) {
+  if (SESSION.role === 'admin') return true;
+  var fp = SESSION.fieldPerms || {};
+  var p = fp[slug];
+  if (!p) return false;
+  return mode === 'edit' ? !!p.edit : !!(p.view || p.edit);
+}
+
+var users = [
+  {name:'Abdur Rahman', email:'a.rahman@dphe.gov.bd', role:'HQ Admin', office:'DPHE HQ, Dhaka', phone:'01711-000001', last:'আজ, সকাল ১০:৩০', active:true,
+   perms:['dashboard','add','edit','delete','monitoring','records','map','species','reports','export','photo','users']},
+  {name:'Farida Khanam', email:'f.khanam@dhaka.dphe.gov.bd', role:'Divisional', office:'Dhaka Division Office', phone:'01711-000002', last:'গতকাল, বিকেল ৩:১৫', active:true,
+   perms:['dashboard','add','monitoring','records','map','reports','photo']},
+  {name:'Motiur Rahman', email:'m.rahman@ctg.dphe.gov.bd', role:'Divisional', office:'Chittagong Division Office', phone:'01711-000003', last:'২ দিন আগে', active:true,
+   perms:['dashboard','add','monitoring','records','map','photo']},
+  {name:'Rashida Begum', email:'r.begum@raj.dphe.gov.bd', role:'District', office:'Rajshahi District Office', phone:'01711-000004', last:'আজ, সকাল ৯:০০', active:true,
+   perms:['dashboard','add','monitoring','records','map','photo']},
+  {name:'Kamal Hossain', email:'k.hossain@rgp.dphe.gov.bd', role:'Upazilla', office:'Pirganj, Rangpur', phone:'01711-000005', last:'৩ দিন আগে', active:false,
+   perms:['dashboard','add','monitoring','records']},
+  {name:'Sabina Yasmin', email:'s.yasmin@khu.dphe.gov.bd', role:'District', office:'Khulna District Office', phone:'01711-000006', last:'আজ, সকাল ১১:২০', active:true,
+   perms:['dashboard','add','edit','monitoring','records','map','photo']},
+];
+
+var editingPermUserIdx = null; // কোন user-এর পারমিশন এডিট করা হচ্ছে
 
 var roleMap = {
   admin:{label:'HQ Admin',badge:'badge-admin',initials:'AD'},
@@ -1152,9 +1605,13 @@ var roleMap = {
   upazilla:{label:'Upazilla Officer',badge:'badge-upa',initials:'UO'},
 };
 
-var MON_PERIODS = ['3m','6m','1yr','2yr','3yr','4yr','5yr'];
-var MON_LABELS = {'3m':'3 Mo','6m':'6 Mo','1yr':'1 Yr','2yr':'2 Yr','3yr':'3 Yr','4yr':'4 Yr','5yr':'5 Yr'};
-var MON_DAYS = {'3m':90,'6m':180,'1yr':365,'2yr':730,'3yr':1095,'4yr':1460,'5yr':1825};
+// Monitoring status labels (for display)
+var MON_STATUS_LABELS = {
+  'Alive': 'Alive (সতেজ)',
+  'Dead': 'Dead (মৃত)',
+  'Care Required': 'Care Required (যত্ন প্রয়োজন)',
+  'Pending Check': 'Pending Check (যাচাই বাকি)'
+};
 
 // ════════════════════════════════
 // LOGIN
@@ -1184,8 +1641,8 @@ function doLogin() {
   renderRecords();
   renderUsers();
   renderMonitoring();
-  buildChart('month-chart');
-  buildChart('report-chart');
+  // month-chart built inside initDashboard()
+  buildChart_legacy('report-chart');
   updateMapCards();
   renderSpeciesTable();
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
@@ -1242,7 +1699,7 @@ function initDashboard() {
     var totalPlanted = records.filter(function(x){ return x.species === r.species; }).length;
     return '<tr><td>' + r.date + '</td><td>' + r.div + '</td><td>' + r.upa + '</td>' +
     '<td>' + r.species + '</td><td><b>' + totalPlanted + '</b></td><td>' + r.site + '</td>' +
-    '<td><span class="status-pill ' + statusClass(r.status) + '">' + r.status + '</span></td></tr>';
+    '<td><span class="status-pill ' + statusClass(r.status) + '">' + statusLabel(r.status) + '</span></td></tr>';
   }).join('');
 
   // Total trees planted = total number of records
@@ -1250,17 +1707,27 @@ function initDashboard() {
 
   // Update survival rate stat
   var alive = records.filter(function(r){ return r.status === 'Alive'; }).length;
+  var dead  = records.filter(function(r){ return r.status === 'Dead'; }).length;
+  var care  = records.filter(function(r){ return r.status === 'Care Required'; }).length;
   var survivalEl = document.getElementById('s-survival');
   if (survivalEl && records.length > 0) {
     survivalEl.textContent = Math.round(alive / records.length * 100) + '%';
   }
+  // Update alive / dead / care stat cards if they exist
+  var sAlive = document.getElementById('s-alive'); if (sAlive) sAlive.textContent = alive;
+  var sDead  = document.getElementById('s-dead');  if (sDead)  sDead.textContent  = dead;
+  var sCare  = document.getElementById('s-care');  if (sCare)  sCare.textContent  = care;
 }
 
-function buildChart(id) {
+// buildChart: delegated to RBAC section (see below) for month-chart
+// This stub keeps compatibility for report-chart
+function buildChart_legacy(id) {
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var vals = [8200,14500,21000,28000,35000,42000,38000,51000,46000,55000,49000,62000];
   var max = Math.max(...vals);
-  document.getElementById(id).innerHTML = months.map((m,i) =>
+  var elBC = document.getElementById(id);
+  if (!elBC) return;
+  elBC.innerHTML = months.map((m,i) =>
     '<div class="bar-wrap"><div class="bar-val">' + (vals[i]/1000).toFixed(0) + 'k</div>' +
     '<div class="bar" style="height:' + Math.round(vals[i]/max*100) + 'px" title="' + m + ': ' + vals[i].toLocaleString() + ' trees"></div>' +
     '<div class="bar-label">' + m + '</div></div>'
@@ -1401,19 +1868,37 @@ function handlePhotos(files) {
   Array.from(files).forEach(file => {
     var origKB = (file.size / 1024).toFixed(0);
     if (file.size <= 102400) {
-      // Under 100KB, no resize needed
       showPhotoPreview(file, origKB, origKB, false);
       readAsDataURL(file, function(dataUrl) {
-        processedPhotos.push({name: file.name, data: dataUrl, size: origKB});
+        uploadPhotoToDrive(file.name, dataUrl, origKB);
       });
     } else {
-      // Needs resize
       resizeImage(file, 100 * 1024, function(blob, newKB) {
         showPhotoPreview(file, origKB, newKB, true);
         readAsDataURL(blob, function(dataUrl) {
-          processedPhotos.push({name: file.name, data: dataUrl, size: newKB});
+          uploadPhotoToDrive(file.name, dataUrl, newKB);
         });
       });
+    }
+  });
+}
+
+// ── Upload a single photo to Google Drive via Apps Script ──────────
+// Stores only the resulting Drive URL on the record (keeps Sheets rows small).
+function uploadPhotoToDrive(filename, dataUrl, sizeKB) {
+  var slot = { name: filename, data: dataUrl, size: sizeKB, url: null, uploading: backendConfigured() };
+  processedPhotos.push(slot);
+  if (!backendConfigured()) return; // offline mode: keep base64 locally only
+  var commaIdx = dataUrl.indexOf(',');
+  var mime = (dataUrl.substring(5, dataUrl.indexOf(';')) || 'image/jpeg');
+  var base64 = dataUrl.substring(commaIdx + 1);
+  apiCall('uploadImage', { filename: filename, mime: mime, data: base64 }).then(function(res) {
+    slot.uploading = false;
+    if (res && res.ok && res.url) {
+      slot.url = res.url;
+      slot.data = null; // drop heavy base64 once we have the Drive URL
+    } else {
+      console.warn('Photo upload failed, keeping local copy only:', res && res.error);
     }
   });
 }
@@ -1517,8 +2002,7 @@ function saveRecord() {
   }
   var newId = 'TRK-' + String(records.length + 1).padStart(4,'0');
   var catShort = document.getElementById('f-cat').value || 'Others';
-  var statusRaw = document.getElementById('f-status').value;
-  var statusShort = statusRaw.split(' — ')[0] || statusRaw;
+  var statusShort = document.getElementById('f-status').value;
   records.push({
     id: newId, date: date, div: div, dis: dis, upa: upa, site: site,
     species: species, cat: catShort, count: 0,
@@ -1537,10 +2021,12 @@ function saveRecord() {
   showAlert('add-alert-success');
   clearForm();
   initDashboard();
+  renderRecords();
   renderMonitoring();
 }
 
 function clearForm() {
+  var ip = document.getElementById('inline-mon-panel'); if(ip) ip.style.display='none';
   ['f-div','f-dis','f-upa','f-site','f-caregiver','f-caregiver-phone','f-remarks','f-date'].forEach(id => {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -1575,10 +2061,10 @@ function statusClass(s) {
 }
 
 function statusLabel(s) {
-  if (s === 'Alive') return '🟢 Alive — সতেজ';
-  if (s === 'Dead') return '🔴 Dead — মৃত';
-  if (s === 'Care Required') return '🟡 Care Required — যত্ন প্রয়োজন';
-  if (s === 'Pending Check') return '⚪ Pending Check — যাচাই বাকি';
+  if (s === 'Alive') return 'Alive (সতেজ)';
+  if (s === 'Dead') return 'Dead (মৃত)';
+  if (s === 'Care Required') return 'Care Required (যত্ন প্রয়োজন)';
+  if (s === 'Pending Check') return 'Pending Check (যাচাই বাকি)';
   return s || '—';
 }
 
@@ -1606,7 +2092,7 @@ function renderRecords() {
     '<td>' + r.species + '</td>' +
     '<td><span style="font-size:11px;background:#e8f5e9;color:#1b5e20;padding:2px 8px;border-radius:20px">' + r.cat + '</span></td>' +
     '<td><b style="color:#1a5c2a">' + totalPlanted + '</b></td>' +
-    '<td><span class="status-pill ' + statusClass(r.status) + '">' + r.status + '</span></td>' +
+    '<td><span class="status-pill ' + statusClass(r.status) + '">' + statusLabel(r.status) + '</span></td>' +
     '<td style="white-space:nowrap">' +
     '<button class="btn btn-sm" onclick="viewRecord(\'' + r.id + '\')" style="font-size:11px;padding:3px 8px;margin-right:3px">👁 View</button>' +
     '<button class="btn btn-sm" onclick="editRecord(\'' + r.id + '\')" style="font-size:11px;padding:3px 8px;margin-right:3px;border-color:#1976d2;color:#1565c0;background:#e3f2fd">✏️ Edit</button>' +
@@ -1621,7 +2107,7 @@ function viewRecord(id) {
   var r = records.find(x => x.id === id);
   if (!r) return;
   var mon = r.monitoring && r.monitoring.length > 0
-    ? r.monitoring.map(m => '\n  [' + MON_LABELS[m.period] + '] ' + m.date + ' → ' + m.status + (m.careDetail ? ' (' + m.careDetail + ')' : '') + '\n   Note: ' + (m.notes || 'None')).join('')
+    ? r.monitoring.map(function(m,i) { return '\n  [পরিদর্শন #' + (m.visitNo||i+1) + '] ' + m.date + ' → ' + m.status + (m.careDetail ? ' (' + m.careDetail + ')' : '') + '\n   Note: ' + (m.notes || 'None'); }).join('')
     : '\n  No monitoring visits yet.';
   alert('📋 RECORD DETAILS\n\n' +
     'ID: ' + r.id + '\nDate: ' + r.date + '\n' +
@@ -1630,7 +2116,7 @@ function viewRecord(id) {
     'Category: ' + r.cat + '\nCount: ' + r.count + ' trees\n' +
     'Officer: ' + r.officer + '\n' +
     'Caregiver: ' + (r.caregiver || 'N/A') + ' | ' + (r.caregiverPhone || 'N/A') + '\n' +
-    'Funding: ' + r.fund + '\nStatus: ' + r.status + '\n' +
+    'Funding: ' + r.fund + '\nStatus: ' + statusLabel(r.status) + '\n' +
     'GPS: ' + (r.lat || 'N/A') + ', ' + (r.lon || 'N/A') + '\n' +
     'Remarks: ' + (r.remarks || 'None') +
     '\n\n── Monitoring visits:' + mon
@@ -1640,28 +2126,31 @@ function viewRecord(id) {
 // ════════════════════════════════
 // MONITORING
 // ════════════════════════════════
-function getMonitoringDueStatus(r) {
-  var planted = new Date(r.date);
-  var today = new Date();
-  var daysSince = Math.floor((today - planted) / 86400000);
-  var completed = (r.monitoring || []).map(m => m.period);
-  // If dead, all future visits locked
-  var isDead = r.status === 'Dead';
-  var result = MON_PERIODS.map(period => {
-    var daysNeeded = MON_DAYS[period];
-    var done = completed.includes(period);
-    var eligible = daysSince >= daysNeeded;
-    var upcoming = !done && !eligible && (daysNeeded - daysSince) <= 30;
-    var due = !done && eligible;
-    var overdue = !done && eligible && (daysSince - daysNeeded) > 30;
-    return {period, done, due, upcoming, overdue, locked: isDead && !done};
-  });
-  return result;
+// ════════════════════════════════
+// MONITORING — নতুন সিস্টেম
+// যেকোনো সময় visit যোগ করা যাবে
+// Dead হলে পরবর্তী visit লক হবে
+// ════════════════════════════════
+
+function getLastVisit(r) {
+  var visits = r.monitoring || [];
+  if (visits.length === 0) return null;
+  return visits.slice().sort(function(a,b){ return new Date(b.date) - new Date(a.date); })[0];
 }
 
-// ── MON PERIODS for table ──
-var MON_PERIODS_TABLE = ['3m','6m','1yr','2yr','3yr','5yr'];
-var MON_LABELS_TABLE  = {'3m':'৩ মাস','6m':'৬ মাস','1yr':'১ বছর','2yr':'২ বছর','3yr':'৩ বছর','5yr':'৫ বছর'};
+function isTreeDead(r) {
+  // গাছ মৃত যদি main status Dead অথবা যেকোনো visit Dead
+  if (r.status === 'Dead') return true;
+  var visits = r.monitoring || [];
+  return visits.some(function(v){ return v.status === 'Dead'; });
+}
+
+function getStatusClass(status) {
+  if (status === 'Alive') return 'alive';
+  if (status === 'Dead') return 'dead';
+  if (status === 'Care Required') return 'care';
+  return 'pending';
+}
 
 function renderMonitoring() {
   var fd   = (document.getElementById('mon-filter-div')?.value  || '');
@@ -1678,138 +2167,123 @@ function renderMonitoring() {
 
   if (filtered.length === 0) {
     document.getElementById('mon-tbody').innerHTML =
-      '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:40px;font-size:13px">No records found.</td></tr>';
+      '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:40px;font-size:13px">কোনো রেকর্ড পাওয়া যায়নি।</td></tr>';
     return;
   }
 
-  document.getElementById('mon-tbody').innerHTML = filtered.map(r => {
-    var isDead = r.status === 'Dead';
-    var planted = new Date(r.date);
-    var today   = new Date();
-    var daysSince = Math.floor((today - planted) / 86400000);
-    var completed = (r.monitoring || []).map(m => m.period);
+  document.getElementById('mon-tbody').innerHTML = filtered.map(r => buildMonRow(r)).join('');
+}
 
-    // Photo cell
-    var photoCell = '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">' +
-      '<button class="mon-photo-btn" onclick="triggerMonPhoto(\'' + r.id + '\')">Browse...</button>' +
-      '<span style="font-size:10px;color:#aaa" id="mpn-' + r.id + '">No ...ed.</span>' +
-      '</div>';
+function buildMonRow(r) {
+  var dead = isTreeDead(r);
+  var visits = r.monitoring || [];
+  var lastVisit = getLastVisit(r);
 
-    // Per-period cells
-    var periodCells = MON_PERIODS_TABLE.map(period => {
-      var daysNeeded = MON_DAYS[period] || (period==='5yr'?1825:0);
-      var done = completed.includes(period);
-      var eligible = daysSince >= daysNeeded;
-      var locked = (!done && !eligible) || (isDead && !done);
+  // Photo cell
+  var photoCell = '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">' +
+    '<button class="mon-photo-btn" onclick="triggerMonPhoto(\'' + r.id + '\')">Browse...</button>' +
+    '<span style="font-size:10px;color:#aaa" id="mpn-' + r.id + '">No ...ed.</span>' +
+    '</div>';
 
-      if (locked) {
-        return '<td><div class="mon-locked" title="Not yet due">🔒</div></td>';
-      }
+  // Current status pill
+  var statusColor = dead ? '#c62828' : (r.status==='Care Required'?'#f57c00':(r.status==='Pending Check'?'#888':'#2d8a42'));
+  var statusBg    = dead ? '#ffebee' : (r.status==='Care Required'?'#fff8e1':(r.status==='Pending Check'?'#f5f5f5':'#e8f5e9'));
+  var statusCell = '<span style="display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:'+statusBg+';color:'+statusColor+'">' +
+    (MON_STATUS_LABELS[r.status] || r.status) + '</span>' +
+    (dead ? '<div style="font-size:10px;color:#c62828;margin-top:3px;font-weight:600">🔒 Dead — Locked</div>' : '');
 
-      // Get current recorded status for this period
-      var recorded = (r.monitoring||[]).find(m=>m.period===period);
-      var curVal = recorded ? recorded.status : (done?'Alive':'');
+  // Last visit cell
+  var lastVisitCell = lastVisit
+    ? '<div style="font-size:11px;font-weight:600;color:#333">' + lastVisit.date + '</div>' +
+      '<div style="font-size:10px;color:#555;margin-top:2px">' + (MON_STATUS_LABELS[lastVisit.status]||lastVisit.status) + '</div>' +
+      (lastVisit.officer ? '<div style="font-size:10px;color:#888">👤 ' + lastVisit.officer + '</div>' : '')
+    : '<span style="font-size:11px;color:#bbb">কোনো পরিদর্শন নেই</span>';
 
-      var selClass = curVal==='Alive'?'alive':(curVal==='Dead'?'dead':(curVal?'care':'pending'));
-      return '<td><select class="mon-status-sel ' + selClass + '" ' +
-        'onchange="updateMonStatus(\'' + r.id + '\',\'' + period + '\',this)" ' +
-        'data-rid="' + r.id + '" data-period="' + period + '">' +
-        '<option value=""' + (!curVal?'selected':'') + '>— নির্বাচন —</option>' +
-        '<option value="Alive"' + (curVal==='Alive'?' selected':'') + '>🟢 Alive — সতেজ</option>' +
-        '<option value="Care Required"' + (curVal==='Care Required'?' selected':'') + '>🟡 Care Required — যত্ন প্রয়োজন</option>' +
-        '<option value="Dead"'  + (curVal==='Dead'?' selected':'')  + '>🔴 Dead — মৃত</option>' +
-        '<option value="Pending Check"' + (curVal==='Pending Check'?' selected':'') + '>⚪ Pending Check — যাচাই বাকি</option>' +
-        '</select></td>';
-    }).join('');
+  // Visit count
+  var visitCountCell = '<div style="text-align:center">' +
+    '<span style="font-size:18px;font-weight:700;color:' + (visits.length>0?'#2d8a42':'#bbb') + '">' + visits.length + '</span>' +
+    '<div style="font-size:10px;color:#888">বার</div></div>';
 
-    // GPS badge
-    var gpsBadge = (r.lat && r.lon)
-      ? '<div class="mon-gps-badge">📍 ' + parseFloat(r.lat).toFixed(4) + ', ' + parseFloat(r.lon).toFixed(4) + '</div>'
-      : '<div style="font-size:10px;color:#ccc">GPS N/A</div>';
+  // History button
+  var historyCell = visits.length > 0
+    ? '<button onclick="showVisitHistory(\'' + r.id + '\')" style="padding:4px 10px;border-radius:6px;border:1.5px solid #1976d2;color:#1565c0;background:#e3f2fd;font-size:11px;cursor:pointer;font-weight:600">📋 দেখুন</button>'
+    : '<span style="font-size:10px;color:#bbb">ইতিহাস নেই</span>';
 
-    return '<tr class="' + (isDead?'dead-row':'') + '">' +
-      '<td><div class="mon-id-cell">' + r.id + '</div>' +
-           '<div class="mon-species">' + r.species + '</div></td>' +
-      '<td><div class="mon-location">' + r.upa + ' › ' + r.dis + '</div>' + gpsBadge + '</td>' +
-      '<td>' + photoCell + '</td>' +
-      periodCells +
-      '</tr>';
-  }).join('');
+  // New report button or locked
+  var reportCell = dead
+    ? '<div style="display:flex;align-items:center;gap:6px;color:#c62828;font-size:11px;font-weight:600"><span style="font-size:16px">🔒</span> গাছ মৃত</div>'
+    : '<button onclick="openMonModal(\'' + r.id + '\')" style="padding:6px 14px;border-radius:7px;border:none;background:#2d8a42;color:#fff;font-size:12px;font-weight:700;cursor:pointer">➕ নতুন রিপোর্ট</button>';
+
+  // GPS badge
+  var gpsBadge = (r.lat && r.lon)
+    ? '<div class="mon-gps-badge">📍 ' + parseFloat(r.lat).toFixed(4) + ', ' + parseFloat(r.lon).toFixed(4) + '</div>'
+    : '<div style="font-size:10px;color:#ccc">GPS N/A</div>';
+
+  return '<tr class="' + (dead?'dead-row':'') + '">' +
+    '<td><div class="mon-id-cell">' + r.id + '</div>' +
+         '<div class="mon-species">' + r.species + '</div></td>' +
+    '<td><div class="mon-location">' + r.upa + ' › ' + r.dis + '</div>' + gpsBadge + '</td>' +
+    '<td>' + photoCell + '</td>' +
+    '<td>' + statusCell + '</td>' +
+    '<td>' + lastVisitCell + '</td>' +
+    '<td>' + visitCountCell + '</td>' +
+    '<td>' + historyCell + '</td>' +
+    '<td>' + reportCell + '</td>' +
+    '</tr>';
 }
 
 function renderMonitoringFromList(list) {
   if (list.length === 0) {
     document.getElementById('mon-tbody').innerHTML =
-      '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:40px;font-size:13px">এই ব্যাসার্ধে কোনো গাছ পাওয়া যায়নি।</td></tr>';
+      '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:40px;font-size:13px">এই ব্যাসার্ধে কোনো গাছ পাওয়া যায়নি।</td></tr>';
     return;
   }
-  // Temporarily override records for rendering
-  var saved = records;
-  // Use same renderMonitoring logic but with filtered list
   document.getElementById('mon-tbody').innerHTML = list.map(r => buildMonRow(r)).join('');
 }
 
-function buildMonRow(r) {
-    var isDead = r.status === 'Dead';
-    var planted = new Date(r.date);
-    var today   = new Date();
-    var daysSince = Math.floor((today - planted) / 86400000);
-    var completed = (r.monitoring || []).map(m => m.period);
-    var photoCell = '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">' +
-      '<button class="mon-photo-btn" onclick="triggerMonPhoto(\'' + r.id + '\')">📷 ছবি</button>' +
-      '<span style="font-size:10px;color:#aaa" id="mpn-' + r.id + '">কোনো ছবি নেই</span>' +
-      '</div>';
-    var periodCells = MON_PERIODS_TABLE.map(function(period) {
-      var daysNeeded = MON_DAYS[period] || (period==='5yr'?1825:0);
-      var done = completed.includes(period);
-      var eligible = daysSince >= daysNeeded;
-      var locked = (!done && !eligible) || (isDead && !done);
-      if (locked) return '<td><div class="mon-locked" title="এখনো সময় হয়নি">🔒</div></td>';
-      var recorded = (r.monitoring||[]).find(function(m){return m.period===period;});
-      var curVal = recorded ? recorded.status : (done?'Alive':'');
-      var selClass = curVal==='Alive'?'alive':(curVal==='Dead'?'dead':(curVal==='Care Required'?'care':'pending'));
-      return '<td><select class="mon-status-sel ' + selClass + '" ' +
-        'onchange="updateMonStatus(\'' + r.id + '\',\'' + period + '\',this)" ' +
-        'data-rid="' + r.id + '" data-period="' + period + '">' +
-        '<option value=""' + (!curVal?'selected':'') + '>— নির্বাচন —</option>' +
-        '<option value="Alive"' + (curVal==='Alive'?' selected':'') + '>🟢 Alive — সতেজ</option>' +
-        '<option value="Care Required"' + (curVal==='Care Required'?' selected':'') + '>🟡 Care Required — যত্ন প্রয়োজন</option>' +
-        '<option value="Dead"'  + (curVal==='Dead'?' selected':'')  + '>🔴 Dead — মৃত</option>' +
-        '<option value="Pending Check"' + (curVal==='Pending Check'?' selected':'') + '>⚪ Pending Check — যাচাই বাকি</option>' +
-        '</select></td>';
-    }).join('');
-    var gpsBadge = (r.lat && r.lon)
-      ? '<div class="mon-gps-badge">📍 ' + parseFloat(r.lat).toFixed(4) + ', ' + parseFloat(r.lon).toFixed(4) + '</div>'
-      : '<div style="font-size:10px;color:#ccc">GPS N/A</div>';
-    return '<tr class="' + (isDead?'dead-row':'') + '">' +
-      '<td><div class="mon-id-cell">' + r.id + '</div><div class="mon-species">' + r.species + '</div></td>' +
-      '<td><div class="mon-location">' + r.upa + ' › ' + r.dis + '</div>' + gpsBadge + '</td>' +
-      '<td>' + photoCell + '</td>' +
-      periodCells + '</tr>';
+function showVisitHistory(rid) {
+  var r = records.find(x => x.id === rid);
+  if (!r) return;
+  var visits = (r.monitoring || []).slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  document.getElementById('visit-history-tree-info').textContent = r.id + ' — ' + r.species + ' | ' + r.site;
+  var html = visits.length === 0
+    ? '<p style="color:#aaa;text-align:center;padding:20px">কোনো পরিদর্শন রেকর্ড নেই।</p>'
+    : visits.map(function(v, i) {
+        var sc = getStatusClass(v.status);
+        var bg = v.status==='Dead'?'#ffebee':(v.status==='Care Required'?'#fff8e1':(v.status==='Alive'?'#e8f5e9':'#f5f5f5'));
+        var cl = v.status==='Dead'?'#c62828':(v.status==='Care Required'?'#e65100':(v.status==='Alive'?'#1a5c2a':'#888'));
+        // Find the original index in r.monitoring (not the sorted view index)
+        var r2 = records.find(function(x){ return x.id === currentMonRecordId; });
+        var origIdx = r2 ? r2.monitoring.findIndex(function(m){ return m.date===v.date && m.visitNo===v.visitNo; }) : -1;
+        return '<div style="border-left:4px solid '+cl+';padding:10px 14px;margin-bottom:10px;background:'+bg+';border-radius:0 8px 8px 0">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+            '<div>' +
+              '<span style="font-weight:700;font-size:13px;color:'+cl+'">' + (MON_STATUS_LABELS[v.status]||v.status) + '</span>' +
+              '<span style="font-size:10px;color:#aaa;margin-left:8px">Visit #' + (v.visitNo||i+1) + '</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:6px">' +
+              '<span style="font-size:11px;color:#888;font-weight:600">' + v.date + '</span>' +
+              (origIdx >= 0 ? '<button onclick="editMonVisitFromHistory(\'' + currentMonRecordId + '\',' + origIdx + ')" style="padding:2px 8px;border-radius:5px;border:1.5px solid #1976d2;color:#1565c0;background:#e3f2fd;font-size:10px;cursor:pointer;font-weight:600">✏️ Edit</button>' : '') +
+              (origIdx >= 0 ? '<button onclick="deleteMonVisit(\'' + currentMonRecordId + '\',' + origIdx + ')" style="padding:2px 8px;border-radius:5px;border:1.5px solid #c62828;color:#c62828;background:#ffebee;font-size:10px;cursor:pointer;font-weight:600">🗑 Del</button>' : '') +
+            '</div>' +
+          '</div>' +
+          (v.officer ? '<div style="font-size:11px;color:#555;margin-bottom:4px">👤 ' + v.officer + '</div>' : '') +
+          (v.notes ? '<div style="font-size:11px;color:#333">' + v.notes + '</div>' : '') +
+          (v.careDetail ? '<div style="font-size:11px;color:#e65100;margin-top:3px">🔧 ' + v.careDetail + '</div>' : '') +
+          (v.replacement && v.replacement!=='no' ? '<div style="font-size:11px;color:#1565c0;margin-top:3px">🔄 Replacement: ' + v.replacement + '</div>' : '') +
+        '</div>';
+      }).join('');
+  document.getElementById('visit-history-body').innerHTML = html;
+  document.getElementById('visit-history-modal').style.display = 'block';
 }
 
-function updateMonStatus(rid, period, sel) {
-  var r = records.find(x=>x.id===rid);
-  if (!r) return;
-  if (!r.monitoring) r.monitoring=[];
-  var val = sel.value;
-  if (!val) return;
-  var existing = r.monitoring.findIndex(m=>m.period===period);
-  var entry = {period, date:new Date().toISOString().split('T')[0], status:val, notes:'', officer:r.officer||''};
-  if (existing>=0) r.monitoring[existing]=entry; else r.monitoring.push(entry);
-  if (val==='Dead') r.status='Dead';
-  else if (val==='Care Required') r.status='Care Required';
-  else r.status='Alive';
-  // Re-style select
-  sel.className = 'mon-status-sel ' + (val==='Alive'?'alive':(val==='Dead'?'dead':'care'));
-  showAlert('mon-alert-success');
-  initDashboard();
-  // Sync monitoring update to Sheets
-  var updatedRec = records.find(function(x){return x.id===rid;});
-  if (updatedRec) apiCall('updateRecord', {record: updatedRec}).then(function(res){
-    showSyncStatus(res ? '☁️ Monitoring saved to Sheets' : '💾 Saved locally', !!res);
-  });
-}
+
+// updateMonStatus no longer used (replaced by openMonModal flow)
+
+
+
+
+
 
 function triggerMonPhoto(rid) {
   var inp = document.createElement('input');
@@ -1911,7 +2385,44 @@ function editRecord(id) {
     // Mark as editing
     document.getElementById('save-record-btn').textContent='💾 Update Record — আপডেট করুন';
     document.getElementById('save-record-btn').setAttribute('data-edit-id', id);
+    // Show monitoring inline editor
+    renderInlineMonitoring(id);
   },100);
+}
+
+function renderInlineMonitoring(recordId) {
+  var panel = document.getElementById('inline-mon-panel');
+  var r = records.find(x => x.id === recordId);
+  if (!panel || !r) return;
+  panel.style.display = 'block';
+  document.getElementById('inline-mon-rec-id').textContent = recordId;
+  var visits = (r.monitoring||[]).slice().sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+  var tbody = document.getElementById('inline-mon-tbody');
+  if (visits.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:#aaa;text-align:center;padding:16px">No monitoring visits yet.</td></tr>';
+  } else {
+    tbody.innerHTML = visits.map(function(v, sortedIdx) {
+      var origIdx = r.monitoring.findIndex(function(m){ return m.date===v.date && m.visitNo===v.visitNo; });
+      var bg = v.status==='Dead'?'#ffebee':(v.status==='Care Required'?'#fff8e1':(v.status==='Alive'?'#e8f5e9':'#f5f5f5'));
+      var cl = v.status==='Dead'?'#c62828':(v.status==='Care Required'?'#e65100':(v.status==='Alive'?'#2d8a42':'#888'));
+      return '<tr style="background:'+bg+'">' +
+        '<td style="font-size:11px;color:#888">Visit #'+(v.visitNo||sortedIdx+1)+'</td>' +
+        '<td style="font-size:12px;font-weight:600">'+v.date+'</td>' +
+        '<td><span style="font-size:11px;font-weight:700;color:'+cl+'">'+(MON_STATUS_LABELS[v.status]||v.status)+'</span></td>' +
+        '<td style="font-size:11px;color:#555;max-width:180px">'+( v.notes || '—' )+'</td>' +
+        '<td style="white-space:nowrap">' +
+          '<button onclick="openMonModalEdit(\'' + recordId + '\',' + origIdx + ')" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1.5px solid #1976d2;color:#1565c0;background:#e3f2fd;cursor:pointer;margin-right:3px">✏️ Edit</button>' +
+          '<button onclick="deleteMonVisit(\'' + recordId + '\',' + origIdx + ');renderInlineMonitoring(\'' + recordId + '\')" style="font-size:10px;padding:2px 7px;border-radius:5px;border:1.5px solid #c62828;color:#c62828;background:#ffebee;cursor:pointer">🗑</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+  // Update add visit button
+  var addBtn = document.getElementById('inline-mon-add-btn');
+  if (addBtn) {
+    addBtn.onclick = function() { openMonModal(recordId); };
+    addBtn.style.display = r.status === 'Dead' || isTreeDead(r) ? 'none' : 'inline-block';
+  }
 }
 
 function deleteRecord(id) {
@@ -1923,30 +2434,74 @@ function deleteRecord(id) {
   initDashboard();
   renderMonitoring();
   apiCall('deleteRecord', {id: id}).then(function(res){
-    showSyncStatus(res ? '🗑️ Deleted from Google Sheets' : '🗑️ Deleted locally', !!res);
+    showSyncStatus(res && res.ok ? '🗑️ Deleted from Google Sheets' : '⚠️ Delete sync failed', !!(res&&res.ok));
   });
 }
 
 function openMonModal(recordId) {
   currentMonRecordId = recordId;
+  currentMonEditIndex = null; // new visit
   var r = records.find(x => x.id === recordId);
   if (!r) return;
+
+  // Dead গাছে নতুন visit লক
+  if (isTreeDead(r)) {
+    alert('⚠️ এই গাছটি মৃত চিহ্নিত করা হয়েছে। নতুন পরিদর্শন রিপোর্ট করা সম্ভব নয়।');
+    return;
+  }
+
+  document.getElementById('mon-modal-title').textContent = '🔍 নতুন পরিদর্শন রেকর্ড করুন';
   document.getElementById('mon-modal-info').innerHTML =
     '<b>' + r.id + '</b> — ' + r.species + '<br>' +
-    r.site + ', ' + r.upa + ' | Planted: ' + r.date + ' | Trees: ' + r.count +
-    (r.caregiver ? '<br>👤 Caregiver: ' + r.caregiver + (r.caregiverPhone ? ' · ' + r.caregiverPhone : '') : '');
+    r.site + ', ' + r.upa + ' | রোপণ: <b>' + r.date + '</b>' +
+    (r.caregiver ? '<br>👤 পরিচর্যাকারী: ' + r.caregiver + (r.caregiverPhone ? ' · ' + r.caregiverPhone : '') : '') +
+    '<br>📋 মোট পরিদর্শন: ' + (r.monitoring||[]).length + ' বার';
 
-  // Pre-select next due period
-  var ds = getMonitoringDueStatus(r);
-  var nextDue = ds.find(d => d.due || d.overdue);
-  if (nextDue) {
-    document.getElementById('mon-period').value = nextDue.period;
+  // Default date: tomorrow of last visit or today (but must be after last visit)
+  var visits = (r.monitoring||[]).slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  var defaultDate = new Date().toISOString().split('T')[0];
+  if (visits.length > 0 && visits[0].date >= defaultDate) {
+    // Suggest next day after last visit
+    var nextDay = new Date(visits[0].date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    defaultDate = nextDay.toISOString().split('T')[0];
   }
-  document.getElementById('mon-date').value = new Date().toISOString().split('T')[0];
+  var monDateEl = document.getElementById('mon-date');
+  monDateEl.value = defaultDate;
+  monDateEl.min = r.date; // Cannot select before plantation date
+  document.getElementById('mon-date-hint').textContent = r.monitoring && r.monitoring.length > 0
+    ? '📅 Plantation: ' + r.date + '  |  Last visit: ' + visits[0].date + '  →  New date must be after last visit'
+    : '📅 Plantation date: ' + r.date + '  →  Visit date must be after this';
   document.getElementById('mon-notes').value = '';
   document.getElementById('mon-care-detail').value = '';
-  document.getElementById('mon-officer').value = r.officer;
-  document.getElementById('mon-tree-status').value = r.status === 'Dead' ? 'Dead' : 'Alive';
+  document.getElementById('mon-officer').value = r.officer || '';
+  document.getElementById('mon-tree-status').value = r.status === 'Dead' ? 'Alive' : (r.status || 'Alive');
+  toggleMonitoringFields();
+  document.getElementById('mon-modal').style.display = 'block';
+}
+
+function openMonModalEdit(recordId, visitIdx) {
+  currentMonRecordId = recordId;
+  currentMonEditIndex = visitIdx;
+  var r = records.find(x => x.id === recordId);
+  if (!r || !r.monitoring || !r.monitoring[visitIdx]) return;
+  var v = r.monitoring[visitIdx];
+
+  document.getElementById('mon-modal-title').textContent = '✏️ পরিদর্শন রেকর্ড সম্পাদনা করুন (Visit #' + (v.visitNo || visitIdx+1) + ')';
+  document.getElementById('mon-modal-info').innerHTML =
+    '<b>' + r.id + '</b> — ' + r.species + '<br>' +
+    r.site + ', ' + r.upa + ' | রোপণ: <b>' + r.date + '</b>' +
+    '<br>✏️ Editing Visit #' + (v.visitNo || visitIdx+1);
+
+  var monDateEl2 = document.getElementById('mon-date');
+  monDateEl2.value = v.date || '';
+  monDateEl2.min = r.date;
+  document.getElementById('mon-date-hint').textContent = '📅 Plantation: ' + r.date + '  |  All visits must be in chronological order after plantation date.';
+  document.getElementById('mon-notes').value = v.notes || '';
+  document.getElementById('mon-care-detail').value = v.careDetail || '';
+  document.getElementById('mon-officer').value = v.officer || '';
+  document.getElementById('mon-tree-status').value = v.status || 'Alive';
+  document.getElementById('mon-replacement').value = v.replacement || 'no';
   toggleMonitoringFields();
   document.getElementById('mon-modal').style.display = 'block';
 }
@@ -1957,6 +2512,35 @@ function toggleMonitoringFields() {
   document.getElementById('mon-care-wrap').style.display = status === 'Care Required' ? 'block' : 'none';
 }
 
+
+function editMonVisitFromHistory(recordId, visitIdx) {
+  document.getElementById('visit-history-modal').style.display = 'none';
+  openMonModalEdit(recordId, visitIdx);
+}
+
+function deleteMonVisit(recordId, visitIdx) {
+  var r = records.find(x => x.id === recordId);
+  if (!r || !r.monitoring) return;
+  var v = r.monitoring[visitIdx];
+  if (!confirm('Delete Visit #' + (v.visitNo||visitIdx+1) + ' on ' + v.date + '?\nThis cannot be undone.')) return;
+  r.monitoring.splice(visitIdx, 1);
+  // Re-number
+  r.monitoring.sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+  r.monitoring.forEach(function(v,i){ v.visitNo = i+1; });
+  // Recalculate main status from latest visit
+  if (r.monitoring.length > 0) {
+    var latest = r.monitoring.slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); })[0];
+    r.status = latest.status;
+  }
+  renderMonitoring();
+  renderRecords();
+  initDashboard();
+  // Refresh history modal with updated data
+  showVisitHistory(recordId);
+  apiCall('updateRecord', {record: r}).then(function(res){
+    showSyncStatus(res && res.ok ? '☁️ Monitoring updated in Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
+  });
+}
 function closeMonModal() {
   document.getElementById('mon-modal').style.display = 'none';
   currentMonRecordId = null;
@@ -1965,33 +2549,101 @@ function closeMonModal() {
 function saveMonitoringVisit() {
   var r = records.find(x => x.id === currentMonRecordId);
   if (!r) return;
-  var period = document.getElementById('mon-period').value;
-  var date = document.getElementById('mon-date').value;
+
+  // Double-check dead lock
+  if (isTreeDead(r) && !currentMonEditIndex && currentMonEditIndex !== 0) {
+    alert('⚠️ এই গাছটি মৃত। নতুন রিপোর্ট সংরক্ষণ করা যাবে না।');
+    closeMonModal();
+    return;
+  }
+
+  var date   = document.getElementById('mon-date').value;
   var status = document.getElementById('mon-tree-status').value;
-  var notes = document.getElementById('mon-notes').value;
+  var notes  = document.getElementById('mon-notes').value;
   var officer = document.getElementById('mon-officer').value;
-  if (!date || !status) { alert('Please fill required fields'); return; }
+  if (!date || !status) { alert('তারিখ ও অবস্থা অবশ্যই পূরণ করুন।'); return; }
 
   if (!r.monitoring) r.monitoring = [];
-  // Update/replace period entry
-  var existing = r.monitoring.findIndex(m => m.period === period);
+
+  // ── DATE CHRONOLOGY VALIDATION ──────────────────────────────
+  var plantDate = r.date; // plantation date is the anchor
+  if (date < plantDate) {
+    alert('❌ তারিখ ত্রুটি!\n\nপরিদর্শনের তারিখ (' + date + ') রোপণের তারিখের (' + plantDate + ') আগে হতে পারবে না।\n\nPlantation date: ' + plantDate + '\nVisit date must be after this date.');
+    return;
+  }
+
+  // Sort existing visits by date to find boundaries
+  var isEditing = (currentMonEditIndex !== null && currentMonEditIndex !== undefined);
+  var otherVisits = r.monitoring.filter(function(_, idx) { return !isEditing || idx !== currentMonEditIndex; });
+  var sortedOthers = otherVisits.slice().sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+
+  if (isEditing) {
+    // Find what comes before and after in sorted order (excluding this edit)
+    var newVisitNo = currentMonEditIndex; // 0-based index of edited entry
+    // Find predecessor: all other visits with date < new date
+    var predecessors = sortedOthers.filter(function(v){ return v.date < date; });
+    // Find successor: all other visits with date > new date
+    var successors = sortedOthers.filter(function(v){ return v.date > date; });
+    // Validation: if there's a visit after plantation date but with conflict
+    // (all visits already in sorted order among themselves, just need date vs plantation)
+    // Additional: check no successor has same date
+    var exactMatch = sortedOthers.find(function(v){ return v.date === date; });
+    if (exactMatch) {
+      alert('❌ তারিখ ত্রুটি!\n\n' + date + ' তারিখে ইতিমধ্যে একটি পরিদর্শন রেকর্ড আছে। একই দিনে দুটি পরিদর্শন করা সম্ভব নয়।\n\nA visit on ' + date + ' already exists. Each visit must have a unique date.');
+      return;
+    }
+  } else {
+    // New visit — must be after all existing visits
+    if (sortedOthers.length > 0) {
+      var lastVisitDate = sortedOthers[sortedOthers.length-1].date;
+      if (date <= lastVisitDate) {
+        alert('❌ তারিখ ত্রুটি!\n\nনতুন পরিদর্শনের তারিখ (' + date + ') পূর্বের সর্বশেষ পরিদর্শনের তারিখের (' + lastVisitDate + ') পরে হতে হবে।\n\nNew visit date must be AFTER the last visit date: ' + lastVisitDate + '\n\nPlantation: ' + plantDate + '\nLast visit: ' + lastVisitDate + '\nYour date: ' + date);
+        return;
+      }
+    }
+  }
+  // ── END VALIDATION ───────────────────────────────────────────
+
   var entry = {
-    period, date, status, notes, officer,
+    visitNo: isEditing ? (currentMonEditIndex + 1) : (r.monitoring.length + 1),
+    date: date,
+    status: status,
+    notes: notes,
+    officer: officer,
     careDetail: document.getElementById('mon-care-detail').value,
     replacement: document.getElementById('mon-replacement').value,
   };
-  if (existing >= 0) r.monitoring[existing] = entry;
-  else r.monitoring.push(entry);
 
-  // Update main status if dead
-  if (status === 'Dead') r.status = 'Dead';
-  else if (status === 'Care Required') r.status = 'Care Required';
-  else if (status === 'Alive') r.status = 'Alive';
+  if (isEditing) {
+    r.monitoring[currentMonEditIndex] = entry;
+    // Re-number all visits after sorting by date
+    r.monitoring.sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+    r.monitoring.forEach(function(v,i){ v.visitNo = i+1; });
+  } else {
+    r.monitoring.push(entry);
+  }
 
+  // Main status = status of the most recent visit (by date)
+  var allSorted = r.monitoring.slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  var latestStatus = allSorted[0] ? allSorted[0].status : status;
+  r.status = latestStatus;
+
+  currentMonEditIndex = null;
   closeMonModal();
   showAlert('mon-alert-success');
   renderMonitoring();
+  renderRecords();
   initDashboard();
+  // Refresh inline panel if open (user editing from add-tree form)
+  var ip = document.getElementById('inline-mon-panel');
+  if (ip && ip.style.display !== 'none' && currentMonRecordId) {
+    renderInlineMonitoring(currentMonRecordId);
+  }
+
+  // Google Sheets sync
+  apiCall('updateRecord', {record: r}).then(function(res){
+    showSyncStatus(res && res.ok ? '☁️ Monitoring saved to Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
+  });
 }
 
 // ════════════════════════════════
@@ -2038,7 +2690,7 @@ function addAllMarkers() {
     var icon = L.circleMarker([parseFloat(r.lat), parseFloat(r.lon)], {
       radius: 8, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9
     }).addTo(leafletMap)
-      .bindPopup('<b>'+r.id+'</b><br>🌿 '+r.species+'<br>📍 '+r.upa+', '+r.dis+'<br>📅 '+r.date+'<br>🌳 '+r.count+' trees<br>Status: <b>'+r.status+'</b>');
+      .bindPopup('<b>'+r.id+'</b><br>🌿 '+r.species+'<br>📍 '+r.upa+', '+r.dis+'<br>📅 '+r.date+'<br>Status: <b>'+statusLabel(r.status)+'</b>');
     leafletMarkers.push(icon);
   });
 }
@@ -2131,41 +2783,251 @@ function exportCSV() {
 }
 
 // ════════════════════════════════
-// USERS
+// USERS — পূর্ণ পারমিশন সিস্টেম
 // ════════════════════════════════
-function renderUsers() {
+
+function renderUsers(filterText) {
   var roleColors = {'HQ Admin':'badge-admin','Divisional':'badge-div','District':'badge-dis','Upazilla':'badge-upa'};
-  document.getElementById('users-tbody').innerHTML = users.map((u,i) =>
-    '<tr>' +
-    '<td style="color:#aaa;font-size:12px">' + (i+1) + '</td>' +
-    '<td><b>' + u.name + '</b></td>' +
-    '<td style="font-size:12px;color:#666">' + u.email + '</td>' +
-    '<td><span class="user-role nav-badge ' + (roleColors[u.role]||'') + '">' + u.role + '</span></td>' +
-    '<td style="font-size:12px;color:#666">' + u.office + '</td>' +
-    '<td style="font-size:12px;color:#888">' + u.last + '</td>' +
-    '<td><span class="status-pill ' + (u.active ? 'status-alive' : 'status-dead') + '">' + (u.active ? 'Active' : 'Inactive') + '</span></td>' +
-    '<td><button class="btn btn-sm" style="font-size:11px" onclick="toggleUser(' + i + ')">' + (u.active ? '🔒 Deactivate' : '✅ Activate') + '</button></td>' +
-    '</tr>'
-  ).join('');
+  var list = filterText
+    ? users.filter(u => u.name.toLowerCase().includes(filterText.toLowerCase()) || u.email.toLowerCase().includes(filterText.toLowerCase()))
+    : users;
+
+  document.getElementById('users-tbody').innerHTML = list.map(function(u, i) {
+    var realIdx = users.indexOf(u);
+    var permCount = (u.perms || []).length;
+    var maxPerm = PERM_DEFS.length;
+    var permBar = Math.round(permCount / maxPerm * 100);
+    var permColor = permBar > 66 ? '#2d8a42' : permBar > 33 ? '#f57c00' : '#c62828';
+
+    // পারমিশন ব্যাজ সারি
+    var permBadges = (u.perms || []).slice(0,5).map(function(p) {
+      var def = PERM_DEFS.find(function(d){return d.key===p;});
+      return def ? '<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:#e8f5e9;color:#1a5c2a;margin:1px;display:inline-block">' + def.label.split(' ')[0] + '</span>' : '';
+    }).join('');
+    if ((u.perms||[]).length > 5) permBadges += '<span style="font-size:10px;color:#aaa">+' + ((u.perms||[]).length - 5) + '</span>';
+
+    return '<tr>' +
+      '<td style="color:#aaa;font-size:12px">' + (realIdx+1) + '</td>' +
+      '<td><b>' + u.name + '</b><div style="font-size:11px;color:#888;margin-top:2px">' + (u.phone||'') + '</div></td>' +
+      '<td style="font-size:12px;color:#666">' + u.email + '</td>' +
+      '<td>' +
+        '<span class="user-role nav-badge ' + (roleColors[u.role]||'') + '">' + u.role + '</span>' +
+      '</td>' +
+      '<td style="font-size:12px;color:#666">' + u.office + '</td>' +
+      '<td>' +
+        '<div style="font-size:11px;color:#888;margin-bottom:4px">' + u.last + '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<div style="flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden">' +
+            '<div style="width:' + permBar + '%;height:100%;background:' + permColor + ';border-radius:3px"></div>' +
+          '</div>' +
+          '<span style="font-size:10px;color:#888;white-space:nowrap">' + permCount + '/' + PERM_DEFS.length + ' পারমিশন</span>' +
+        '</div>' +
+        '<div style="margin-top:4px">' + permBadges + '</div>' +
+      '</td>' +
+      '<td><span class="status-pill ' + (u.active ? 'status-alive' : 'status-dead') + '">' + (u.active ? '✅ সক্রিয়' : '🔴 নিষ্ক্রিয়') + '</span></td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-sm" style="font-size:11px;margin-bottom:4px;width:100%;background:#e3f2fd;color:#1565c0;border-color:#1976d2" onclick="openPermModal(' + realIdx + ')">🔑 পারমিশন পরিচালনা</button><br>' +
+        '<button class="btn btn-sm" style="font-size:11px;width:100%;' + (u.active ? 'color:#c62828;border-color:#c62828' : 'color:#1a5c2a;border-color:#2d8a42') + '" onclick="toggleUser(' + realIdx + ')">' + (u.active ? '🔒 নিষ্ক্রিয় করুন' : '✅ সক্রিয় করুন') + '</button>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
 }
 
-function toggleUser(i) { users[i].active = !users[i].active; renderUsers(); }
+function filterUsers(q) { renderUsers(q); }
+
+function toggleUser(i) {
+  users[i].active = !users[i].active;
+  renderUsers();
+  apiCall('updateUser', { user: users[i] }).then(function(res){
+    if (!res || !res.ok) console.warn('toggleUser sync failed:', res && res.error);
+  });
+}
 
 function showAddUserForm() {
   var f = document.getElementById('add-user-form');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  if (f.style.display === 'block') updateRolePermDefaults();
+}
+
+function updateRolePermDefaults() {
+  var role = document.getElementById('u-role').value;
+  var defaults = ROLE_DEFAULT_PERMS[role] || [];
+  PERM_DEFS.forEach(function(def) {
+    var el = document.getElementById('perm-' + def.key);
+    if (!el) return;
+    el.checked = defaults.includes(def.key);
+    el.disabled = false;
+    el.closest('label').style.opacity = '1';
+    el.closest('label').title = '';
+  });
 }
 
 function addUser() {
-  var name = document.getElementById('u-name').value;
-  var email = document.getElementById('u-email').value;
+  var name = document.getElementById('u-name').value.trim();
+  var email = document.getElementById('u-email').value.trim();
   var role = document.getElementById('u-role').value;
-  var office = document.getElementById('u-office').value;
-  if (!name || !email) { alert('Name and username are required'); return; }
-  users.push({name, email, role, office, phone: document.getElementById('u-phone').value, last: 'Never', active: true});
+  var office = document.getElementById('u-office').value.trim();
+  if (!name || !email) { alert('নাম এবং ইউজারনেম আবশ্যক'); return; }
+
+  var perms = PERM_DEFS
+    .filter(function(def){ var el=document.getElementById('perm-'+def.key); return el&&el.checked&&!el.disabled; })
+    .map(function(def){ return def.key; });
+
+  users.push({
+    name: name, email: email, role: role, office: office,
+    phone: document.getElementById('u-phone').value,
+    last: 'কখনো না', active: true, perms: perms,
+    fieldPerms: buildDefaultFieldPerms(perms)
+  });
   renderUsers();
   document.getElementById('add-user-form').style.display = 'none';
-  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(id => document.getElementById(id).value = '');
+  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ document.getElementById(id).value=''; });
+}
+
+// ── পারমিশন Modal (Field-Level Accordion) ──
+function openPermModal(idx) {
+  editingPermUserIdx = idx;
+  var u = users[idx];
+  ensureFieldPerms(u);
+
+  document.getElementById('perm-modal-user-info').innerHTML =
+    '<b>' + u.name + '</b> &nbsp;|&nbsp; ' + u.role + ' &nbsp;|&nbsp; ' + u.office +
+    '<br><span style="color:#aaa">Email: ' + u.email + '</span>';
+
+  var grid = document.getElementById('perm-modal-grid');
+  grid.innerHTML = FIELD_SCHEMA.map(function(mod, mi) {
+    var rows = mod.fields.map(function(f, fi) {
+      var slug = mod.key + '.' + f.key;
+      var perm = u.fieldPerms[slug] || { view:false, edit:false };
+      var cbBase = 'pf-' + mi + '-' + fi;
+      if (f.type === 'action') {
+        return '<div class="perm-field-row">' +
+          '<span class="perm-field-name">' + f.label + '</span>' +
+          '<label class="perm-toggle ' + (perm.edit ? 'on' : '') + '" id="lbl-' + cbBase + '-edit">' +
+            '<input type="checkbox" id="' + cbBase + '-edit" data-slug="' + slug + '" data-mode="edit" ' + (perm.edit ? 'checked' : '') + ' onchange="onFieldPermToggle(this)"> অনুমোদিত | Allowed' +
+          '</label>' +
+        '</div>';
+      }
+      var editDisabled = (f.type === 'display'); // pure display items have no Edit concept
+      return '<div class="perm-field-row">' +
+        '<span class="perm-field-name">' + f.label + '</span>' +
+        '<label class="perm-toggle ' + (perm.view ? 'on' : '') + '" id="lbl-' + cbBase + '-view">' +
+          '<input type="checkbox" id="' + cbBase + '-view" data-slug="' + slug + '" data-mode="view" ' + (perm.view ? 'checked' : '') + ' onchange="onFieldPermToggle(this)"> View' +
+        '</label>' +
+        (editDisabled ? '' :
+        '<label class="perm-toggle edit-toggle ' + (perm.edit ? 'on' : '') + '" id="lbl-' + cbBase + '-edit">' +
+          '<input type="checkbox" id="' + cbBase + '-edit" data-slug="' + slug + '" data-mode="edit" ' + (perm.edit ? 'checked' : '') + ' onchange="onFieldPermToggle(this)"> Edit' +
+        '</label>') +
+      '</div>';
+    }).join('');
+
+    var moduleViewCount = mod.fields.filter(function(f){ var s = u.fieldPerms[mod.key+'.'+f.key]; return s && (s.view||s.edit); }).length;
+
+    return '<div class="perm-acc" id="acc-' + mi + '">' +
+      '<div class="perm-acc-head" onclick="togglePermAcc(' + mi + ')">' +
+        '<span class="arrow">▶</span>' +
+        '<span class="perm-acc-title">' + mod.label + '</span>' +
+        '<span class="perm-acc-count" id="acc-count-' + mi + '">' + moduleViewCount + '/' + mod.fields.length + ' সক্রিয়</span>' +
+        '<span class="perm-master-row" onclick="event.stopPropagation()">' +
+          '<span class="perm-toggle" onclick="setModuleFieldPerms(' + mi + ',true,false)">সব View</span>' +
+          '<span class="perm-toggle edit-toggle" onclick="setModuleFieldPerms(' + mi + ',true,true)">সব Edit</span>' +
+          '<span class="perm-toggle" onclick="setModuleFieldPerms(' + mi + ',false,false)">কোনোটি নয়</span>' +
+        '</span>' +
+      '</div>' +
+      '<div class="perm-acc-body">' + rows + '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('perm-modal').style.display = 'block';
+}
+
+function togglePermAcc(mi) {
+  var acc = document.getElementById('acc-' + mi);
+  if (acc) acc.classList.toggle('open');
+}
+
+// Toggle one field's view/edit checkbox with sensible dependency rules:
+// turning Edit on implies View on; turning View off implies Edit off.
+function onFieldPermToggle(el) {
+  var mode = el.getAttribute('data-mode');
+  var slug = el.getAttribute('data-slug');
+  var grid = document.getElementById('perm-modal-grid');
+  if (mode === 'edit' && el.checked) {
+    var viewCb = grid.querySelector('input[data-slug="' + slug + '"][data-mode="view"]');
+    if (viewCb && !viewCb.checked) { viewCb.checked = true; refreshTogglePill(viewCb); }
+  }
+  if (mode === 'view' && !el.checked) {
+    var editCb = grid.querySelector('input[data-slug="' + slug + '"][data-mode="edit"]');
+    if (editCb && editCb.checked) { editCb.checked = false; refreshTogglePill(editCb); }
+  }
+  refreshTogglePill(el);
+  refreshAccCount(grid, slug);
+}
+
+function refreshTogglePill(cb) {
+  var lbl = cb.closest('label.perm-toggle');
+  if (lbl) lbl.classList.toggle('on', cb.checked);
+}
+
+function refreshAccCount(grid, slug) {
+  var moduleKey = slug.split('.')[0];
+  var mi = FIELD_SCHEMA.findIndex(function(m){ return m.key === moduleKey; });
+  if (mi === -1) return;
+  var mod = FIELD_SCHEMA[mi];
+  var activeCount = 0;
+  mod.fields.forEach(function(f) {
+    var vEl = grid.querySelector('input[data-slug="' + mod.key + '.' + f.key + '"][data-mode="view"]');
+    var eEl = grid.querySelector('input[data-slug="' + mod.key + '.' + f.key + '"][data-mode="edit"]');
+    if ((vEl && vEl.checked) || (eEl && eEl.checked)) activeCount++;
+  });
+  var countEl = document.getElementById('acc-count-' + mi);
+  if (countEl) countEl.textContent = activeCount + '/' + mod.fields.length + ' সক্রিয়';
+}
+
+// Bulk-set every field in a module: setModuleFieldPerms(moduleIndex, view, edit)
+function setModuleFieldPerms(mi, view, edit) {
+  var mod = FIELD_SCHEMA[mi];
+  var grid = document.getElementById('perm-modal-grid');
+  mod.fields.forEach(function(f) {
+    var slug = mod.key + '.' + f.key;
+    var vEl = grid.querySelector('input[data-slug="' + slug + '"][data-mode="view"]');
+    var eEl = grid.querySelector('input[data-slug="' + slug + '"][data-mode="edit"]');
+    if (vEl) { vEl.checked = view || edit; refreshTogglePill(vEl); }
+    if (eEl) { eEl.checked = (f.type !== 'display') && edit; refreshTogglePill(eEl); }
+  });
+  refreshAccCount(grid, mod.key + '.' + mod.fields[0].key);
+}
+
+function closePermModal() {
+  document.getElementById('perm-modal').style.display = 'none';
+  editingPermUserIdx = null;
+}
+
+function savePermissions() {
+  if (editingPermUserIdx === null) return;
+  var grid = document.getElementById('perm-modal-grid');
+  var fieldPerms = {};
+  FIELD_SCHEMA.forEach(function(mod) {
+    mod.fields.forEach(function(f) {
+      var slug = mod.key + '.' + f.key;
+      var vEl = grid.querySelector('input[data-slug="' + slug + '"][data-mode="view"]');
+      var eEl = grid.querySelector('input[data-slug="' + slug + '"][data-mode="edit"]');
+      fieldPerms[slug] = { view: !!(vEl && vEl.checked), edit: !!(eEl && eEl.checked) };
+    });
+  });
+  var u = users[editingPermUserIdx];
+  u.fieldPerms = fieldPerms;
+  u.perms = deriveLegacyPermsFromFieldPerms(fieldPerms); // keep legacy sidebar/route-guard code working
+  if (SESSION.email === u.email) { SESSION.perms = u.perms; SESSION.fieldPerms = u.fieldPerms; applySidebarPermissions(); applyFieldPermissions(); }
+  closePermModal();
+  renderUsers();
+  apiCall('updateUser', { user: u }).then(function(res){
+    if (!res || !res.ok) console.warn('permissions sync failed:', res && res.error);
+  });
+  // Show success feedback
+  var ss = document.getElementById('sync-status');
+  if(ss){ ss.textContent='✅ ফিল্ড-লেভেল পারমিশন সংরক্ষিত হয়েছে'; ss.style.color='#2d8a42'; ss.style.display='inline';
+    setTimeout(function(){ ss.style.display='none'; },3000); }
 }
 
 // ── SPECIES DROPDOWN POPULATION ──
@@ -2274,7 +3136,7 @@ function addSpeciesEntry() {
   var newSp = {en:en,bn:bn,sci:sci,cat:cat};
   TREE_LIST.push(newSp);
   apiCall('addSpecies', {species: newSp}).then(function(res){
-    showSyncStatus(res ? '☁️ Species saved to Sheets' : '💾 Saved locally', !!res);
+    showSyncStatus(res && res.ok ? '☁️ Species saved to Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
   renderSpeciesTable();
   document.getElementById('add-species-form').style.display='none';
@@ -2291,7 +3153,7 @@ function deleteSpecies(idx) {
   var delName = TREE_LIST[idx].en;
   TREE_LIST.splice(idx,1);
   apiCall('deleteSpecies', {en: delName}).then(function(res){
-    showSyncStatus(res ? '🗑️ Species removed from Sheets' : '🗑️ Removed locally', !!res);
+    showSyncStatus(res && res.ok ? '🗑️ Species removed from Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
   renderSpeciesTable();
 }
@@ -2436,9 +3298,13 @@ function saveRecord() {
       r.lat=document.getElementById('f-lat').value;
       r.lon=document.getElementById('f-lon').value;
       r.remarks=document.getElementById('f-remarks').value;
+      if (processedPhotos.length) {
+        r.photos = (r.photos||[]).concat(processedPhotos.map(function(p){ return p.url || p.data; }).filter(Boolean));
+      }
       apiCall('updateRecord', {record: r}).then(function(res){
-        showSyncStatus(res ? '☁️ Updated in Google Sheets' : '💾 Updated locally (offline)', !!res);
+        showSyncStatus(res && res.ok ? '☁️ Updated in Google Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
       });
+      renderInlineMonitoring(editId);
     }
     var successEl=document.getElementById('add-alert-success');
     successEl.textContent='✅ Record updated successfully! রেকর্ড আপডেট হয়েছে।';
@@ -2456,11 +3322,12 @@ function saveRecord() {
       lat:document.getElementById('f-lat').value,
       lon:document.getElementById('f-lon').value,
       remarks:document.getElementById('f-remarks').value,
+      photos: processedPhotos.map(function(p){ return p.url || p.data; }).filter(Boolean),
       monitoring:[]
     };
     records.push(newRec);
     apiCall('addRecord', {record: newRec}).then(function(res){
-      showSyncStatus(res ? '☁️ Saved to Google Sheets' : '💾 Saved locally (offline)', !!res);
+      showSyncStatus(res && res.ok ? '☁️ Saved to Google Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
     });
     var successEl2=document.getElementById('add-alert-success');
     successEl2.textContent='✅ Record saved successfully! বৃক্ষরোপণ তথ্য সংরক্ষিত হয়েছে।';
@@ -2495,6 +3362,920 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
+
+// ════════════════════════════════════════════════════════════════════
+// ENTERPRISE RBAC SYSTEM
+// ════════════════════════════════════════════════════════════════════
+
+// ── Session state ──────────────────────────────────────────────────
+var SESSION = {
+  role: 'admin',        // 'admin' | 'divisional' | 'district' | 'upazilla'
+  div:  null,           // assigned division (for non-admin)
+  dis:  null,           // assigned district (for district/upazilla)
+  upa:  null,           // assigned upazilla (for upazilla)
+  perms: [],            // granted permission keys
+  name: '',
+  email: '',
+};
+
+// ── Data access scoping ────────────────────────────────────────────
+// Returns only records this session is allowed to see/edit
+function scopedRecords() {
+  switch (SESSION.role) {
+    case 'admin':       return records;
+    case 'divisional':  return records.filter(function(r){ return r.div === SESSION.div; });
+    case 'district':    return records.filter(function(r){ return r.dis === SESSION.dis; });
+    case 'upazilla':    return records.filter(function(r){ return r.upa === SESSION.upa; });
+    default: return [];
+  }
+}
+
+// Can this session EDIT/DELETE a given record?
+function canMutateRecord(r) {
+  switch (SESSION.role) {
+    case 'admin':      return true;
+    case 'divisional': return r.div === SESSION.div;
+    case 'district':   return r.dis === SESSION.dis;
+    case 'upazilla':   return r.upa === SESSION.upa;
+    default: return false;
+  }
+}
+
+// Permission check
+function hasPerm(key) {
+  if (SESSION.role === 'admin') return true;
+  return SESSION.perms.indexOf(key) !== -1;
+}
+
+// Enforce perm — hide page and show denied message
+function enforcePerm(key, pageName) {
+  if (!hasPerm(key)) {
+    var page = document.getElementById('page-' + pageName);
+    if (page) {
+      page.innerHTML = '<div class="perm-denied">' +
+        '<div class="perm-denied-icon">🔒</div>' +
+        '<h2>অ্যাক্সেস নেই — Access Denied</h2>' +
+        '<p>আপনার এই পাতাটি দেখার অনুমতি নেই।<br>Your role does not have permission to access this module.</p>' +
+        '<p style="margin-top:8px;font-size:11px;color:#bbb">Permission required: <b>' + key + '</b></p>' +
+        '</div>';
+    }
+    return false;
+  }
+  return true;
+}
+
+// ── Sidebar visibility based on permissions ─────────────────────────
+function applySidebarPermissions() {
+  var items = document.querySelectorAll('.sidebar-item');
+  // mapping: sidebar text → perm key
+  var map = {
+    'Dashboard': 'dashboard',
+    'Add Tree Record': 'add',
+    'Monitoring': 'monitoring',
+    'All Records': 'records',
+    'Map View': 'map',
+    'Plant Species': 'species',
+    'Reports': 'reports',
+    'User Management': 'users',
+  };
+  items.forEach(function(item) {
+    var text = item.textContent.trim();
+    var permKey = null;
+    Object.keys(map).forEach(function(k) { if (text.indexOf(k) !== -1) permKey = map[k]; });
+    if (permKey && !hasPerm(permKey)) {
+      item.style.display = 'none';
+    } else {
+      item.style.display = '';
+    }
+  });
+  // Admin section only for admin or users-perm holders
+  var adminSec = document.getElementById('admin-section');
+  var adminMenu = document.getElementById('admin-users-menu');
+  if (adminSec && adminMenu) {
+    var show = (SESSION.role === 'admin' || hasPerm('users'));
+    adminSec.style.display = show ? '' : 'none';
+    adminMenu.style.display = show ? '' : 'none';
+  }
+}
+
+// ── Scope banner ────────────────────────────────────────────────────
+function renderScopeBanner() {
+  var el = document.getElementById('scope-banner');
+  if (!el) return;
+  var cls, icon, msg;
+  switch (SESSION.role) {
+    case 'admin':
+      cls='scope-admin'; icon='🛡️';
+      msg='<b>HQ Admin</b> — Full national access. Viewing all 8 divisions, 64 districts, all upazillas.';
+      break;
+    case 'divisional':
+      cls='scope-div'; icon='🏢';
+      msg='<b>Divisional Officer</b> — Operational scope: <b>'+SESSION.div+' Division</b>. You manage all districts under this division. Dashboard shows national comparison (read-only).';
+      break;
+    case 'district':
+      cls='scope-dis'; icon='🏬';
+      msg='<b>District Officer</b> — Operational scope: <b>'+SESSION.dis+' District</b> ('+SESSION.div+' Division). Dashboard shows division-level comparison (read-only).';
+      break;
+    case 'upazilla':
+      cls='scope-upa'; icon='📍';
+      msg='<b>Upazilla Officer</b> — Operational scope: <b>'+SESSION.upa+' Upazilla</b> ('+SESSION.dis+', '+SESSION.div+'). Dashboard shows district, division & national comparison (read-only).';
+      break;
+    default: cls='scope-admin'; icon='?'; msg='Unknown role';
+  }
+  el.className='scope-banner '+cls;
+  el.innerHTML='<span style="font-size:20px">'+icon+'</span><span>'+msg+'</span>';
+}
+
+// ── Role-adaptive dashboard KPIs ────────────────────────────────────
+function renderRoleKPIs() {
+  var el = document.getElementById('role-kpi-grid');
+  if (!el) return;
+  var myRecs = scopedRecords();
+  var alive = myRecs.filter(function(r){return r.status==='Alive';}).length;
+  var dead  = myRecs.filter(function(r){return r.status==='Dead';}).length;
+  var care  = myRecs.filter(function(r){return r.status==='Care Required';}).length;
+  var pending = myRecs.filter(function(r){return r.status==='Pending Check';}).length;
+  var survRate = myRecs.length > 0 ? Math.round(alive/myRecs.length*100) : 0;
+  var monitored = myRecs.filter(function(r){return r.monitoring && r.monitoring.length>0;}).length;
+
+  var scopeLabel = SESSION.role==='admin'?'National':
+    (SESSION.role==='divisional'?SESSION.div+' Div':
+    (SESSION.role==='district'?SESSION.dis+' Dist':SESSION.upa+' Upazilla'));
+
+  el.className='kpi-grid';
+  el.innerHTML=[
+    {label:'My Scope Records',val:myRecs.length,sub:scopeLabel+' records',cls:''},
+    {label:'Alive (সতেজ)',val:alive,sub:survRate+'% survival rate',cls:''},
+    {label:'Dead (মৃত)',val:dead,sub:'Requires replacement',cls:'red'},
+    {label:'Care Required',val:care,sub:'Need attention',cls:'amber'},
+    {label:'Pending Check',val:pending,sub:'Not yet verified',cls:'blue'},
+    {label:'Monitored',val:monitored,sub:'Have ≥1 visit record',cls:'purple'},
+  ].map(function(kpi){
+    return '<div class="kpi-card '+kpi.cls+'"><div class="kpi-val">'+kpi.val+'</div>'+
+      '<div class="kpi-label">'+kpi.label+'</div><div class="kpi-sub">'+kpi.sub+'</div></div>';
+  }).join('');
+}
+
+// ── Comparative Analytics (read-only, cross-scope) ──────────────────
+function renderCompareSection() {
+  var el = document.getElementById('role-compare-section');
+  if (!el) return;
+  if (SESSION.role === 'admin') { el.innerHTML=''; return; } // Admin sees full dashboard already
+
+  var html = '<div class="card dash-compare-section">';
+
+  if (SESSION.role === 'divisional') {
+    html += '<div class="card-title"><span>📊</span> Division Comparison — জাতীয় তুলনামূলক বিশ্লেষণ <span style="font-size:11px;color:#aaa;font-weight:400">(Read-only comparative analytics)</span></div>';
+    html += '<table class="compare-table"><thead><tr><th>#</th><th>Division</th><th>Records</th><th>Alive</th><th>Survival %</th><th>Rank</th></tr></thead><tbody>';
+    var divStats = divData.map(function(d){
+      var recs = records.filter(function(r){return r.div===d.name;});
+      var al = recs.filter(function(r){return r.status==='Alive';}).length;
+      return {name:d.name,color:d.color,recs:recs.length,alive:al,surv:recs.length>0?Math.round(al/recs.length*100):0};
+    }).sort(function(a,b){return b.recs-a.recs;});
+    divStats.forEach(function(d,i){
+      var isMe = d.name===SESSION.div;
+      var rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+      html += '<tr class="'+(isMe?'me-row':'')+'">'+
+        '<td><span class="rank-badge '+rankCls+'">'+(i+1)+'</span></td>'+
+        '<td>'+(isMe?'<b style="color:#1a5c2a">★ '+d.name+'</b>':d.name)+'</td>'+
+        '<td><b>'+d.recs+'</b></td><td>'+d.alive+'</td>'+
+        '<td><div style="display:flex;align-items:center;gap:6px"><div style="width:'+Math.round(d.surv*0.6)+'px;height:6px;background:#2d8a42;border-radius:3px"></div>'+d.surv+'%</div></td>'+
+        '<td><span class="rank-badge '+rankCls+'">'+(i+1)+'</span></td></tr>';
+    });
+    // National total row
+    var natRecs=records.length,natAl=records.filter(function(r){return r.status==='Alive';}).length;
+    html += '<tr style="background:#f5f5f5;font-weight:700"><td>—</td><td>🌐 National Total</td><td>'+natRecs+'</td><td>'+natAl+'</td><td>'+Math.round(natAl/Math.max(1,natRecs)*100)+'%</td><td>—</td></tr>';
+    html += '</tbody></table>';
+
+  } else if (SESSION.role === 'district') {
+    html += '<div class="card-title"><span>📊</span> District Comparison within '+SESSION.div+' Division <span style="font-size:11px;color:#aaa;font-weight:400">(Read-only)</span></div>';
+    var myDivDistricts = districtMap[SESSION.div] || [];
+    var disStats = myDivDistricts.map(function(dis){
+      var recs = records.filter(function(r){return r.dis===dis;});
+      var al = recs.filter(function(r){return r.status==='Alive';}).length;
+      return {name:dis,recs:recs.length,alive:al,surv:recs.length>0?Math.round(al/recs.length*100):0};
+    }).sort(function(a,b){return b.recs-a.recs;});
+    html += '<table class="compare-table"><thead><tr><th>#</th><th>District</th><th>Records</th><th>Alive</th><th>Survival %</th></tr></thead><tbody>';
+    disStats.forEach(function(d,i){
+      var isMe = d.name===SESSION.dis;
+      var rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+      html += '<tr class="'+(isMe?'me-row':'')+'">'+
+        '<td><span class="rank-badge '+rankCls+'">'+(i+1)+'</span></td>'+
+        '<td>'+(isMe?'<b style="color:#1a5c2a">★ '+d.name+'</b>':d.name)+'</td>'+
+        '<td><b>'+d.recs+'</b></td><td>'+d.alive+'</td>'+
+        '<td><div style="display:flex;align-items:center;gap:6px"><div style="width:'+Math.round(d.surv*0.6)+'px;height:6px;background:#1976d2;border-radius:3px"></div>'+d.surv+'%</div></td></tr>';
+    });
+    // Averages
+    var divRecs=records.filter(function(r){return r.div===SESSION.div;});
+    var divAl=divRecs.filter(function(r){return r.status==='Alive';}).length;
+    var natRecs2=records.length, natAl2=records.filter(function(r){return r.status==='Alive';}).length;
+    html += '<tr style="background:#e3f2fd;font-weight:600"><td>—</td><td>📊 '+SESSION.div+' Division Avg</td><td>'+Math.round(divRecs.length/Math.max(1,myDivDistricts.length))+'</td><td>'+Math.round(divAl/Math.max(1,myDivDistricts.length))+'</td><td>'+Math.round(divAl/Math.max(1,divRecs.length)*100)+'%</td></tr>';
+    html += '<tr style="background:#f5f5f5;font-weight:600"><td>—</td><td>🌐 National Avg</td><td>'+Math.round(natRecs2/64)+'</td><td>'+Math.round(natAl2/64)+'</td><td>'+Math.round(natAl2/Math.max(1,natRecs2)*100)+'%</td></tr>';
+    html += '</tbody></table>';
+
+  } else if (SESSION.role === 'upazilla') {
+    // Upazilla: compare with sibling upazillas in same district
+    html += '<div class="card-title"><span>📊</span> Upazilla Comparison — '+SESSION.dis+' District <span style="font-size:11px;color:#aaa;font-weight:400">(Read-only)</span></div>';
+    var myUpas = upazillaMap[SESSION.dis] || [];
+    var upaStats = myUpas.map(function(upa){
+      var recs = records.filter(function(r){return r.upa===upa;});
+      var al = recs.filter(function(r){return r.status==='Alive';}).length;
+      return {name:upa,recs:recs.length,alive:al,surv:recs.length>0?Math.round(al/recs.length*100):0};
+    }).sort(function(a,b){return b.recs-a.recs;});
+    html += '<table class="compare-table"><thead><tr><th>Rank</th><th>Upazilla</th><th>Records</th><th>Alive</th><th>Survival %</th></tr></thead><tbody>';
+    upaStats.forEach(function(u,i){
+      var isMe = u.name===SESSION.upa;
+      var rankCls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+      html += '<tr class="'+(isMe?'me-row':'')+'">'+
+        '<td><span class="rank-badge '+rankCls+'">'+(i+1)+'</span></td>'+
+        '<td>'+(isMe?'<b style="color:#1a5c2a">★ '+u.name+'</b>':u.name)+'</td>'+
+        '<td><b>'+u.recs+'</b></td><td>'+u.alive+'</td>'+
+        '<td><div style="display:flex;align-items:center;gap:6px"><div style="width:'+Math.round(u.surv*0.6)+'px;height:6px;background:#7b1fa2;border-radius:3px"></div>'+u.surv+'%</div></td></tr>';
+    });
+    // Dist / Div / National averages
+    var disRecs=records.filter(function(r){return r.dis===SESSION.dis;}),disAl=disRecs.filter(function(r){return r.status==='Alive';}).length;
+    var divRecs2=records.filter(function(r){return r.div===SESSION.div;}),divAl2=divRecs2.filter(function(r){return r.status==='Alive';}).length;
+    var natRecs3=records.length,natAl3=records.filter(function(r){return r.status==='Alive';}).length;
+    html += '<tr style="background:#f3e5f5;font-weight:600"><td>—</td><td>📊 '+SESSION.dis+' District Avg</td><td>'+Math.round(disRecs.length/Math.max(1,myUpas.length))+'</td><td>'+Math.round(disAl/Math.max(1,myUpas.length))+'</td><td>'+Math.round(disAl/Math.max(1,disRecs.length)*100)+'%</td></tr>';
+    html += '<tr style="background:#e3f2fd;font-weight:600"><td>—</td><td>📊 '+SESSION.div+' Division Avg</td><td>'+Math.round(divRecs2.length/64)+'</td><td>'+Math.round(divAl2/64)+'</td><td>'+Math.round(divAl2/Math.max(1,divRecs2.length)*100)+'%</td></tr>';
+    html += '<tr style="background:#f5f5f5;font-weight:600"><td>—</td><td>🌐 National Avg</td><td>'+Math.round(natRecs3/500)+'</td><td>'+Math.round(natAl3/500)+'</td><td>'+Math.round(natAl3/Math.max(1,natRecs3)*100)+'%</td></tr>';
+    html += '</tbody></table>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Login location cascades ─────────────────────────────────────────
+function selectRole(r, el) {
+  currentRole = r;
+  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('active'); });
+  el.classList.add('active');
+  var lf = document.getElementById('login-location-fields');
+  var ldw = document.getElementById('login-dis-wrap');
+  var luw = document.getElementById('login-upa-wrap');
+  if (!lf) return;
+  if (r === 'admin') {
+    lf.style.display='none';
+  } else {
+    lf.style.display='block';
+    ldw.style.display = (r==='district'||r==='upazilla') ? 'block' : 'none';
+    luw.style.display = (r==='upazilla') ? 'block' : 'none';
+  }
+}
+
+function loginDivChange() {
+  var div = document.getElementById('login-div').value;
+  var disSel = document.getElementById('login-dis');
+  var upaSel = document.getElementById('login-upa');
+  disSel.innerHTML = '<option value="">— Select District —</option>';
+  upaSel.innerHTML = '<option value="">— Select Upazilla —</option>';
+  if (div && districtMap[div]) {
+    districtMap[div].forEach(function(d){ disSel.add(new Option(d,d)); });
+  }
+}
+
+function loginDisChange() {
+  var dis = document.getElementById('login-dis').value;
+  var upaSel = document.getElementById('login-upa');
+  upaSel.innerHTML = '<option value="">— Select Upazilla —</option>';
+  if (dis && upazillaMap[dis]) {
+    upazillaMap[dis].forEach(function(u){ upaSel.add(new Option(u,u)); });
+  }
+}
+
+// ── Production doLogin — authenticates against Google Sheet via Apps Script ──
+function doLogin() {
+  var user = document.getElementById('login-user').value.trim();
+  var pass = document.getElementById('login-pass').value;
+  if (!user || !pass) { alert('Please enter username and password'); return; }
+
+  if (!backendConfigured()) {
+    alert('⚠️ Backend configured নেই।\n\nAPPS_SCRIPT_URL সেট করা হয়নি। SETUP_GUIDE.md অনুসরণ করে Google Apps Script ডিপ্লয় করুন, তারপর সেই URL এই ফাইলের শুরুতে বসান।');
+    return;
+  }
+
+  // Resolve location from login form (used only as a hint; server is the source of truth)
+  var loginDiv = (document.getElementById('login-div')?.value) || '';
+  var loginDis = (document.getElementById('login-dis')?.value) || '';
+  var loginUpa = (document.getElementById('login-upa')?.value) || '';
+  if (currentRole !== 'admin') {
+    if (!loginDiv) { alert('Please select your Division.'); return; }
+    if ((currentRole==='district'||currentRole==='upazilla') && !loginDis) { alert('Please select your District.'); return; }
+    if (currentRole==='upazilla' && !loginUpa) { alert('Please select your Upazilla.'); return; }
+  }
+
+  var btn = document.querySelector('.btn-login');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ যাচাই করা হচ্ছে...'; }
+
+  apiCall('login', { email: user, password: pass }).then(function(res) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔐 Sign in'; }
+    if (!res || !res.ok) {
+      alert('❌ ' + (res && res.error ? res.error : 'লগইন ব্যর্থ হয়েছে। ইউজারনেম অথবা পাসওয়ার্ড ভুল।'));
+      return;
+    }
+    var u = res.user;
+    AUTH_TOKEN = res.token;
+
+    SESSION.role  = roleKeyFromLabel(u.role);
+    SESSION.email = u.email;
+    SESSION.name  = u.name;
+    SESSION.div   = u.div || (SESSION.role !== 'admin' ? loginDiv : null);
+    SESSION.dis   = u.dis || (SESSION.role==='district'||SESSION.role==='upazilla' ? loginDis : null);
+    SESSION.upa   = u.upa || (SESSION.role==='upazilla' ? loginUpa : null);
+    SESSION.perms = (u.perms && u.perms.length) ? u.perms : (ROLE_DEFAULT_PERMS[u.role] || ROLE_DEFAULT_PERMS['Upazilla'] || []);
+    SESSION.fieldPerms = ensureFieldPerms(u);
+    if (SESSION.role === 'admin') {
+      SESSION.perms = PERM_DEFS.map(function(p){ return p.key; });
+      SESSION.fieldPerms = buildDefaultFieldPerms(SESSION.perms);
+    }
+    currentRole = SESSION.role;
+
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+
+    var rm = roleMap[currentRole];
+    document.getElementById('role-badge').className = 'nav-badge ' + rm.badge;
+    document.getElementById('role-badge').textContent = rm.label;
+    document.getElementById('nav-avatar').textContent = rm.initials;
+    document.getElementById('nav-user-email').textContent = u.email;
+
+    applySidebarPermissions();
+    lockLocationFields();
+
+    showLoading('ডেটা লোড হচ্ছে...');
+    apiCall('getAll', {}).then(function(data) {
+      hideLoading();
+      if (data && data.ok) {
+        if (data.records) records = data.records;
+        if (data.users)   users   = data.users;
+        if (data.species) TREE_LIST = data.species;
+      } else {
+        alert('⚠️ ডেটা লোড করতে সমস্যা হয়েছে: ' + (data && data.error || 'unknown error') + '\n\nস্থানীয় ডেমো ডেটা দেখানো হচ্ছে।');
+      }
+      initDashboard();
+      renderRecords();
+      renderUsers();
+      renderMonitoring();
+      buildChart_legacy('report-chart');
+      updateMapCards();
+      renderSpeciesTable();
+      document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('mon-date').value = new Date().toISOString().split('T')[0];
+      populateSpeciesDropdown();
+      applyFieldPermissions();
+    });
+  });
+}
+
+function roleKeyFromLabel(label) {
+  var map = { 'HQ Admin':'admin', 'Divisional':'divisional', 'District':'district', 'Upazilla':'upazilla' };
+  return map[label] || 'upazilla';
+}
+
+// ── Logout: also invalidate server-side session token ──────────────
+var _origLogout2 = logout;
+function logout() {
+  if (!confirm('Logout করতে চান?')) return;
+  if (backendConfigured() && AUTH_TOKEN) { apiCall('logout', {}); }
+  AUTH_TOKEN = null;
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('main-app').style.display = 'none';
+}
+
+// ── Lock location fields in Add Tree for scoped users ──────────────
+function lockLocationFields() {
+  if (SESSION.role === 'admin') return;
+  var fDiv = document.getElementById('f-div');
+  var fDis = document.getElementById('f-dis');
+  var fUpa = document.getElementById('f-upa');
+  if (!fDiv) return;
+
+  // Pre-set and lock division
+  if (SESSION.div) {
+    fDiv.value = SESSION.div;
+    fDiv.disabled = true;
+    updateDistrict();
+  }
+  setTimeout(function(){
+    if (SESSION.dis) {
+      if (fDis) { fDis.value = SESSION.dis; fDis.disabled = true; updateUpazilla(); }
+      setTimeout(function(){
+        if (SESSION.upa && fUpa) { fUpa.value = SESSION.upa; fUpa.disabled = true; }
+      },100);
+    }
+  },100);
+}
+
+// ── Override renderRecords to scope data ───────────────────────────
+var _origRenderRecords = renderRecords;
+function renderRecords() {
+  var myRecs = scopedRecords();
+  var fd = (document.getElementById('filter-div')?.value || '').toLowerCase();
+  var fc = (document.getElementById('filter-cat')?.value || '').toLowerCase();
+  var fs = (document.getElementById('filter-status')?.value || '').toLowerCase();
+  var fq = (document.getElementById('search-q')?.value || '').toLowerCase();
+  var filtered = myRecs.filter(function(r){
+    return (!fd || r.div.toLowerCase()===fd) &&
+           (!fc || r.cat.toLowerCase().includes(fc)) &&
+           (!fs || r.status.toLowerCase().includes(fs)) &&
+           (!fq || r.species.toLowerCase().includes(fq) || r.upa.toLowerCase().includes(fq) || r.site.toLowerCase().includes(fq));
+  });
+  document.getElementById('records-tbody').innerHTML = filtered.map(function(r) {
+    var canEdit = canMutateRecord(r) && hasPerm('edit');
+    var canDel  = canMutateRecord(r) && hasPerm('delete');
+    var totalPlanted = myRecs.filter(function(x){ return x.species === r.species; }).length;
+    return '<tr>' +
+    '<td style="font-size:11px;color:#aaa">'+r.id+'</td>' +
+    '<td>'+r.date+'</td>' +
+    '<td><b>'+r.div+'</b></td><td>'+r.dis+'</td><td>'+r.upa+'</td>' +
+    '<td>'+r.species+'</td>' +
+    '<td><span style="font-size:11px;background:#e8f5e9;color:#1b5e20;padding:2px 8px;border-radius:20px">'+r.cat+'</span></td>' +
+    '<td><b style="color:#1a5c2a">'+totalPlanted+'</b></td>' +
+    '<td><span class="status-pill '+statusClass(r.status)+'">'+statusLabel(r.status)+'</span></td>' +
+    '<td style="white-space:nowrap">' +
+    '<button class="btn btn-sm" onclick="viewRecord(\''+r.id+'\')" style="font-size:11px;padding:3px 8px;margin-right:3px">👁 View</button>' +
+    (canEdit ? '<button class="btn btn-sm" onclick="editRecord(\''+r.id+'\')" style="font-size:11px;padding:3px 8px;margin-right:3px;border-color:#1976d2;color:#1565c0;background:#e3f2fd">✏️ Edit</button>' : '') +
+    (canDel  ? '<button class="btn btn-sm" onclick="deleteRecord(\''+r.id+'\')" style="font-size:11px;padding:3px 8px;border-color:#c62828;color:#c62828;background:#ffebee">🗑 Delete</button>' : '') +
+    '</td></tr>';
+  }).join('');
+  document.getElementById('records-count').textContent = 'Showing ' + filtered.length + ' of ' + myRecs.length + ' records (your scope)';
+}
+
+// ── Override renderMonitoring to scope data ────────────────────────
+var _origRenderMonitoring = renderMonitoring;
+function renderMonitoring() {
+  var myRecs = scopedRecords();
+  var fd   = (document.getElementById('mon-filter-div')?.value  || '');
+  var fdis = (document.getElementById('mon-filter-dis')?.value  || '');
+  var fupa = (document.getElementById('mon-filter-upa')?.value  || '');
+  var fq   = (document.getElementById('mon-search')?.value      || '').toLowerCase();
+  var filtered = myRecs.filter(function(r){
+    return (!fd   || r.div===fd) &&
+           (!fdis || r.dis===fdis) &&
+           (!fupa || r.upa===fupa) &&
+           (!fq   || r.species.toLowerCase().includes(fq) || r.site.toLowerCase().includes(fq) || r.id.toLowerCase().includes(fq));
+  });
+  if (filtered.length === 0) {
+    document.getElementById('mon-tbody').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;color:#aaa;padding:40px;font-size:13px">আপনার স্কোপে কোনো রেকর্ড নেই।</td></tr>';
+    return;
+  }
+  document.getElementById('mon-tbody').innerHTML = filtered.map(function(r){ return buildMonRow(r); }).join('');
+}
+
+// ── Override initDashboard to include RBAC elements ────────────────
+var _origInitDashboard = initDashboard;
+function initDashboard() {
+  renderScopeBanner();
+  renderRoleKPIs();
+  renderCompareSection();
+
+  var myRecs = scopedRecords();
+  var alive   = myRecs.filter(function(r){ return r.status==='Alive'; }).length;
+  var dead    = myRecs.filter(function(r){ return r.status==='Dead'; }).length;
+  var care    = myRecs.filter(function(r){ return r.status==='Care Required'; }).length;
+  var survRate = myRecs.length > 0 ? Math.round(alive/myRecs.length*100) : 0;
+
+  // ── Stat cards ──────────────────────────────────────────────────
+  var el_total = document.getElementById('s-total');
+  if (el_total) el_total.textContent = myRecs.length.toLocaleString();
+
+  var el_surv = document.getElementById('s-survival');
+  if (el_surv) el_surv.textContent = myRecs.length > 0 ? survRate+'%' : '—';
+
+  var el_alive_sub = document.getElementById('s-alive-sub');
+  if (el_alive_sub) el_alive_sub.textContent = alive+' alive / '+dead+' dead / '+care+' care';
+
+  // Active Offices — count unique unit at scope level
+  var el_offices = document.getElementById('s-offices');
+  var el_offices_sub = document.getElementById('s-offices-sub');
+  var activeOffices = 0, officeSubTxt = '';
+  if (SESSION.role === 'admin') {
+    // count unique divisions+districts+upazillas in records
+    var divs = new Set(myRecs.map(function(r){ return r.div; })).size;
+    var diss = new Set(myRecs.map(function(r){ return r.dis; })).size;
+    var upas = new Set(myRecs.map(function(r){ return r.upa; })).size;
+    activeOffices = divs + diss + upas;
+    officeSubTxt = divs+'টি বিভাগ, '+diss+'টি জেলা, '+upas+'টি উপজেলা';
+  } else if (SESSION.role === 'divisional') {
+    var diss2 = new Set(myRecs.map(function(r){ return r.dis; })).size;
+    var upas2 = new Set(myRecs.map(function(r){ return r.upa; })).size;
+    activeOffices = diss2 + upas2;
+    officeSubTxt = diss2+'টি জেলা, '+upas2+'টি উপজেলা';
+  } else if (SESSION.role === 'district') {
+    var upas3 = new Set(myRecs.map(function(r){ return r.upa; })).size;
+    activeOffices = upas3;
+    officeSubTxt = upas3+'টি উপজেলা সক্রিয়';
+  } else {
+    activeOffices = myRecs.length > 0 ? 1 : 0;
+    officeSubTxt = SESSION.upa || 'আপনার উপজেলা';
+  }
+  if (el_offices) el_offices.textContent = activeOffices;
+  if (el_offices_sub) el_offices_sub.textContent = officeSubTxt;
+
+  // ── Progress bars (horizontal) — scoped ─────────────────────────
+  var progressTitle = document.getElementById('progress-chart-title');
+  var progressEl    = document.getElementById('div-progress-bars');
+  var barItems = [];
+
+  if (SESSION.role === 'admin') {
+    // All 8 divisions
+    if (progressTitle) progressTitle.textContent = 'Progress by Division | বিভাগ ভিত্তিক অগ্রগতি';
+    barItems = divData.map(function(d) {
+      var cnt = myRecs.filter(function(r){ return r.div===d.name; }).length;
+      return {label:d.name, count:cnt, color:d.color};
+    });
+  } else if (SESSION.role === 'divisional') {
+    // Districts within this division
+    if (progressTitle) progressTitle.textContent = SESSION.div+' Division — District-wise Progress | জেলা ভিত্তিক অগ্রগতি';
+    var disList = districtMap[SESSION.div] || [];
+    var colors2 = ['#1a5c2a','#1976d2','#f57c00','#7b1fa2','#c62828','#00838f','#558b2f','#e65100','#3949ab','#00695c','#c62828','#827717','#4e342e'];
+    barItems = disList.map(function(d, i) {
+      var cnt = myRecs.filter(function(r){ return r.dis===d; }).length;
+      return {label:d, count:cnt, color:colors2[i%colors2.length]};
+    });
+  } else if (SESSION.role === 'district') {
+    // Upazillas within this district
+    if (progressTitle) progressTitle.textContent = SESSION.dis+' District — Upazilla-wise Progress | উপজেলা ভিত্তিক অগ্রগতি';
+    var upaList = upazillaMap[SESSION.dis] || [];
+    var colors3 = ['#2d8a42','#1976d2','#f57c00','#9c27b0','#c62828','#00838f','#e65100','#3949ab'];
+    barItems = upaList.map(function(u, i) {
+      var cnt = myRecs.filter(function(r){ return r.upa===u; }).length;
+      return {label:u, count:cnt, color:colors3[i%colors3.length]};
+    });
+  } else {
+    // Upazilla user — status breakdown
+    if (progressTitle) progressTitle.textContent = SESSION.upa+' — Status Breakdown | অবস্থা বিশ্লেষণ';
+    barItems = [
+      {label:'Alive (সতেজ)',         count:alive, color:'#2d8a42'},
+      {label:'Care Required (যত্ন)', count:care,  color:'#f57c00'},
+      {label:'Dead (মৃত)',            count:dead,  color:'#c62828'},
+      {label:'Pending Check (যাচাই)', count:myRecs.filter(function(r){return r.status==='Pending Check';}).length, color:'#888'},
+    ];
+  }
+
+  // Render horizontal bars
+  var maxCount = Math.max(1, Math.max.apply(null, barItems.map(function(b){ return b.count; })));
+  if (progressEl) {
+    progressEl.innerHTML = barItems.map(function(b) {
+      var pct = Math.round(b.count / maxCount * 100);
+      return '<div class="progress-row" style="margin-bottom:12px">' +
+        '<div class="pl" style="width:120px;font-size:12px;color:#444;flex-shrink:0;text-overflow:ellipsis;overflow:hidden;white-space:nowrap" title="'+b.label+'">'+b.label+'</div>' +
+        '<div class="pb" style="flex:1;height:20px;background:#f0f0f0;border-radius:4px;overflow:hidden">' +
+          '<div class="pf" style="width:'+pct+'%;height:100%;background:'+b.color+';border-radius:4px;display:flex;align-items:center;padding-left:6px;transition:width .6s ease">' +
+            (pct > 15 ? '<span style="font-size:11px;color:#fff;font-weight:700">'+b.count+'</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="pc" style="width:40px;text-align:right;font-size:12px;font-weight:700;color:'+b.color+'">'+b.count+'</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ── Trees by Category — scoped donut ─────────────────────────────
+  var catCounts = {fruit:0, timber:0, med:0, other:0};
+  myRecs.forEach(function(r) {
+    var c = (r.cat||'').toLowerCase();
+    if (c.includes('fruit'))   catCounts.fruit++;
+    else if (c.includes('timber') || c.includes('বনজ')) catCounts.timber++;
+    else if (c.includes('medi')  || c.includes('ওষু'))  catCounts.med++;
+    else catCounts.other++;
+  });
+  var total = myRecs.length || 1;
+  var circumference = 174; // 2*π*r ≈ 2*3.14159*27.7
+  function dashArr(n) { return Math.round(n/total*circumference)+' '+circumference; }
+  // Calculate offsets
+  var off0 = 0;
+  var off1 = -Math.round(catCounts.fruit/total*circumference);
+  var off2 = off1 - Math.round(catCounts.timber/total*circumference);
+  var off3 = off2 - Math.round(catCounts.med/total*circumference);
+  var setDA = function(id, da, offset) {
+    var el = document.getElementById(id);
+    if (el) { el.setAttribute('stroke-dasharray', da); el.setAttribute('stroke-dashoffset', offset); }
+  };
+  setDA('donut-fruit',  dashArr(catCounts.fruit),  off0);
+  setDA('donut-timber', dashArr(catCounts.timber), off1);
+  setDA('donut-med',    dashArr(catCounts.med),    off2);
+  setDA('donut-other',  dashArr(catCounts.other),  off3);
+  var el_dlbl = document.getElementById('donut-lbl'); if(el_dlbl) el_dlbl.textContent = SESSION.role==='admin'?'National':'Scope';
+  var el_dval = document.getElementById('donut-val'); if(el_dval) el_dval.textContent = myRecs.length;
+  var pct = function(n){ return myRecs.length>0 ? ' ('+Math.round(n/myRecs.length*100)+'%)' : ''; };
+  var el_cf = document.getElementById('cat-fruit-lbl');  if(el_cf)  el_cf.textContent  = 'Fruit trees — '+catCounts.fruit+pct(catCounts.fruit);
+  var el_ct = document.getElementById('cat-timber-lbl'); if(el_ct)  el_ct.textContent  = 'Timber trees — '+catCounts.timber+pct(catCounts.timber);
+  var el_cm = document.getElementById('cat-med-lbl');    if(el_cm)  el_cm.textContent  = 'Medicinal — '+catCounts.med+pct(catCounts.med);
+  var el_co = document.getElementById('cat-other-lbl');  if(el_co)  el_co.textContent  = 'Others — '+catCounts.other+pct(catCounts.other);
+
+  // ── Monthly trend chart — scoped, last 12 months ──────────────────
+  buildScopedMonthlyChart(myRecs);
+
+  // ── Recent activity — scoped ──────────────────────────────────────
+  var recent = myRecs.slice().reverse().slice(0, 6);
+  var recentEl = document.getElementById('recent-tbody');
+  if (recentEl) {
+    recentEl.innerHTML = recent.map(function(r) {
+      var total2 = myRecs.filter(function(x){ return x.species===r.species; }).length;
+      return '<tr><td>'+r.date+'</td><td>'+r.div+'</td><td>'+r.upa+'</td>'+
+        '<td>'+r.species+'</td><td><b>'+total2+'</b></td><td>'+r.site+'</td>'+
+        '<td><span class="status-pill '+statusClass(r.status)+'">'+statusLabel(r.status)+'</span></td></tr>';
+    }).join('');
+  }
+  // Sync s-total one more time (for compat with old code)
+  var el_t2 = document.getElementById('s-total'); if(el_t2) el_t2.textContent = myRecs.length.toLocaleString();
+  var el_s2 = document.getElementById('s-survival'); if(el_s2) el_s2.textContent = myRecs.length>0 ? survRate+'%' : '—';
+}
+
+// ── Scoped monthly chart — last 12 months backward from most recent record ──
+function buildScopedMonthlyChart(myRecs) {
+  var el = document.getElementById('month-chart');
+  if (!el) return;
+
+  // Update title
+  var titleEl = document.getElementById('trend-chart-title');
+  if (titleEl) {
+    var scopeName = SESSION.role==='admin' ? 'National' :
+      (SESSION.role==='divisional' ? SESSION.div+' Division' :
+      (SESSION.role==='district'   ? SESSION.dis+' District' : SESSION.upa+' Upazilla'));
+    titleEl.textContent = scopeName+' — Monthly Trend';
+  }
+
+  if (myRecs.length === 0) {
+    el.innerHTML = '<div style="width:100%;text-align:center;color:#aaa;padding:30px;font-size:13px">কোনো ডেটা নেই</div>';
+    return;
+  }
+
+  // Find the most recent plantation date in scoped records
+  var dates = myRecs.map(function(r){ return r.date; }).filter(Boolean).sort();
+  var latestDateStr = dates[dates.length - 1]; // e.g. "2025-08-27"
+  var latestDate = new Date(latestDateStr);
+
+  // Build 12-month labels going BACKWARD from the latest month
+  var months = [];
+  for (var i = 11; i >= 0; i--) {
+    var d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
+    months.push({
+      year: d.getFullYear(),
+      month: d.getMonth(), // 0-based
+      label: d.toLocaleString('default', {month:'short'}) + ' ' + String(d.getFullYear()).slice(2),
+    });
+  }
+
+  // Count records planted in each month (from scoped records)
+  var counts = months.map(function(m) {
+    return myRecs.filter(function(r) {
+      if (!r.date) return false;
+      var rd = new Date(r.date);
+      return rd.getFullYear() === m.year && rd.getMonth() === m.month;
+    }).length;
+  });
+
+  var maxCount = Math.max(1, Math.max.apply(null, counts));
+
+  el.innerHTML = months.map(function(m, i) {
+    var cnt = counts[i];
+    var h = Math.round(cnt / maxCount * 100);
+    return '<div class="bar-wrap">' +
+      '<div class="bar-val" style="font-size:9px">' + cnt + '</div>' +
+      '<div class="bar" style="height:' + Math.max(2, h) + 'px" title="' + m.label + ': ' + cnt + ' records"></div>' +
+      '<div class="bar-label" style="font-size:9px">' + m.label + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// Keep old buildChart for report page (uses fixed sample data)
+function buildChart(id) {
+  if (id === 'month-chart') {
+    // month-chart is now handled by buildScopedMonthlyChart inside initDashboard
+    // Only call if SESSION not set yet (before login)
+    if (SESSION && SESSION.role) return;
+  }
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var vals = [8200,14500,21000,28000,35000,42000,38000,51000,46000,55000,49000,62000];
+  var max = Math.max.apply(null, vals);
+  var elBC = document.getElementById(id);
+  if (!elBC) return;
+  elBC.innerHTML = months.map(function(m, i) {
+    return '<div class="bar-wrap"><div class="bar-val">' + (vals[i]/1000).toFixed(0) + 'k</div>' +
+      '<div class="bar" style="height:' + Math.round(vals[i]/max*100) + 'px" title="' + m + ': ' + vals[i].toLocaleString() + '"></div>' +
+      '<div class="bar-label">' + m + '</div></div>';
+  }).join('');
+}
+function updateRolePermDefaults() {
+  var role = document.getElementById('u-role').value;
+  var locFields = document.getElementById('user-location-fields');
+  var disWrap = document.getElementById('u-dis-wrap');
+  var upaWrap = document.getElementById('u-upa-wrap');
+  if (!locFields) return;
+  // Show/hide location fields based on role
+  if (role === 'HQ Admin') {
+    locFields.style.display = 'none';
+  } else {
+    locFields.style.display = 'grid';
+    disWrap.style.display = (role==='District'||role==='Upazilla') ? 'block' : 'none';
+    upaWrap.style.display = (role==='Upazilla') ? 'block' : 'none';
+  }
+  // Auto-check permissions based on role
+  var defaults = ROLE_DEFAULT_PERMS[role] || [];
+  PERM_DEFS.forEach(function(pd){
+    var el = document.getElementById('perm-'+pd.key);
+    if (el) el.checked = defaults.indexOf(pd.key) !== -1;
+  });
+}
+
+function updateUserDistrict() {
+  var div = document.getElementById('u-div').value;
+  var disSel = document.getElementById('u-dis');
+  var upaSel = document.getElementById('u-upa');
+  if (!disSel) return;
+  disSel.innerHTML = '<option value="">— Select District —</option>';
+  if (upaSel) upaSel.innerHTML = '<option value="">— Select Upazilla —</option>';
+  if (div && districtMap[div]) {
+    districtMap[div].forEach(function(d){ disSel.add(new Option(d,d)); });
+  }
+}
+
+function updateUserUpazilla() {
+  var dis = document.getElementById('u-dis').value;
+  var upaSel = document.getElementById('u-upa');
+  if (!upaSel) return;
+  upaSel.innerHTML = '<option value="">— Select Upazilla —</option>';
+  if (dis && upazillaMap[dis]) {
+    upazillaMap[dis].forEach(function(u){ upaSel.add(new Option(u,u)); });
+  }
+}
+
+// ── Enhanced addUser — include location fields ─────────────────────
+var _origAddUser = addUser;
+function addUser() {
+  var name = document.getElementById('u-name').value.trim();
+  var email = document.getElementById('u-email').value.trim();
+  var role = document.getElementById('u-role').value;
+  var office = document.getElementById('u-office').value.trim();
+  var pass = document.getElementById('u-pass').value;
+  var phone = document.getElementById('u-phone').value.trim();
+  if (!name || !email || !role || !pass) { alert('নাম, ইমেইল, ভূমিকা ও পাসওয়ার্ড আবশ্যক।'); return; }
+
+  // Collect location
+  var uDiv = document.getElementById('u-div')?.value || '';
+  var uDis = document.getElementById('u-dis')?.value || '';
+  var uUpa = document.getElementById('u-upa')?.value || '';
+  if (role !== 'HQ Admin' && !uDiv) { alert('Please select a Division for this user.'); return; }
+  if ((role==='District'||role==='Upazilla') && !uDis) { alert('Please select a District for this user.'); return; }
+  if (role==='Upazilla' && !uUpa) { alert('Please select an Upazilla for this user.'); return; }
+
+  // Collect permissions
+  var perms = PERM_DEFS.filter(function(pd){
+    var el = document.getElementById('perm-'+pd.key); return el && el.checked;
+  }).map(function(pd){ return pd.key; });
+
+  var newUser = {
+    name:name, email:email, role:role, office:office||uDiv+(uDis?' / '+uDis:'')+(uUpa?' / '+uUpa:''),
+    phone:phone, last:'এইমাত্র', active:true, perms:perms, password:pass,
+    div: uDiv||null, dis: uDis||null, upa: uUpa||null
+  };
+  users.push(newUser);
+  renderUsers();
+  document.getElementById('add-user-form').style.display='none';
+  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  if(document.getElementById('u-role')) document.getElementById('u-role').selectedIndex=0;
+  updateRolePermDefaults();
+  apiCall('addUser', { user: newUser }).then(function(res){
+    if (!res || !res.ok) alert('⚠️ ব্যবহারকারী সার্ভারে সংরক্ষণ করা যায়নি: ' + (res && res.error || 'unknown error'));
+  });
+}
+
+// ── Enhanced renderUsers — show location ──────────────────────────
+var _origRenderUsers = renderUsers;
+function renderUsers(filterText) {
+  var q = (filterText||'').toLowerCase();
+  var tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  var filtered = q ? users.filter(function(u){ return u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q); }) : users;
+  var roleColors={'HQ Admin':'#e65100','Divisional':'#0d47a1','District':'#1b5e20','Upazilla':'#6a1b9a'};
+  var roleBgs={'HQ Admin':'#fff8e1','Divisional':'#e3f2fd','District':'#e8f5e9','Upazilla':'#f3e5f5'};
+  tbody.innerHTML = filtered.map(function(u,i){
+    var realIdx = users.indexOf(u);
+    var locStr = [u.div,u.dis,u.upa].filter(Boolean).join(' › ') || 'National';
+    return '<tr>'+
+      '<td style="font-size:11px;color:#aaa">'+(realIdx+1)+'</td>'+
+      '<td><b>'+u.name+'</b><div style="font-size:10px;color:#888">'+u.phone+'</div></td>'+
+      '<td style="font-size:12px">'+u.email+'</td>'+
+      '<td><span class="user-role" style="background:'+(roleBgs[u.role]||'#f5f5f5')+';color:'+(roleColors[u.role]||'#333')+'">'+u.role+'</span>'+
+          '<div style="font-size:10px;color:#888;margin-top:2px">📍 '+locStr+'</div></td>'+
+      '<td style="font-size:12px">'+u.office+'</td>'+
+      '<td style="font-size:11px;color:#888">'+u.last+'</td>'+
+      '<td><span class="status-pill '+(u.active?'status-alive':'status-dead')+'">'+(u.active?'Active':'Inactive')+'</span></td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="btn btn-sm" onclick="openPermModal('+realIdx+')" style="font-size:11px;padding:3px 8px;margin-right:3px;border-color:#1a5c2a;color:#1a5c2a;background:#e8f5e9">🔑 Permissions</button>'+
+        '<button class="btn btn-sm" onclick="toggleUser('+realIdx+')" style="font-size:11px;padding:3px 8px;margin-right:3px">'+
+          (u.active?'⏸ Deactivate':'▶ Activate')+'</button>'+
+        '<button class="btn btn-sm" onclick="deleteUserAtIdx('+realIdx+')" style="font-size:11px;padding:3px 8px;border-color:#c62828;color:#c62828;background:#ffebee">🗑</button>'+
+      '</td></tr>';
+  }).join('');
+}
+
+function deleteUserAtIdx(idx) {
+  if (!confirm('Delete user "'+users[idx].name+'"?')) return;
+  var email = users[idx].email;
+  users.splice(idx,1);
+  renderUsers();
+  apiCall('deleteUser', { email: email }).then(function(res){
+    if (!res || !res.ok) console.warn('deleteUser sync failed:', res && res.error);
+  });
+}
+
+// ── GPS Radius — scope-aware ────────────────────────────────────────
+function applyGPSRadius() {
+  var lat=parseFloat(document.getElementById('mon-gps-lat').value);
+  var lon=parseFloat(document.getElementById('mon-gps-lon').value);
+  var rad=parseFloat(document.getElementById('mon-gps-radius').value)||500;
+  if (isNaN(lat)||isNaN(lon)) { alert('দয়া করে সঠিক GPS স্থানাংক দিন'); return; }
+  function haversine(la1,lo1,la2,lo2){
+    var R=6371000,dLat=(la2-la1)*Math.PI/180,dLon=(lo2-lo1)*Math.PI/180;
+    var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+  // Only search within scoped records
+  var inRadius = scopedRecords().filter(function(r){
+    if(!r.lat||!r.lon) return false;
+    return haversine(lat,lon,parseFloat(r.lat),parseFloat(r.lon))<=rad;
+  });
+  var res=document.getElementById('gps-radius-result');
+  if(res){
+    res.style.display='block';
+    if(inRadius.length===0){
+      res.style.background='#fff8e1'; res.style.color='#f57f17';
+      res.textContent='⚠️ এই ব্যাসার্ধে কোনো গাছ পাওয়া যায়নি ('+rad+' মিটার)।';
+    } else {
+      res.style.background='#e8f5e9'; res.style.color='#1b5e20';
+      res.textContent='✅ '+inRadius.length+'টি গাছ পাওয়া গেছে '+rad+' মিটার ব্যাসার্ধে।';
+    }
+  }
+  renderMonitoringFromList(inRadius);
+}
+
+// ── Report export — scope-aware ────────────────────────────────────
+var _origExportCSV = exportCSV;
+function exportCSV() {
+  if (!hasPerm('export')) { alert('আপনার এই কাজ করার অনুমতি নেই।'); return; }
+  var rows = scopedRecords();
+  var header = ['ID','Date','Division','District','Upazilla','Site','Species','Category','Status','Lat','Lon','Caregiver','Caregiver Phone','Fund','Remarks','Visit Count'];
+  var csv = header.join(',') + '\n' + rows.map(function(r){
+    return [r.id,r.date,r.div,r.dis,r.upa,'"'+(r.site||'').replace(/"/g,'""')+'"',
+      '"'+r.species+'"',r.cat,r.status,r.lat||'',r.lon||'',
+      '"'+(r.caregiver||'')+'"',r.caregiverPhone||'',r.fund||'',
+      '"'+(r.remarks||'').replace(/"/g,'""')+'"',(r.monitoring||[]).length].join(',');
+  }).join('\n');
+  var blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='dphe_trees_'+SESSION.role+'_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+// ── showPage RBAC guard ────────────────────────────────────────────
+var _origShowPage = showPage;
+function showPage(id, el) {
+  // Permission check
+  var permMap = {
+    'add-tree':'add','monitoring':'monitoring','records':'records',
+    'map':'map','species':'species','reports':'reports','users':'users'
+  };
+  var required = permMap[id];
+  if (required && !hasPerm(required)) {
+    alert('⛔ অ্যাক্সেস নেই।\n\nআপনার এই মডিউলটি অ্যাক্সেস করার অনুমতি নেই।');
+    return;
+  }
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) {
+    document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active');});
+    el.classList.add('active');
+  }
+  if (id==='records') renderRecords();
+  if (id==='monitoring') renderMonitoring();
+  if (id==='map') { updateMapCards(); setTimeout(function(){ initLeafletMap(); if(leafletMap) leafletMap.invalidateSize(); },100); }
+  if (id==='species') { renderSpeciesTable(); }
+  if (id==='dashboard') { initDashboard(); }
+  applyFieldPermissions();
+}
+
+// ── saveRecord — scope-lock for non-admin ─────────────────────────
+var _origSaveRecord = saveRecord;
+function saveRecord() {
+  if (!hasPerm('add')) { alert('আপনার নতুন রেকর্ড যোগ করার অনুমতি নেই।'); return; }
+  _origSaveRecord();
+}
+
+// ── deleteRecord — perm + scope check ─────────────────────────────
+var _origDeleteRecord = deleteRecord;
+function deleteRecord(id) {
+  var r = records.find(function(x){return x.id===id;});
+  if (!r) return;
+  if (!hasPerm('delete')) { alert('আপনার রেকর্ড মুছে ফেলার অনুমতি নেই।'); return; }
+  if (!canMutateRecord(r)) { alert('আপনি এই রেকর্ডটি মুছে ফেলতে পারবেন না — এটি আপনার স্কোপের বাইরে।'); return; }
+  _origDeleteRecord(id);
+}
 
 </script>
 </body>
