@@ -319,7 +319,24 @@ tr:hover td{background:#f8fdf8}
   .sidebar{display:none}
   .gps-box{flex-direction:column}
 }
-</style>
+/* ── RECORD VIEW MODAL ── */
+.rv-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.rv-overlay.open{display:flex}
+.rv-box{background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
+.rv-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1.5px solid #eee;position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0}
+.rv-head h3{margin:0;font-size:16px;color:#1a5c2a}
+.rv-close{cursor:pointer;font-size:20px;color:#888;border:none;background:none;line-height:1}
+.rv-body{padding:18px 20px}
+.rv-photos{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.rv-photos img{width:110px;height:110px;object-fit:cover;border-radius:8px;border:2px solid #c8e6c9;cursor:pointer}
+.rv-no-photo{font-size:12px;color:#aaa;background:#f7f7f7;border-radius:8px;padding:14px;text-align:center;margin-bottom:16px}
+.rv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:13px}
+.rv-grid .full{grid-column:1/-1}
+.rv-grid label{display:block;font-size:11px;color:#888;font-weight:700;margin-bottom:2px}
+.rv-mon{margin-top:16px;border-top:1.5px solid #eee;padding-top:12px}
+.rv-mon-item{font-size:12px;color:#444;background:#f7faf7;border-radius:8px;padding:8px 10px;margin-bottom:6px}
+
+
 </head>
 <body>
 
@@ -527,7 +544,10 @@ tr:hover td{background:#f8fdf8}
       <!-- Tree species dropdown + custom -->
       <div class="fg full">
         <label>Tree Species * <span style="font-weight:400;color:#2d8a42">| গাছের প্রজাতি</span></label>
-        <select id="f-species-sel" onchange="onSpeciesDDChange()" style="width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;background:#fafafa;outline:none">
+        <input type="text" id="f-species-search" placeholder="🔍 খুঁজুন | Search species — English বা বাংলা..." autocomplete="off"
+          oninput="filterSpeciesDropdown()" onfocus="filterSpeciesDropdown()"
+          style="width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;margin-bottom:6px">
+        <select id="f-species-sel" onchange="onSpeciesDDChange()" size="6" style="width:100%;padding:9px 11px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;background:#fafafa;outline:none">
           <option value="">— Select Tree Species —</option>
         </select>
         <input type="hidden" id="f-species-final" value="">
@@ -993,8 +1013,8 @@ tr:hover td{background:#f8fdf8}
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn" onclick="document.getElementById('add-user-form').style.display='none'">বাতিল করুন</button>
-      <button class="btn btn-primary" onclick="addUser()">💾 ব্যবহারকারী সংরক্ষণ করুন</button>
+      <button class="btn" onclick="cancelUserForm()">বাতিল করুন</button>
+      <button class="btn btn-primary" id="save-user-btn" onclick="addUser()">💾 ব্যবহারকারী সংরক্ষণ করুন</button>
     </div>
   </div>
 
@@ -1576,6 +1596,7 @@ var users = [
 ];
 
 var editingPermUserIdx = null; // কোন user-এর পারমিশন এডিট করা হচ্ছে
+var editingUserIdx = null; // কোন user-এর তথ্য এডিট করা হচ্ছে (null = নতুন user যোগ করা হচ্ছে)
 
 var roleMap = {
   admin:{label:'HQ Admin',badge:'badge-admin',initials:'AD'},
@@ -2077,21 +2098,49 @@ function renderRecords() {
 function viewRecord(id) {
   var r = records.find(x => x.id === id);
   if (!r) return;
-  var mon = r.monitoring && r.monitoring.length > 0
-    ? r.monitoring.map(function(m,i) { return '\n  [পরিদর্শন #' + (m.visitNo||i+1) + '] ' + m.date + ' → ' + m.status + (m.careDetail ? ' (' + m.careDetail + ')' : '') + '\n   Note: ' + (m.notes || 'None'); }).join('')
-    : '\n  No monitoring visits yet.';
-  alert('📋 RECORD DETAILS\n\n' +
-    'ID: ' + r.id + '\nDate: ' + r.date + '\n' +
-    'Location: ' + r.upa + ', ' + r.dis + ', ' + r.div + '\n' +
-    'Site: ' + r.site + '\nSpecies: ' + r.species + '\n' +
-    'Category: ' + r.cat + '\nCount: ' + r.count + ' trees\n' +
-    'Officer: ' + r.officer + '\n' +
-    'Caregiver: ' + (r.caregiver || 'N/A') + ' | ' + (r.caregiverPhone || 'N/A') + '\n' +
-    'Funding: ' + r.fund + '\nStatus: ' + statusLabel(r.status) + '\n' +
-    'GPS: ' + (r.lat || 'N/A') + ', ' + (r.lon || 'N/A') + '\n' +
-    'Remarks: ' + (r.remarks || 'None') +
-    '\n\n── Monitoring visits:' + mon
-  );
+
+  var photos = (r.photos || []).filter(Boolean);
+  var photosHtml = photos.length
+    ? '<div class="rv-photos">' + photos.map(function(p){
+        return '<img src="' + p + '" onclick="window.open(this.src,\'_blank\')" alt="Tree photo">';
+      }).join('') + '</div>'
+    : '<div class="rv-no-photo">📷 কোনো ছবি আপলোড করা হয়নি — No photo uploaded for this record.</div>';
+
+  var monHtml = '<div class="rv-no-photo" style="margin-top:0">কোনো পরিদর্শন তথ্য নেই — No monitoring visits yet.</div>';
+  if (r.monitoring && r.monitoring.length > 0) {
+    monHtml = r.monitoring.map(function(m, i){
+      return '<div class="rv-mon-item">🔍 পরিদর্শন #' + (m.visitNo || i + 1) + ' — ' + m.date + ' — <b>' + statusLabel(m.status) + '</b>' +
+        (m.careDetail ? ' (' + m.careDetail + ')' : '') +
+        (m.notes ? '<br><span style="color:#888">Note: ' + m.notes + '</span>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  document.getElementById('rv-title').textContent = '📋 ' + r.id + ' — ' + r.species;
+  document.getElementById('rv-body').innerHTML =
+    photosHtml +
+    '<div class="rv-grid">' +
+      '<div><label>Date</label>' + r.date + '</div>' +
+      '<div><label>Status</label>' + statusLabel(r.status) + '</div>' +
+      '<div class="full"><label>Location</label>' + r.upa + ', ' + r.dis + ', ' + r.div + '</div>' +
+      '<div class="full"><label>Site</label>' + r.site + '</div>' +
+      '<div><label>Species</label>' + r.species + '</div>' +
+      '<div><label>Category</label>' + r.cat + '</div>' +
+      '<div><label>Count</label>' + r.count + ' trees</div>' +
+      '<div><label>Officer</label>' + (r.officer || '—') + '</div>' +
+      '<div><label>Caregiver</label>' + (r.caregiver || 'N/A') + '</div>' +
+      '<div><label>Caregiver Phone</label>' + (r.caregiverPhone || 'N/A') + '</div>' +
+      '<div><label>Funding</label>' + r.fund + '</div>' +
+      '<div><label>GPS</label>' + (r.lat || 'N/A') + ', ' + (r.lon || 'N/A') + '</div>' +
+      '<div class="full"><label>Remarks</label>' + (r.remarks || 'None') + '</div>' +
+    '</div>' +
+    '<div class="rv-mon"><label style="display:block;font-size:11px;color:#888;font-weight:700;margin-bottom:6px">পরিদর্শন ইতিহাস — Monitoring History</label>' + monHtml + '</div>';
+
+  document.getElementById('rv-overlay').classList.add('open');
+}
+
+function closeViewRecord() {
+  document.getElementById('rv-overlay').classList.remove('open');
 }
 
 // ════════════════════════════════
@@ -2816,46 +2865,146 @@ function toggleUser(i) {
   });
 }
 
+function cancelUserForm() {
+  editingUserIdx = null;
+  document.getElementById('add-user-form').style.display = 'none';
+  resetUserFormFields();
+  setUserFormMode(false);
+}
+
 function showAddUserForm() {
+  editingUserIdx = null;
   var f = document.getElementById('add-user-form');
-  f.style.display = f.style.display === 'none' ? 'block' : 'none';
-  if (f.style.display === 'block') updateRolePermDefaults();
+  resetUserFormFields();
+  f.style.display = 'block';
+  updateRolePermDefaults();
+  setUserFormMode(false);
 }
 
-function updateRolePermDefaults() {
-  var role = document.getElementById('u-role').value;
-  var defaults = ROLE_DEFAULT_PERMS[role] || [];
-  PERM_DEFS.forEach(function(def) {
-    var el = document.getElementById('perm-' + def.key);
-    if (!el) return;
-    el.checked = defaults.includes(def.key);
-    el.disabled = false;
-    el.closest('label').style.opacity = '1';
-    el.closest('label').title = '';
-  });
+function resetUserFormFields() {
+  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  if (document.getElementById('u-role')) document.getElementById('u-role').selectedIndex = 0;
+  if (document.getElementById('u-div')) document.getElementById('u-div').value = '';
+  var disSel = document.getElementById('u-dis'); if (disSel) disSel.innerHTML = '<option value="">— Select District —</option>';
+  var upaSel = document.getElementById('u-upa'); if (upaSel) upaSel.innerHTML = '<option value="">— Select Upazilla —</option>';
 }
 
+function setUserFormMode(isEdit) {
+  var titleEl = document.querySelector('#add-user-form .card-title');
+  var saveBtn = document.getElementById('save-user-btn');
+  var passEl = document.getElementById('u-pass');
+  var passLabel = passEl ? passEl.closest('.fg').querySelector('label') : null;
+  if (titleEl) titleEl.innerHTML = isEdit
+    ? '<span>✏️</span> ব্যবহারকারী সম্পাদনা করুন | Edit User'
+    : '<span>➕</span> নতুন ব্যবহারকারী যোগ করুন';
+  if (saveBtn) saveBtn.textContent = isEdit ? '💾 পরিবর্তন সংরক্ষণ করুন' : '💾 ব্যবহারকারী সংরক্ষণ করুন';
+  if (passEl) passEl.placeholder = isEdit ? 'পরিবর্তন করতে চাইলে নতুন পাসওয়ার্ড দিন' : 'প্রাথমিক পাসওয়ার্ড';
+  if (passLabel) passLabel.textContent = isEdit ? 'পাসওয়ার্ড (ঐচ্ছিক)' : 'পাসওয়ার্ড *';
+}
+
+// ── Edit an existing user — opens the same form pre-filled ─────────
+function editUser(idx) {
+  var u = users[idx];
+  if (!u) return;
+  editingUserIdx = idx;
+
+  document.getElementById('u-name').value = u.name || '';
+  document.getElementById('u-email').value = u.email || '';
+  document.getElementById('u-role').value = u.role || 'HQ Admin';
+  document.getElementById('u-office').value = u.office || '';
+  document.getElementById('u-pass').value = '';
+  document.getElementById('u-phone').value = u.phone || '';
+
+  updateRolePermDefaults(); // shows/hides location fields based on role, sets perm defaults first
+
+  // Pre-fill location (cascading)
+  var divSel = document.getElementById('u-div');
+  if (divSel) {
+    divSel.value = u.div || '';
+    updateUserDistrict();
+    var disSel = document.getElementById('u-dis');
+    if (disSel && u.dis) {
+      disSel.value = u.dis;
+      updateUserUpazilla();
+      var upaSel = document.getElementById('u-upa');
+      if (upaSel && u.upa) upaSel.value = u.upa;
+    }
+  }
+
+  // Pre-check this user's actual saved permissions (not just role defaults)
+  if (u.perms && u.perms.length) {
+    PERM_DEFS.forEach(function(pd){
+      var el = document.getElementById('perm-'+pd.key);
+      if (el) el.checked = u.perms.indexOf(pd.key) !== -1;
+    });
+  }
+
+  setUserFormMode(true);
+  var f = document.getElementById('add-user-form');
+  f.style.display = 'block';
+  f.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── Enhanced addUser — handles both create (new) and save (edit) ───
+var _origAddUser = addUser;
 function addUser() {
   var name = document.getElementById('u-name').value.trim();
   var email = document.getElementById('u-email').value.trim();
   var role = document.getElementById('u-role').value;
   var office = document.getElementById('u-office').value.trim();
-  if (!name || !email) { alert('নাম এবং ইউজারনেম আবশ্যক'); return; }
+  var pass = document.getElementById('u-pass').value;
+  var phone = document.getElementById('u-phone').value.trim();
+  var isEdit = editingUserIdx !== null;
+  if (!name || !email || !role || (!isEdit && !pass)) { alert('নাম, ইমেইল, ভূমিকা ও পাসওয়ার্ড আবশ্যক।'); return; }
 
-  var perms = PERM_DEFS
-    .filter(function(def){ var el=document.getElementById('perm-'+def.key); return el&&el.checked&&!el.disabled; })
-    .map(function(def){ return def.key; });
+  // Collect location
+  var uDiv = document.getElementById('u-div')?.value || '';
+  var uDis = document.getElementById('u-dis')?.value || '';
+  var uUpa = document.getElementById('u-upa')?.value || '';
+  if (role !== 'HQ Admin' && !uDiv) { alert('Please select a Division for this user.'); return; }
+  if ((role==='District'||role==='Upazilla') && !uDis) { alert('Please select a District for this user.'); return; }
+  if (role==='Upazilla' && !uUpa) { alert('Please select an Upazilla for this user.'); return; }
 
-  users.push({
-    name: name, email: email, role: role, office: office,
-    phone: document.getElementById('u-phone').value,
-    last: 'কখনো না', active: true, perms: perms,
-    fieldPerms: buildDefaultFieldPerms(perms)
-  });
+  // Collect permissions
+  var perms = PERM_DEFS.filter(function(pd){
+    var el = document.getElementById('perm-'+pd.key); return el && el.checked;
+  }).map(function(pd){ return pd.key; });
+
+  if (isEdit) {
+    var u = users[editingUserIdx];
+    if (!u) { editingUserIdx = null; return; }
+    u.name = name; u.email = email; u.role = role;
+    u.office = office || uDiv+(uDis?' / '+uDis:'')+(uUpa?' / '+uUpa:'');
+    u.phone = phone; u.perms = perms;
+    u.div = uDiv||null; u.dis = uDis||null; u.upa = uUpa||null;
+    if (pass) u.password = pass; // শুধু নতুন পাসওয়ার্ড দিলেই পরিবর্তন হবে
+    renderUsers();
+    document.getElementById('add-user-form').style.display = 'none';
+    editingUserIdx = null;
+    resetUserFormFields();
+    setUserFormMode(false);
+    apiCall('updateUser', { user: u }).then(function(res){
+      if (!res || !res.ok) alert('⚠️ পরিবর্তন সার্ভারে সংরক্ষণ করা যায়নি: ' + (res && res.error || 'unknown error'));
+    });
+    return;
+  }
+
+  var newUser = {
+    name:name, email:email, role:role, office:office||uDiv+(uDis?' / '+uDis:'')+(uUpa?' / '+uUpa:''),
+    phone:phone, last:'এইমাত্র', active:true, perms:perms, password:pass,
+    div: uDiv||null, dis: uDis||null, upa: uUpa||null
+  };
+  users.push(newUser);
   renderUsers();
-  document.getElementById('add-user-form').style.display = 'none';
-  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('add-user-form').style.display='none';
+  resetUserFormFields();
+  setUserFormMode(false);
+  apiCall('addUser', { user: newUser }).then(function(res){
+    if (!res || !res.ok) alert('⚠️ ব্যবহারকারী সার্ভারে সংরক্ষণ করা যায়নি: ' + (res && res.error || 'unknown error'));
+  });
 }
+
+// (legacy duplicate updateRolePermDefaults/addUser removed — see enhanced versions above/below)
 
 // ── পারমিশন Modal (Field-Level Accordion) ──
 function openPermModal(idx) {
@@ -3020,18 +3169,46 @@ function populateSpeciesDropdown() {
     og.label = cat;
     grouped[cat].forEach(function(t) {
       var o = new Option(t.en + ' (' + t.bn + ')', t.en + ' (' + t.bn + ')');
+      o.setAttribute('data-en', (t.en || '').toLowerCase());
+      o.setAttribute('data-bn', (t.bn || '').toLowerCase());
       og.appendChild(o);
     });
     sel.appendChild(og);
+  });
+  var search = document.getElementById('f-species-search');
+  if (search) search.value = '';
+}
+
+// ── Bilingual (English + বাংলা) live search/filter for the species list ──
+function filterSpeciesDropdown() {
+  var sel = document.getElementById('f-species-sel');
+  var search = document.getElementById('f-species-search');
+  if (!sel || !search) return;
+  var q = search.value.trim().toLowerCase();
+
+  Array.prototype.forEach.call(sel.querySelectorAll('option'), function(o) {
+    if (!o.value) { o.style.display = ''; return; } // keep placeholder as-is
+    var en = o.getAttribute('data-en') || '';
+    var bn = o.getAttribute('data-bn') || '';
+    var match = !q || en.indexOf(q) !== -1 || bn.indexOf(q) !== -1;
+    o.style.display = match ? '' : 'none';
+  });
+
+  // Hide optgroups whose every option is filtered out
+  Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function(og) {
+    var anyVisible = Array.prototype.some.call(og.querySelectorAll('option'), function(o){ return o.style.display !== 'none'; });
+    og.style.display = anyVisible ? '' : 'none';
   });
 }
 
 function onSpeciesDDChange() {
   var sel = document.getElementById('f-species-sel');
   var val = sel.value;
+  var search = document.getElementById('f-species-search');
   var catDisplay = document.getElementById('f-cat-display');
   var catHidden = document.getElementById('f-cat');
   if (val) {
+    if (search) search.value = val;
     document.getElementById('f-species-final').value = val;
     var t = TREE_LIST.find(function(x){ return (x.en+' ('+x.bn+')') === val; }) ||
             TREE_LIST.find(function(x){ return val.startsWith(x.en); });
@@ -4200,47 +4377,9 @@ function updateUserUpazilla() {
   }
 }
 
-// ── Enhanced addUser — include location fields ─────────────────────
-var _origAddUser = addUser;
-function addUser() {
-  var name = document.getElementById('u-name').value.trim();
-  var email = document.getElementById('u-email').value.trim();
-  var role = document.getElementById('u-role').value;
-  var office = document.getElementById('u-office').value.trim();
-  var pass = document.getElementById('u-pass').value;
-  var phone = document.getElementById('u-phone').value.trim();
-  if (!name || !email || !role || !pass) { alert('নাম, ইমেইল, ভূমিকা ও পাসওয়ার্ড আবশ্যক।'); return; }
+// (duplicate legacy addUser removed — enhanced edit-aware version defined earlier handles both create & edit)
 
-  // Collect location
-  var uDiv = document.getElementById('u-div')?.value || '';
-  var uDis = document.getElementById('u-dis')?.value || '';
-  var uUpa = document.getElementById('u-upa')?.value || '';
-  if (role !== 'HQ Admin' && !uDiv) { alert('Please select a Division for this user.'); return; }
-  if ((role==='District'||role==='Upazilla') && !uDis) { alert('Please select a District for this user.'); return; }
-  if (role==='Upazilla' && !uUpa) { alert('Please select an Upazilla for this user.'); return; }
 
-  // Collect permissions
-  var perms = PERM_DEFS.filter(function(pd){
-    var el = document.getElementById('perm-'+pd.key); return el && el.checked;
-  }).map(function(pd){ return pd.key; });
-
-  var newUser = {
-    name:name, email:email, role:role, office:office||uDiv+(uDis?' / '+uDis:'')+(uUpa?' / '+uUpa:''),
-    phone:phone, last:'এইমাত্র', active:true, perms:perms, password:pass,
-    div: uDiv||null, dis: uDis||null, upa: uUpa||null
-  };
-  users.push(newUser);
-  renderUsers();
-  document.getElementById('add-user-form').style.display='none';
-  ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  if(document.getElementById('u-role')) document.getElementById('u-role').selectedIndex=0;
-  updateRolePermDefaults();
-  apiCall('addUser', { user: newUser }).then(function(res){
-    if (!res || !res.ok) alert('⚠️ ব্যবহারকারী সার্ভারে সংরক্ষণ করা যায়নি: ' + (res && res.error || 'unknown error'));
-  });
-}
-
-// ── Enhanced renderUsers — show location ──────────────────────────
 var _origRenderUsers = renderUsers;
 function renderUsers(filterText) {
   var q = (filterText||'').toLowerCase();
@@ -4262,6 +4401,7 @@ function renderUsers(filterText) {
       '<td style="font-size:11px;color:#888">'+u.last+'</td>'+
       '<td><span class="status-pill '+(u.active?'status-alive':'status-dead')+'">'+(u.active?'Active':'Inactive')+'</span></td>'+
       '<td style="white-space:nowrap">'+
+        '<button class="btn btn-sm" onclick="editUser('+realIdx+')" style="font-size:11px;padding:3px 8px;margin-right:3px;border-color:#1565c0;color:#1565c0;background:#e3f2fd">✏️ Edit</button>'+
         '<button class="btn btn-sm" onclick="openPermModal('+realIdx+')" style="font-size:11px;padding:3px 8px;margin-right:3px;border-color:#1a5c2a;color:#1a5c2a;background:#e8f5e9">🔑 Permissions</button>'+
         '<button class="btn btn-sm" onclick="toggleUser('+realIdx+')" style="font-size:11px;padding:3px 8px;margin-right:3px">'+
           (u.active?'⏸ Deactivate':'▶ Activate')+'</button>'+
@@ -4360,5 +4500,16 @@ function showPage(id, el) {
 // their single definitions earlier in this file — no wrapper/override needed.)
 
 </script>
+<!-- RECORD VIEW MODAL (photos + full details) -->
+<div class="rv-overlay" id="rv-overlay" onclick="if(event.target===this) closeViewRecord()">
+  <div class="rv-box">
+    <div class="rv-head">
+      <h3 id="rv-title">📋 Record Details</h3>
+      <button class="rv-close" onclick="closeViewRecord()">✕</button>
+    </div>
+    <div class="rv-body" id="rv-body"></div>
+  </div>
+</div>
+
 </body>
 </html>
