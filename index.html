@@ -378,7 +378,7 @@ tr:hover td{background:#f8fdf8}
     </div>
   </div>
   <button class="btn-login" onclick="doLogin()" style="margin-top:14px">🔐 Sign in</button>
-  <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">Demo: any password works for testing</p>
+  <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">🔒 Secured by Google Sheets + Apps Script backend</p>
 </div>
 </div>
 </div>
@@ -829,7 +829,20 @@ tr:hover td{background:#f8fdf8}
       <b>CSV ফরম্যাট:</b> English Name, Bengali Name, Scientific Name, Category<br>
       <b>উদাহরণ:</b> Mango, আম, Mangifera indica, Fruit tree — ফলজ<br>
       ⚠️ প্রথম সারি (Header) স্বয়ংক্রিয়ভাবে বাদ দেওয়া হবে। একই নাম থাকলে Duplicate skip করা হবে।<br>
-      💡 প্রথমে "<b>CSV Template</b>" ডাউনলোড করুন, তারপর পূরণ করে Upload করুন।
+      💡 প্রথমে "<b>CSV Template</b>" ডাউনলোড করুন, তারপর পূরণ করে Upload করুন — অথবা নিচে সরাসরি পেস্ট করুন।
+    </div>
+  </div>
+
+  <!-- Bulk Paste Box (textarea) -->
+  <div class="card">
+    <div class="card-title"><span>📝</span> Paste Bulk Data <span style="font-weight:400;color:#2d8a42">| একসাথে একাধিক প্রজাতি পেস্ট করুন</span></div>
+    <div class="fg">
+      <label>CSV রো পেস্ট করুন (English, Bengali, Scientific, Category) — এক লাইনে একটি প্রজাতি</label>
+      <textarea id="bulk-paste-area" rows="6" placeholder="Mango, আম, Mangifera indica, Fruit tree — ফলজ&#10;Neem, নিম, Azadirachta indica, Medicinal — ওষুধি" style="width:100%;font-family:monospace;font-size:12px;padding:10px;border:1px solid #ddd;border-radius:8px"></textarea>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn" onclick="document.getElementById('bulk-paste-area').value=''">বাতিল করুন</button>
+      <button class="btn btn-primary" id="bulk-submit-btn" onclick="submitBulkSpecies()">📤 Submit Bulk Upload — জমা দিন</button>
     </div>
   </div>
 
@@ -1126,21 +1139,48 @@ var currentMonEditIndex = null; // null = new visit, number = edit existing
 // ════════════════════════════════════════════════════════
 // CONFIGURATION — SET YOUR GOOGLE APPS SCRIPT WEB APP URL
 // ════════════════════════════════════════════════════════
-// 👇 PASTE YOUR APPS SCRIPT WEB APP URL ON THE LINE BELOW (line ~941)
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOmC8sAXw1X_t0_UoHwir6yL4PiNXV-XySMDT8rb6sx7S2KtWwPNeFUYI0IserBVD2/exec';
+// 👇 Deploy Code.gs as a Web App (Execute as: Me, Access: Anyone) and
+//    paste the deployment URL below. See SETUP_GUIDE.md for full steps.
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4eXXXjvVMQF5xNe6oydOG24IcNODyJKw7tS4BxW-9FhUwUBzaM6J07yCw8RyjDxdcCg/exec';
 // ════════════════════════════════════════════════════════
 // API HELPERS
 // ════════════════════════════════════════════════════════
+var AUTH_TOKEN = null; // set after successful login, sent with every write call
+
+function backendConfigured() {
+  return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('https://script.google.com') === 0);
+}
+
 function apiCall(action, payload) {
-  if (!APPS_SCRIPT_URL) return Promise.resolve(null); // offline / not configured
-  var body = Object.assign({ action: action }, payload || {});
+  if (!backendConfigured()) return Promise.resolve({ ok:false, error:'Backend not configured (APPS_SCRIPT_URL ফাঁকা)' });
+  var body = Object.assign({ action: action, token: AUTH_TOKEN }, payload || {});
   return fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
     body: JSON.stringify(body)
   })
   .then(function(r){ return r.json(); })
-  .catch(function(e){ console.warn('API error:', e); return null; });
+  .catch(function(e){ console.warn('API error:', e); return { ok:false, error:String(e) }; });
+}
+
+// ── Full-screen loading overlay ─────────────────────────────────────
+(function(){
+  var ov = document.createElement('div');
+  ov.id = 'gas-loading-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,92,42,.94);color:#fff;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:99999;font-family:Arial,sans-serif;font-size:14px;gap:14px';
+  ov.innerHTML = '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:gasspin .8s linear infinite"></div><div id="gas-loading-text">লোড হচ্ছে…</div>';
+  var addOverlay = function(){ document.body.appendChild(ov); };
+  if (document.body) addOverlay(); else document.addEventListener('DOMContentLoaded', addOverlay);
+  var style = document.createElement('style');
+  style.textContent = '@keyframes gasspin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+})();
+function showLoading(msg) {
+  var t = document.getElementById('gas-loading-text'); if (t) t.textContent = msg || 'লোড হচ্ছে…';
+  var ov = document.getElementById('gas-loading-overlay'); if (ov) ov.style.display = 'flex';
+}
+function hideLoading() {
+  var ov = document.getElementById('gas-loading-overlay'); if (ov) ov.style.display = 'none';
 }
 
 function showSyncStatus(msg, ok) {
@@ -1154,15 +1194,17 @@ function showSyncStatus(msg, ok) {
 
 // ─── LOAD ALL DATA FROM GOOGLE SHEETS ON LOGIN ───
 function loadAllFromSheets() {
-  if (!APPS_SCRIPT_URL) return;
+  if (!backendConfigured()) return;
   showSyncStatus('⏳ Loading data…', true);
   apiCall('getAll').then(function(data) {
-    if (!data) { showSyncStatus('⚠️ Offline mode — using local data', false); return; }
-    if (data.records)  { records   = data.records; }
-    if (data.treeList) { TREE_LIST = data.treeList; }
+    if (!data || !data.ok) { showSyncStatus('⚠️ Sync failed: ' + (data && data.error || 'unknown'), false); return; }
+    if (data.records) { records = data.records; }
+    if (data.users)   { users   = data.users; }
+    if (data.species) { TREE_LIST = data.species; }
     showSyncStatus('✅ Data loaded from Google Sheets', true);
     initDashboard();
     renderRecords();
+    renderUsers();
     renderMonitoring();
     renderSpeciesTable();
     populateSpeciesDropdown();
@@ -1839,19 +1881,37 @@ function handlePhotos(files) {
   Array.from(files).forEach(file => {
     var origKB = (file.size / 1024).toFixed(0);
     if (file.size <= 102400) {
-      // Under 100KB, no resize needed
       showPhotoPreview(file, origKB, origKB, false);
       readAsDataURL(file, function(dataUrl) {
-        processedPhotos.push({name: file.name, data: dataUrl, size: origKB});
+        uploadPhotoToDrive(file.name, dataUrl, origKB);
       });
     } else {
-      // Needs resize
       resizeImage(file, 100 * 1024, function(blob, newKB) {
         showPhotoPreview(file, origKB, newKB, true);
         readAsDataURL(blob, function(dataUrl) {
-          processedPhotos.push({name: file.name, data: dataUrl, size: newKB});
+          uploadPhotoToDrive(file.name, dataUrl, newKB);
         });
       });
+    }
+  });
+}
+
+// ── Upload a single photo to Google Drive via Apps Script ──────────
+// Stores only the resulting Drive URL on the record (keeps Sheets rows small).
+function uploadPhotoToDrive(filename, dataUrl, sizeKB) {
+  var slot = { name: filename, data: dataUrl, size: sizeKB, url: null, uploading: backendConfigured() };
+  processedPhotos.push(slot);
+  if (!backendConfigured()) return; // offline mode: keep base64 locally only
+  var commaIdx = dataUrl.indexOf(',');
+  var mime = (dataUrl.substring(5, dataUrl.indexOf(';')) || 'image/jpeg');
+  var base64 = dataUrl.substring(commaIdx + 1);
+  apiCall('uploadImage', { filename: filename, mime: mime, data: base64 }).then(function(res) {
+    slot.uploading = false;
+    if (res && res.ok && res.url) {
+      slot.url = res.url;
+      slot.data = null; // drop heavy base64 once we have the Drive URL
+    } else {
+      console.warn('Photo upload failed, keeping local copy only:', res && res.error);
     }
   });
 }
@@ -1943,17 +2003,8 @@ function updateUpazilla() {
   list.forEach(u => { var o = new Option(u,u); upa.appendChild(o); });
 }
 
-// NOTE: saveRecord is consolidated into a single definition further below (search "FINAL saveRecord").
-// This file previously had THREE separate `function saveRecord(){...}` declarations.
-// In JavaScript, when a function is declared more than once in the same scope, hoisting makes the
-// LAST declaration in the file win for the identifier from the very start of script execution —
-// even for lines written earlier. So the later line `var _origSaveRecord = saveRecord;` was actually
-// capturing a reference to itself (the last/permission-check version), not the "real" save logic.
-// Clicking "Save Record" called that wrapper, which called `_origSaveRecord()`, which called itself
-// again forever — an infinite loop that crashes silently (no error shown, no alert, no Google Sheets
-// write, nothing happens). That was the root cause of "Add Tree Plantation Record submit hocche na".
-// Fixed by merging all the logic (validation + edit-mode + Google Sheets sync + permission check)
-// into one single saveRecord function below.
+// NOTE: saveRecord() is defined once, later in this file (see "function saveRecord"
+// further down), where it has the full edit/new + permission + Google Sheets sync logic.
 
 function clearForm() {
   var ip = document.getElementById('inline-mon-panel'); if(ip) ip.style.display='none';
@@ -2358,15 +2409,15 @@ function renderInlineMonitoring(recordId) {
 function deleteRecord(id) {
   var r = records.find(x=>x.id===id);
   if (!r) return;
-  if (typeof hasPerm === 'function' && !hasPerm('delete')) { alert('আপনার রেকর্ড মুছে ফেলার অনুমতি নেই।'); return; }
-  if (typeof canMutateRecord === 'function' && !canMutateRecord(r)) { alert('আপনি এই রেকর্ডটি মুছে ফেলতে পারবেন না — এটি আপনার স্কোপের বাইরে।'); return; }
+  if (!hasPerm('delete')) { alert('আপনার রেকর্ড মুছে ফেলার অনুমতি নেই।'); return; }
+  if (!canMutateRecord(r)) { alert('আপনি এই রেকর্ডটি মুছে ফেলতে পারবেন না — এটি আপনার স্কোপের বাইরে।'); return; }
   if (!confirm('⚠️ এই রেকর্ডটি মুছে ফেলবেন?\n\nID: '+r.id+'\nSpecies: '+r.species+'\nSite: '+r.site+'\n\nএই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।')) return;
   records = records.filter(x=>x.id!==id);
   renderRecords();
   initDashboard();
   renderMonitoring();
   apiCall('deleteRecord', {id: id}).then(function(res){
-    showSyncStatus(res ? '🗑️ Deleted from Google Sheets' : '🗑️ Deleted locally', !!res);
+    showSyncStatus(res && res.ok ? '🗑️ Deleted from Google Sheets' : '⚠️ Delete sync failed', !!(res&&res.ok));
   });
 }
 
@@ -2470,7 +2521,7 @@ function deleteMonVisit(recordId, visitIdx) {
   // Refresh history modal with updated data
   showVisitHistory(recordId);
   apiCall('updateRecord', {record: r}).then(function(res){
-    showSyncStatus(res ? '☁️ Monitoring updated in Sheets' : '💾 Updated locally', !!res);
+    showSyncStatus(res && res.ok ? '☁️ Monitoring updated in Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
 }
 function closeMonModal() {
@@ -2574,7 +2625,7 @@ function saveMonitoringVisit() {
 
   // Google Sheets sync
   apiCall('updateRecord', {record: r}).then(function(res){
-    showSyncStatus(res ? '☁️ Monitoring saved to Sheets' : '💾 Saved locally', !!res);
+    showSyncStatus(res && res.ok ? '☁️ Monitoring saved to Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
 }
 
@@ -2770,6 +2821,9 @@ function filterUsers(q) { renderUsers(q); }
 function toggleUser(i) {
   users[i].active = !users[i].active;
   renderUsers();
+  apiCall('updateUser', { user: users[i] }).then(function(res){
+    if (!res || !res.ok) console.warn('toggleUser sync failed:', res && res.error);
+  });
 }
 
 function showAddUserForm() {
@@ -2950,6 +3004,9 @@ function savePermissions() {
   if (SESSION.email === u.email) { SESSION.perms = u.perms; SESSION.fieldPerms = u.fieldPerms; applySidebarPermissions(); applyFieldPermissions(); }
   closePermModal();
   renderUsers();
+  apiCall('updateUser', { user: u }).then(function(res){
+    if (!res || !res.ok) console.warn('permissions sync failed:', res && res.error);
+  });
   // Show success feedback
   var ss = document.getElementById('sync-status');
   if(ss){ ss.textContent='✅ ফিল্ড-লেভেল পারমিশন সংরক্ষিত হয়েছে'; ss.style.color='#2d8a42'; ss.style.display='inline';
@@ -3062,7 +3119,7 @@ function addSpeciesEntry() {
   var newSp = {en:en,bn:bn,sci:sci,cat:cat};
   TREE_LIST.push(newSp);
   apiCall('addSpecies', {species: newSp}).then(function(res){
-    showSyncStatus(res ? '☁️ Species saved to Sheets' : '💾 Saved locally', !!res);
+    showSyncStatus(res && res.ok ? '☁️ Species saved to Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
   renderSpeciesTable();
   document.getElementById('add-species-form').style.display='none';
@@ -3079,7 +3136,7 @@ function deleteSpecies(idx) {
   var delName = TREE_LIST[idx].en;
   TREE_LIST.splice(idx,1);
   apiCall('deleteSpecies', {en: delName}).then(function(res){
-    showSyncStatus(res ? '🗑️ Species removed from Sheets' : '🗑️ Removed locally', !!res);
+    showSyncStatus(res && res.ok ? '🗑️ Species removed from Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
   });
   renderSpeciesTable();
 }
@@ -3128,56 +3185,82 @@ function downloadSpeciesTemplate() {
   a.click();
 }
 
-function bulkUploadSpecies(input) {
-  var file=input.files[0];
-  if (!file) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var lines=e.target.result.split('\n');
-    var newSpecies=[];
-    lines.forEach(function(line,idx){
-      if (idx===0&&(line.toLowerCase().includes('english')||line.toLowerCase().includes('name'))) return;
-      var parts=line.split(',').map(function(x){return x.trim().replace(/^"|"$/g,'');});
-      if (parts.length>=2&&parts[0]&&parts[1]) {
-        var exists=TREE_LIST.some(function(t){return t.en.toLowerCase()===parts[0].toLowerCase();});
-        if (!exists) {
-          newSpecies.push({en:parts[0],bn:parts[1],sci:parts[2]||'',cat:parts[3]||'Others — অন্যান্য'});
-        }
+// Parses raw CSV-style text (one species per line: en,bn,sci,cat) into an
+// array of new species objects, skipping a header row and any duplicates
+// already present in TREE_LIST (case-insensitive on English name).
+function parseBulkSpeciesText(text) {
+  var lines = text.split('\n');
+  var toAdd = [];
+  lines.forEach(function(line, idx) {
+    line = line.trim();
+    if (!line) return;
+    if (idx === 0 && (line.toLowerCase().includes('english') || line.toLowerCase().includes('name'))) return;
+    var parts = line.split(',').map(function(x){ return x.trim().replace(/^"|"$/g,''); });
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      var existsAlready = TREE_LIST.some(function(t){ return t.en.toLowerCase() === parts[0].toLowerCase(); }) ||
+        toAdd.some(function(t){ return t.en.toLowerCase() === parts[0].toLowerCase(); });
+      if (!existsAlready) {
+        toAdd.push({ en: parts[0], bn: parts[1], sci: parts[2] || '', cat: parts[3] || 'Others — অন্যান্য' });
       }
-    });
-    newSpecies.forEach(function(sp){ TREE_LIST.push(sp); });
-    renderSpeciesTable();
-    input.value='';
-
-    if (newSpecies.length===0) {
-      showBulkAlert('⚠️ কোনো নতুন প্রজাতি যোগ হয়নি (সব ইতিমধ্যে তালিকায় আছে)।');
-      return;
     }
+  });
+  return toAdd;
+}
 
-    showBulkAlert('⏳ ' + newSpecies.length + 'টি প্রজাতি Google Sheets-এ পাঠানো হচ্ছে...');
+// Adds parsed species to the local list, renders the table, and syncs the
+// whole batch to Google Sheets in ONE request via the 'addSpeciesBulk' action
+// (falls back to per-row 'addSpecies' calls if the backend doesn't support it).
+function syncBulkSpecies(toAdd, btnEl) {
+  if (!toAdd.length) {
+    showBulkAlert('⚠️ কোনো নতুন প্রজাতি পাওয়া যায়নি (সব duplicate অথবা ফাঁকা)।');
+    return;
+  }
+  TREE_LIST.push.apply(TREE_LIST, toAdd);
+  renderSpeciesTable();
+  showBulkAlert('✅ ' + toAdd.length + ' new species added — syncing to Google Sheets…');
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Syncing…'; }
 
-    // Sync each new species to Google Sheets one-by-one (sequential, so the Apps Script
-    // web app isn't hit with many simultaneous requests against the same spreadsheet).
-    var synced = 0, failed = 0;
-    function syncNext(i) {
-      if (i >= newSpecies.length) {
-        var msg = '✅ Bulk upload complete! ' + newSpecies.length + ' new species added.';
-        if (APPS_SCRIPT_URL) {
-          msg += ' ☁️ ' + synced + ' synced to Google Sheets' + (failed ? ', ' + failed + ' failed' : '') + '.';
-        } else {
-          msg += ' 💾 Saved locally only (Google Sheets not configured).';
-        }
-        showBulkAlert(msg);
-        return;
-      }
-      apiCall('addSpecies', {species: newSpecies[i]}).then(function(res){
-        if (res && res.ok) synced++; else failed++;
-        syncNext(i + 1);
+  apiCall('addSpeciesBulk', { species: toAdd }).then(function(res) {
+    if (res && res.ok) {
+      showBulkAlert('☁️ ' + toAdd.length + ' species saved to Google Sheets successfully!');
+      showSyncStatus('☁️ Bulk species saved to Google Sheets', true);
+    } else {
+      // Backend may not have the bulk action yet — fall back to one-by-one.
+      var calls = toAdd.map(function(sp) { return apiCall('addSpecies', { species: sp }); });
+      Promise.all(calls).then(function(results) {
+        var okCount = results.filter(function(r){ return r && r.ok; }).length;
+        showBulkAlert('☁️ ' + okCount + ' / ' + toAdd.length + ' species synced to Google Sheets.');
+        showSyncStatus(okCount === toAdd.length ? '☁️ Bulk species saved to Google Sheets' : '⚠️ Some species failed to sync', okCount === toAdd.length);
       });
     }
-    syncNext(0);
+  }).finally(function() {
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '📤 Submit Bulk Upload — জমা দিন'; }
+  });
+}
+
+function bulkUploadSpecies(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var toAdd = parseBulkSpeciesText(e.target.result);
+    syncBulkSpecies(toAdd, null);
+    input.value = '';
   };
   reader.readAsText(file);
+}
+
+// Triggered by the "Submit Bulk Upload" button next to the paste textarea.
+function submitBulkSpecies() {
+  var area = document.getElementById('bulk-paste-area');
+  var text = area ? area.value : '';
+  if (!text.trim()) {
+    showBulkAlert('⚠️ অনুগ্রহ করে প্রথমে কিছু CSV ডেটা পেস্ট করুন।');
+    return;
+  }
+  var toAdd = parseBulkSpeciesText(text);
+  syncBulkSpecies(toAdd, document.getElementById('bulk-submit-btn'));
+  if (area) area.value = '';
 }
 
 function showBulkAlert(msg) {
@@ -3187,6 +3270,7 @@ function showBulkAlert(msg) {
   el.textContent=msg;
   setTimeout(function(){ el.style.display='none'; }, 4000);
 }
+
 
 
 function filterSpeciesTable() {
@@ -3219,12 +3303,10 @@ function clearForm() {
   if(btn){ btn.textContent='💾 Save Record — সংরক্ষণ করুন'; btn.removeAttribute('data-edit-id'); }
 }
 
-// FINAL saveRecord — handles validation, edit mode, permission check, and Google Sheets sync
+// saveRecord — handles both "new record" and "edit record" modes,
+// enforces add permission, and syncs to Google Sheets via apiCall().
 function saveRecord() {
-  if (typeof hasPerm === 'function' && !hasPerm('add')) {
-    alert('আপনার নতুন রেকর্ড যোগ করার অনুমতি নেই।');
-    return;
-  }
+  if (!hasPerm('add')) { alert('আপনার নতুন রেকর্ড যোগ করার অনুমতি নেই।'); return; }
   var btn = document.getElementById('save-record-btn');
   var editId = btn ? btn.getAttribute('data-edit-id') : null;
   var div = document.getElementById('f-div').value;
@@ -3254,8 +3336,11 @@ function saveRecord() {
       r.lat=document.getElementById('f-lat').value;
       r.lon=document.getElementById('f-lon').value;
       r.remarks=document.getElementById('f-remarks').value;
+      if (processedPhotos.length) {
+        r.photos = (r.photos||[]).concat(processedPhotos.map(function(p){ return p.url || p.data; }).filter(Boolean));
+      }
       apiCall('updateRecord', {record: r}).then(function(res){
-        showSyncStatus(res ? '☁️ Updated in Google Sheets' : '💾 Updated locally (offline)', !!res);
+        showSyncStatus(res && res.ok ? '☁️ Updated in Google Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
       });
       renderInlineMonitoring(editId);
     }
@@ -3275,13 +3360,12 @@ function saveRecord() {
       lat:document.getElementById('f-lat').value,
       lon:document.getElementById('f-lon').value,
       remarks:document.getElementById('f-remarks').value,
-      photos: processedPhotos.slice(),
+      photos: processedPhotos.map(function(p){ return p.url || p.data; }).filter(Boolean),
       monitoring:[]
     };
     records.push(newRec);
-    processedPhotos = [];
     apiCall('addRecord', {record: newRec}).then(function(res){
-      showSyncStatus(res ? '☁️ Saved to Google Sheets' : '💾 Saved locally (offline)', !!res);
+      showSyncStatus(res && res.ok ? '☁️ Saved to Google Sheets' : '⚠️ Sync failed', !!(res&&res.ok));
     });
     var successEl2=document.getElementById('add-alert-success');
     successEl2.textContent='✅ Record saved successfully! বৃক্ষরোপণ তথ্য সংরক্ষিত হয়েছে।';
@@ -3599,80 +3683,103 @@ function loginDisChange() {
   }
 }
 
-// ── Enhanced doLogin — build SESSION ───────────────────────────────
+// ── Production doLogin — authenticates against Google Sheet via Apps Script ──
 function doLogin() {
-  var user = document.getElementById('login-user').value;
+  var user = document.getElementById('login-user').value.trim();
   var pass = document.getElementById('login-pass').value;
   if (!user || !pass) { alert('Please enter username and password'); return; }
 
-  // Resolve location from login form
+  if (!backendConfigured()) {
+    alert('⚠️ Backend configured নেই।\n\nAPPS_SCRIPT_URL সেট করা হয়নি। SETUP_GUIDE.md অনুসরণ করে Google Apps Script ডিপ্লয় করুন, তারপর সেই URL এই ফাইলের শুরুতে বসান।');
+    return;
+  }
+
+  // Resolve location from login form (used only as a hint; server is the source of truth)
   var loginDiv = (document.getElementById('login-div')?.value) || '';
   var loginDis = (document.getElementById('login-dis')?.value) || '';
   var loginUpa = (document.getElementById('login-upa')?.value) || '';
-
-  // Build session
-  SESSION.role  = currentRole;
-  SESSION.email = user;
-  SESSION.name  = user.split('@')[0];
-  SESSION.div   = (currentRole === 'divisional' || currentRole === 'district' || currentRole === 'upazilla') ? loginDiv : null;
-  SESSION.dis   = (currentRole === 'district' || currentRole === 'upazilla') ? loginDis : null;
-  SESSION.upa   = (currentRole === 'upazilla') ? loginUpa : null;
-
-  // Assign permissions based on role (use first matching user or defaults)
-  var matchedUser = users.find(function(u){ return u.email === user; });
-  if (matchedUser && matchedUser.perms) {
-    SESSION.perms = matchedUser.perms;
-    SESSION.fieldPerms = ensureFieldPerms(matchedUser);
-    // Override session location from user record if available
-    if (matchedUser.div) SESSION.div = matchedUser.div;
-    if (matchedUser.dis) SESSION.dis = matchedUser.dis;
-    if (matchedUser.upa) SESSION.upa = matchedUser.upa;
-  } else {
-    SESSION.perms = ROLE_DEFAULT_PERMS[roleMap[currentRole]?.label] ||
-                    ROLE_DEFAULT_PERMS['Upazilla'] || [];
-    SESSION.fieldPerms = buildDefaultFieldPerms(SESSION.perms);
-  }
-  // Admin always gets all permissions
-  if (currentRole === 'admin') {
-    SESSION.perms = PERM_DEFS.map(function(p){return p.key;});
-    SESSION.fieldPerms = buildDefaultFieldPerms(SESSION.perms);
-  }
-
-  // Validate location selections for non-admin
   if (currentRole !== 'admin') {
-    if (!SESSION.div) { alert('Please select your Division.'); return; }
-    if ((currentRole==='district'||currentRole==='upazilla') && !SESSION.dis) { alert('Please select your District.'); return; }
-    if (currentRole==='upazilla' && !SESSION.upa) { alert('Please select your Upazilla.'); return; }
+    if (!loginDiv) { alert('Please select your Division.'); return; }
+    if ((currentRole==='district'||currentRole==='upazilla') && !loginDis) { alert('Please select your District.'); return; }
+    if (currentRole==='upazilla' && !loginUpa) { alert('Please select your Upazilla.'); return; }
   }
 
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
+  var btn = document.querySelector('.btn-login');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ যাচাই করা হচ্ছে...'; }
 
-  var rm = roleMap[currentRole];
-  document.getElementById('role-badge').className = 'nav-badge ' + rm.badge;
-  document.getElementById('role-badge').textContent = rm.label;
-  document.getElementById('nav-avatar').textContent = rm.initials;
-  document.getElementById('nav-user-email').textContent = user;
+  apiCall('login', { email: user, password: pass }).then(function(res) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔐 Sign in'; }
+    if (!res || !res.ok) {
+      alert('❌ ' + (res && res.error ? res.error : 'লগইন ব্যর্থ হয়েছে। ইউজারনেম অথবা পাসওয়ার্ড ভুল।'));
+      return;
+    }
+    var u = res.user;
+    AUTH_TOKEN = res.token;
 
-  // Apply RBAC sidebar
-  applySidebarPermissions();
+    SESSION.role  = roleKeyFromLabel(u.role);
+    SESSION.email = u.email;
+    SESSION.name  = u.name;
+    SESSION.div   = u.div || (SESSION.role !== 'admin' ? loginDiv : null);
+    SESSION.dis   = u.dis || (SESSION.role==='district'||SESSION.role==='upazilla' ? loginDis : null);
+    SESSION.upa   = u.upa || (SESSION.role==='upazilla' ? loginUpa : null);
+    SESSION.perms = (u.perms && u.perms.length) ? u.perms : (ROLE_DEFAULT_PERMS[u.role] || ROLE_DEFAULT_PERMS['Upazilla'] || []);
+    SESSION.fieldPerms = ensureFieldPerms(u);
+    if (SESSION.role === 'admin') {
+      SESSION.perms = PERM_DEFS.map(function(p){ return p.key; });
+      SESSION.fieldPerms = buildDefaultFieldPerms(SESSION.perms);
+    }
+    currentRole = SESSION.role;
 
-  // Pre-lock location fields in Add Tree form for non-admin
-  lockLocationFields();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
 
-  initDashboard();
-  renderRecords();
-  renderUsers();
-  renderMonitoring();
-  // month-chart built inside initDashboard()
-  buildChart_legacy('report-chart');
-  updateMapCards();
-  renderSpeciesTable();
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('mon-date').value = new Date().toISOString().split('T')[0];
-  populateSpeciesDropdown();
-  loadAllFromSheets();
-  applyFieldPermissions();
+    var rm = roleMap[currentRole];
+    document.getElementById('role-badge').className = 'nav-badge ' + rm.badge;
+    document.getElementById('role-badge').textContent = rm.label;
+    document.getElementById('nav-avatar').textContent = rm.initials;
+    document.getElementById('nav-user-email').textContent = u.email;
+
+    applySidebarPermissions();
+    lockLocationFields();
+
+    showLoading('ডেটা লোড হচ্ছে...');
+    apiCall('getAll', {}).then(function(data) {
+      hideLoading();
+      if (data && data.ok) {
+        if (data.records) records = data.records;
+        if (data.users)   users   = data.users;
+        if (data.species) TREE_LIST = data.species;
+      } else {
+        alert('⚠️ ডেটা লোড করতে সমস্যা হয়েছে: ' + (data && data.error || 'unknown error') + '\n\nস্থানীয় ডেমো ডেটা দেখানো হচ্ছে।');
+      }
+      initDashboard();
+      renderRecords();
+      renderUsers();
+      renderMonitoring();
+      buildChart_legacy('report-chart');
+      updateMapCards();
+      renderSpeciesTable();
+      document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('mon-date').value = new Date().toISOString().split('T')[0];
+      populateSpeciesDropdown();
+      applyFieldPermissions();
+    });
+  });
+}
+
+function roleKeyFromLabel(label) {
+  var map = { 'HQ Admin':'admin', 'Divisional':'divisional', 'District':'district', 'Upazilla':'upazilla' };
+  return map[label] || 'upazilla';
+}
+
+// ── Logout: also invalidate server-side session token ──────────────
+var _origLogout2 = logout;
+function logout() {
+  if (!confirm('Logout করতে চান?')) return;
+  if (backendConfigured() && AUTH_TOKEN) { apiCall('logout', {}); }
+  AUTH_TOKEN = null;
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('main-app').style.display = 'none';
 }
 
 // ── Lock location fields in Add Tree for scoped users ──────────────
@@ -4061,7 +4168,7 @@ function addUser() {
 
   var newUser = {
     name:name, email:email, role:role, office:office||uDiv+(uDis?' / '+uDis:'')+(uUpa?' / '+uUpa:''),
-    phone:phone, last:'এইমাত্র', active:true, perms:perms,
+    phone:phone, last:'এইমাত্র', active:true, perms:perms, password:pass,
     div: uDiv||null, dis: uDis||null, upa: uUpa||null
   };
   users.push(newUser);
@@ -4070,6 +4177,9 @@ function addUser() {
   ['u-name','u-email','u-office','u-pass','u-phone'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   if(document.getElementById('u-role')) document.getElementById('u-role').selectedIndex=0;
   updateRolePermDefaults();
+  apiCall('addUser', { user: newUser }).then(function(res){
+    if (!res || !res.ok) alert('⚠️ ব্যবহারকারী সার্ভারে সংরক্ষণ করা যায়নি: ' + (res && res.error || 'unknown error'));
+  });
 }
 
 // ── Enhanced renderUsers — show location ──────────────────────────
@@ -4104,8 +4214,12 @@ function renderUsers(filterText) {
 
 function deleteUserAtIdx(idx) {
   if (!confirm('Delete user "'+users[idx].name+'"?')) return;
+  var email = users[idx].email;
   users.splice(idx,1);
   renderUsers();
+  apiCall('deleteUser', { email: email }).then(function(res){
+    if (!res || !res.ok) console.warn('deleteUser sync failed:', res && res.error);
+  });
 }
 
 // ── GPS Radius — scope-aware ────────────────────────────────────────
@@ -4184,8 +4298,8 @@ function showPage(id, el) {
   applyFieldPermissions();
 }
 
-// (saveRecord permission check is now handled inside the single saveRecord function defined earlier)
-// (deleteRecord permission/scope checks are now handled inside the single deleteRecord function defined earlier)
+// (saveRecord and deleteRecord permission checks are now built directly into
+// their single definitions earlier in this file — no wrapper/override needed.)
 
 </script>
 </body>
